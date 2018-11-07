@@ -48,6 +48,15 @@
     <ClCompile Include="mango\graphics\wrappers\shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mango\misc\maths.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mango\graphics\wrappers\vertex_array.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mango\graphics\wrappers\texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mango\common.h">
@@ -801,6 +810,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mango\graphics\wrappers\shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\graphics\wrappers\buffer_object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\misc\maths.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\graphics\wrappers\vertex_array.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\graphics\wrappers\texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

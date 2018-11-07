@@ -3,8 +3,12 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <array>
+#include <deque>
+#include <vector>
 
 #include "misc/utility.h"
+#include "misc/maths.h"
 
 // glew
 #define GLEW_STATIC
@@ -32,4 +36,6 @@
 
 
 #define DBG_LOG(x, ...) printf_s("[line:%i - func:%s()] " x "\n", __LINE__, __func__, __VA_ARGS__)
+#define DBG_ERROR(x, ...) printf_s("[ERROR][line:%i - func:%s()] " x "\n", __LINE__, __func__, __VA_ARGS__)
+
 #define ASSERT(x) assert(x)

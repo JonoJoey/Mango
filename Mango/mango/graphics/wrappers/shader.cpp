@@ -24,7 +24,7 @@ namespace Mango
 
 			char error[256];
 			glGetShaderInfoLog(shader, 256, nullptr, error);
-			DBG_LOG("Error compiling shader - type:0x%X - %s", type, error);
+			DBG_ERROR("Error compiling shader - type:0x%X - %s", type, error);
 			return 0xFFFFFFFF;
 		};
 
@@ -53,8 +53,11 @@ namespace Mango
 			return;
 		UnregisterUtil();
 
-		if (m_program != 0xFFFFFFFF)
-			glDeleteProgram(m_program);
+		if (m_program == 0xFFFFFFFF)
+			return;
+
+		glDeleteProgram(m_program);
+		m_program = 0xFFFFFFFF;
 	}
 
 	void Shader::Bind() const
@@ -73,7 +76,7 @@ namespace Mango
 
 		const int location = glGetUniformLocation(m_program, name.c_str());
 		if (location == -1)
-			DBG_LOG("Failed to get uniform location - [%s]", name.c_str());
+			DBG_ERROR("Failed to get uniform location - [%s]", name.c_str());
 
 		m_cached_locations[name] = location;
 		return location;
@@ -105,7 +108,7 @@ namespace Mango
 		std::ifstream file(file_path);
 		if (!file)
 		{
-			DBG_LOG("Failed to open file - [%s]", file_path.c_str());
+			DBG_ERROR("Failed to open file - [%s]", file_path.c_str());
 			return "";
 		}
 

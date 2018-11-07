@@ -135,7 +135,10 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mango\graphics\renderer_2d.cpp" />
     <ClCompile Include="mango\graphics\wrappers\shader.cpp" />
+    <ClCompile Include="mango\graphics\wrappers\texture.cpp" />
+    <ClCompile Include="mango\graphics\wrappers\vertex_array.cpp" />
     <ClCompile Include="mango\mango.cpp" />
+    <ClCompile Include="mango\misc\maths.cpp" />
     <ClCompile Include="mango\misc\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -387,8 +390,12 @@
     <ClInclude Include="dep\imgui\imstb_truetype.h" />
     <ClInclude Include="mango\common.h" />
     <ClInclude Include="mango\graphics\renderer_2d.h" />
+    <ClInclude Include="mango\graphics\wrappers\buffer_object.h" />
     <ClInclude Include="mango\graphics\wrappers\shader.h" />
+    <ClInclude Include="mango\graphics\wrappers\texture.h" />
+    <ClInclude Include="mango\graphics\wrappers\vertex_array.h" />
     <ClInclude Include="mango\mango.h" />
+    <ClInclude Include="mango\misc\maths.h" />
     <ClInclude Include="mango\misc\utility.h" />
   </ItemGroup>
   <ItemGroup>

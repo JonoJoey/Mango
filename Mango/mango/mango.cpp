@@ -14,20 +14,23 @@ namespace
 		if (type != GL_DEBUG_TYPE_ERROR)
 			return;
 
-		DBG_LOG("type: 0x%x, severity = 0x%x, message = %s", type, severity, message);
+		if (type == GL_DEBUG_TYPE_ERROR)
+			DBG_ERROR("severity = 0x%x, message = %s", severity, message);
+		else
+			DBG_LOG("Message - type: 0x%x, severity = 0x%x, message = %s", type, severity, message);
 	}
 } // namespace
 
 namespace Mango
 {
-	bool Mango::Setup(const std::string& window_name, const glm::ivec2& window_size)
+	bool MangoCore::Setup(const std::string& window_name, const glm::ivec2& window_size)
 	{
 		ASSERT(!m_is_init);
 
 		// init glfw
 		if (!glfwInit())
 		{
-			DBG_LOG("glfwInit() failure");
+			DBG_ERROR("glfwInit() failure");
 			return false;
 		}
 
@@ -39,7 +42,7 @@ namespace Mango
 		m_window = glfwCreateWindow(window_size[0], window_size[1], window_name.c_str(), nullptr, nullptr);
 		if (!m_window)
 		{
-			DBG_LOG("glfwCreateWindow() failure");
+			DBG_ERROR("glfwCreateWindow() failure");
 			glfwTerminate();
 			return false;
 		}
@@ -50,7 +53,7 @@ namespace Mango
 		// init glew
 		if (const auto error = glewInit(); error != GLEW_OK)
 		{
-			DBG_LOG("glewInit() failure %s", glewGetErrorString(error));
+			DBG_ERROR("glewInit() failure %s", glewGetErrorString(error));
 			glfwDestroyWindow(m_window);
 			glfwTerminate();
 			return false;
@@ -79,10 +82,23 @@ namespace Mango
 		glEnable(GL_DEBUG_OUTPUT);
 		glDebugMessageCallback(MessageCallback, 0);
 
+		// setup 2D renderer
+		if (!m_renderer_2d.Setup(this))
+		{
+			DBG_ERROR("Failed to setup 2D renderer");
+			ImGui_ImplOpenGL3_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+			ImGui::DestroyContext();
+
+			glfwDestroyWindow(m_window);
+			glfwTerminate();
+			return false;
+		}
+
 		m_is_init = true;
 		return true;
 	}
-	void Mango::Release()
+	void MangoCore::Release()
 	{
 		if (!m_is_init)
 			return;
@@ -99,7 +115,7 @@ namespace Mango
 		m_is_init = false;
 	}
 
-	bool Mango::NextFrame(const glm::vec3& clear_color)
+	bool MangoCore::NextFrame(const glm::vec3& clear_color)
 	{
 		if (glfwWindowShouldClose(m_window))
 			return false;
@@ -114,7 +130,7 @@ namespace Mango
 
 		return true;
 	}
-	void Mango::EndFrame()
+	void MangoCore::EndFrame()
 	{
 		// imgui
 		ImGui::Render();
