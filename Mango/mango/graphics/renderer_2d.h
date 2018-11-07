@@ -54,6 +54,10 @@ namespace Mango
 		}
 
 		void RenderTexturedTriangle(const TrianglePos2D& pos, const TriangleTexCoord2D& tex_coord, const Texture& texture);
+		void RenderTexturedTriangle(glm::i16vec2 vert_1, glm::i16vec2 vert_2, glm::i16vec2 vert_3, glm::fvec2 tex_coord_1, glm::fvec2 tex_coord_2, glm::fvec2 tex_coord_3, const Texture& texture)
+		{
+			RenderTexturedTriangle({ vert_1, vert_2, vert_3 }, { tex_coord_1, tex_coord_2, tex_coord_3 }, texture);
+		}
 
 		void SetProjMatrix(const glm::mat4& mat) { m_proj_matrix = mat; }
 		const glm::mat4& GetProjMatrix() const { return m_proj_matrix; }
@@ -71,7 +75,7 @@ namespace Mango
 		glm::mat4 m_proj_matrix,
 			m_view_matrix;
 		
-		struct
+		struct // m_triangle_queue
 		{
 			static constexpr size_t MAX_TRIANGLES = 50;
 			size_t m_num_triangles = 0;
@@ -85,7 +89,7 @@ namespace Mango
 				m_color_buffer;
 		} m_triangle_queue;
 
-		struct
+		struct // m_textured_triangles
 		{
 			VertexArray m_vao;
 			VertexBuffer m_position_buffer,
