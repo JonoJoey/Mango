@@ -28,16 +28,13 @@ int main()
 	triangle_col.m_color_2 = { 0, 255, 0, 255 };
 	triangle_col.m_color_3 = { 0, 0, 255, 255 };
 
-	float vertices[] = 
-	{
-		400.f, 100.f, 
-		100.f, 500.f,
-		700.f, 500.f
-	};
-	unsigned int indices[] =
-	{
-		0, 1, 2
-	};
+	Mango::TriangleTexCoord2D triangle_tex_coords;
+	triangle_tex_coords.m_tex_coord_1 = { 0.5f, 1.f };
+	triangle_tex_coords.m_tex_coord_2 = { 0.f, 0.f};
+	triangle_tex_coords.m_tex_coord_3 = { 1.f, 0.f };
+
+	Mango::Texture texture;
+	ASSERT(texture.Setup("res/textures/mango.jpg"));
 	
 	while (mango.NextFrame({ 0.f, 1.f, 1.f }))
 	{
@@ -48,7 +45,9 @@ int main()
 
 		mango.GetRenderer2D().Start();
 		
-		mango.GetRenderer2D().RenderTriangle({ 400, 100 }, { 100, 500 }, { 700, 500 }, { 255, 0, 0, 255 }, { 0, 255, 0, 255 }, { 0, 0, 255, 255 });
+		mango.GetRenderer2D().RenderTexturedTriangle(triangle_pos, triangle_tex_coords, texture);
+		//mango.GetRenderer2D().RenderTriangle({ 400, 100 }, { 100, 500 }, { 700, 500 }, { 255, 0, 0, 255 }, { 0, 255, 0, 255 }, { 0, 0, 255, 255 });
+		//mango.GetRenderer2D().RenderTriangle({ 500, 100 }, { 200, 500 }, { 800, 500 }, { 255, 0, 0, 255 }, { 0, 255, 0, 255 }, { 0, 0, 255, 255 });
 
 		mango.GetRenderer2D().End();
 

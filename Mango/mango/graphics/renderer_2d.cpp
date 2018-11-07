@@ -25,18 +25,34 @@ namespace Mango
 
 		m_basic_shader.Bind();
 
-		m_triangle_queue.m_positions = new TrianglePos2D[m_triangle_queue.MAX_TRIANGLES * 3];
-		m_triangle_queue.m_position_buffer.Setup(m_triangle_queue.MAX_TRIANGLES * 3, sizeof(TrianglePos2D), nullptr, GL_DYNAMIC_DRAW);
+		m_triangle_queue.m_positions = new TrianglePos2D[m_triangle_queue.MAX_TRIANGLES];
+		m_triangle_queue.m_position_buffer.Setup(m_triangle_queue.MAX_TRIANGLES, sizeof(TrianglePos2D), nullptr, GL_DYNAMIC_DRAW);
 		m_triangle_queue.m_position_buffer.Bind();
 		VertexArray::EnableAttribute(0, 2, GL_SHORT, GL_FALSE, 0, 0);
 		VertexBuffer::Unbind();
 
-		m_triangle_queue.m_colors = new TriangleColor2D[m_triangle_queue.MAX_TRIANGLES * 3];
-		m_triangle_queue.m_color_buffer.Setup(m_triangle_queue.MAX_TRIANGLES * 3, sizeof(TriangleColor2D), nullptr, GL_DYNAMIC_DRAW);
+		m_triangle_queue.m_colors = new TriangleColor2D[m_triangle_queue.MAX_TRIANGLES];
+		m_triangle_queue.m_color_buffer.Setup(m_triangle_queue.MAX_TRIANGLES, sizeof(TriangleColor2D), nullptr, GL_DYNAMIC_DRAW);
 		m_triangle_queue.m_color_buffer.Bind();
 		VertexArray::EnableAttribute(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, 0);
 		VertexBuffer::Unbind();
 		VertexArray::Unbind();
+
+		// m_textured_triangles
+		m_textured_triangles.m_vao.Setup();
+		m_textured_triangles.m_vao.Bind();
+
+		m_texture_shader.Bind();
+
+		m_textured_triangles.m_position_buffer.Setup(1, sizeof(TrianglePos2D), nullptr, GL_DYNAMIC_DRAW);
+		m_textured_triangles.m_position_buffer.Bind();
+		VertexArray::EnableAttribute(0, 2, GL_SHORT, GL_FALSE, 0, 0);
+		VertexBuffer::Unbind();
+
+		m_textured_triangles.m_tex_coord_buffer.Setup(1, sizeof(TriangleTexCoord2D), nullptr, GL_DYNAMIC_DRAW);
+		m_textured_triangles.m_tex_coord_buffer.Bind();
+		VertexArray::EnableAttribute(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		VertexBuffer::Unbind();
 
 		return true;
 	}
@@ -81,9 +97,9 @@ namespace Mango
 
 		// update buffers
 		m_triangle_queue.m_position_buffer.Bind();
-		glBufferSubData(GL_ARRAY_BUFFER, 0, m_triangle_queue.m_num_triangles * 3 * sizeof(TrianglePos2D), m_triangle_queue.m_positions);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, m_triangle_queue.m_num_triangles * sizeof(TrianglePos2D), m_triangle_queue.m_positions);
 		m_triangle_queue.m_color_buffer.Bind();
-		glBufferSubData(GL_ARRAY_BUFFER, 0, m_triangle_queue.m_num_triangles * 3 * sizeof(TriangleColor2D), m_triangle_queue.m_colors);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, m_triangle_queue.m_num_triangles * sizeof(TriangleColor2D), m_triangle_queue.m_colors);
 
 		// draw
 		glDisable(GL_DEPTH_TEST);
@@ -107,5 +123,31 @@ namespace Mango
 		m_triangle_queue.m_colors[m_triangle_queue.m_num_triangles] = color;
 
 		m_triangle_queue.m_num_triangles++;
+	}
+
+	void Renderer2D::RenderTexturedTriangle(const TrianglePos2D& pos, const TriangleTexCoord2D& tex_coord, const Texture& texture)
+	{
+		m_textured_triangles.m_vao.Bind();
+		m_texture_shader.Bind();
+
+		Shader::SetUniformMat4(m_texture_shader.GetUniformLoc("u_ProjectionMatrix"), m_proj_matrix);
+		Shader::SetUniformMat4(m_texture_shader.GetUniformLoc("u_ViewMatrix"), m_view_matrix);
+
+		texture.Bind();
+
+		// update buffers
+		m_textured_triangles.m_position_buffer.Bind();
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(TrianglePos2D), &pos);
+		m_textured_triangles.m_tex_coord_buffer.Bind();
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(TriangleTexCoord2D), &tex_coord);
+
+		// draw
+		glDisable(GL_DEPTH_TEST);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glEnable(GL_DEPTH_TEST);
+
+		VertexBuffer::Unbind();
+		Shader::Unbind();
+		VertexArray::Unbind();
 	}
 } // namespace Mango

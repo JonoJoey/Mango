@@ -5,6 +5,7 @@
 #include "wrappers/shader.h"
 #include "wrappers/vertex_array.h"
 #include "wrappers/buffer_object.h"
+#include "wrappers/texture.h"
 
 
 namespace Mango
@@ -22,6 +23,12 @@ namespace Mango
 		glm::u8vec4 m_color_1;
 		glm::u8vec4 m_color_2;
 		glm::u8vec4 m_color_3;
+	};
+	struct TriangleTexCoord2D
+	{
+		glm::fvec2 m_tex_coord_1;
+		glm::fvec2 m_tex_coord_2;
+		glm::fvec2 m_tex_coord_3;
 	};
 
 	class Renderer2D : private Utility
@@ -46,6 +53,8 @@ namespace Mango
 			RenderTriangle({ vert_1, vert_2, vert_3 }, { color, color, color });
 		}
 
+		void RenderTexturedTriangle(const TrianglePos2D& pos, const TriangleTexCoord2D& tex_coord, const Texture& texture);
+
 		void SetProjMatrix(const glm::mat4& mat) { m_proj_matrix = mat; }
 		const glm::mat4& GetProjMatrix() const { return m_proj_matrix; }
 
@@ -67,7 +76,7 @@ namespace Mango
 			static constexpr size_t MAX_TRIANGLES = 50;
 			size_t m_num_triangles = 0;
 
-			// arrays of size MAX_TRIANGLES * 3
+			// arrays of size MAX_TRIANGLES
 			TrianglePos2D* m_positions = nullptr;
 			TriangleColor2D* m_colors = nullptr;
 
@@ -75,5 +84,12 @@ namespace Mango
 			VertexBuffer m_position_buffer,
 				m_color_buffer;
 		} m_triangle_queue;
+
+		struct
+		{
+			VertexArray m_vao;
+			VertexBuffer m_position_buffer,
+				m_tex_coord_buffer;
+		} m_textured_triangles;
 	};
 } // namespace Mango
