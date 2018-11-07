@@ -95,6 +95,21 @@ namespace Mango
 			return false;
 		}
 
+		// setup 3D renderer
+		if (!m_renderer_3d.Setup(this))
+		{
+			DBG_ERROR("Failed to setup 3D renderer");
+			m_renderer_2d.Release();
+
+			ImGui_ImplOpenGL3_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+			ImGui::DestroyContext();
+
+			glfwDestroyWindow(m_window);
+			glfwTerminate();
+			return false;
+		}
+
 		m_is_init = true;
 		return true;
 	}

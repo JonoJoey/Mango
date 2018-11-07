@@ -60,6 +60,12 @@
     <ClCompile Include="dep\stb\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mango\graphics\renderer_3d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mango\graphics\model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mango\common.h">
@@ -828,6 +834,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dep\stb\stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\graphics\renderer_3d.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\graphics\model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
