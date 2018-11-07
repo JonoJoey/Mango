@@ -38,24 +38,6 @@ int main()
 	{
 		0, 1, 2
 	};
-
-	//Mango::Shader shader(Mango::Shader::ReadFile("res/shaders/basic_vs.glsl"), Mango::Shader::ReadFile("res/shaders/basic_fs.glsl"));
-	//shader.Bind();
-	//
-	//Mango::VertexArray vao;
-	//vao.Setup();
-	//vao.Bind();
-	//
-	//Mango::IndexBuffer ibo(3, sizeof(unsigned int), indices, GL_STATIC_DRAW);
-	//ibo.Bind();
-	//
-	//Mango::VertexBuffer position_vbo(3, sizeof(glm::i16vec2), &triangle_pos, GL_STATIC_DRAW);
-	//position_vbo.Bind();
-	//Mango::VertexArray::EnableAttribute(0, 2, GL_SHORT, GL_FALSE, 0, 0);
-	//
-	//Mango::VertexBuffer color_vbo(3, sizeof(glm::u8vec4), &triangle_col, GL_STATIC_DRAW);
-	//color_vbo.Bind();
-	//Mango::VertexArray::EnableAttribute(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, 0);
 	
 	while (mango.NextFrame({ 0.f, 1.f, 1.f }))
 	{
@@ -65,9 +47,11 @@ int main()
 		ImGui::End();
 
 		mango.GetRenderer2D().Start();
-		mango.GetRenderer2D().RenderTriangle(triangle_pos, triangle_col);
-		mango.GetRenderer2D().RenderTriangle(triangle_pos_2, triangle_col);
+		
+		mango.GetRenderer2D().RenderTriangle({ 400, 100 }, { 100, 500 }, { 700, 500 }, { 255, 0, 0, 255 }, { 0, 255, 0, 255 }, { 0, 0, 255, 255 });
+
 		mango.GetRenderer2D().End();
+
 		// 2d rendering
 		//mango.GetRenderer2D().Start();
 		//shader.Bind();

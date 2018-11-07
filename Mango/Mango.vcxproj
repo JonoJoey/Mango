@@ -132,6 +132,7 @@
     <ClCompile Include="dep\imgui\imgui_impl_glfw.cpp" />
     <ClCompile Include="dep\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="dep\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="dep\stb\stb_image.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mango\graphics\renderer_2d.cpp" />
     <ClCompile Include="mango\graphics\wrappers\shader.cpp" />
@@ -388,6 +389,7 @@
     <ClInclude Include="dep\imgui\imstb_rectpack.h" />
     <ClInclude Include="dep\imgui\imstb_textedit.h" />
     <ClInclude Include="dep\imgui\imstb_truetype.h" />
+    <ClInclude Include="dep\stb\stb_image.h" />
     <ClInclude Include="mango\common.h" />
     <ClInclude Include="mango\graphics\renderer_2d.h" />
     <ClInclude Include="mango\graphics\wrappers\buffer_object.h" />

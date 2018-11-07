@@ -11,7 +11,7 @@ namespace Mango
 
 		// matrices
 		const auto window_size = mango->GetWindowSize();
-		m_proj_matrix = glm::ortho(0, window_size[0], window_size[1], 0);
+		m_proj_matrix = glm::ortho(0.f, float(window_size[0]), float(window_size[1]), 0.f);
 		m_view_matrix = glm::mat4(1.f);
 
 		// shaders
@@ -36,7 +36,6 @@ namespace Mango
 		m_triangle_queue.m_color_buffer.Bind();
 		VertexArray::EnableAttribute(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, 0);
 		VertexBuffer::Unbind();
-
 		VertexArray::Unbind();
 
 		return true;

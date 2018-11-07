@@ -37,6 +37,14 @@ namespace Mango
 		void End();
 
 		void RenderTriangle(const TrianglePos2D& pos, const TriangleColor2D& color);
+		void RenderTriangle(glm::i16vec2 vert_1, glm::i16vec2 vert_2, glm::i16vec2 vert_3, glm::u8vec4 color_1, glm::u8vec4 color_2, glm::u8vec4 color_3)
+		{
+			RenderTriangle({ vert_1, vert_2, vert_3 }, { color_1, color_2, color_3 });
+		}
+		void RenderTriangle(glm::i16vec2 vert_1, glm::i16vec2 vert_2, glm::i16vec2 vert_3, glm::u8vec4 color)
+		{
+			RenderTriangle({ vert_1, vert_2, vert_3 }, { color, color, color });
+		}
 
 		void SetProjMatrix(const glm::mat4& mat) { m_proj_matrix = mat; }
 		const glm::mat4& GetProjMatrix() const { return m_proj_matrix; }
