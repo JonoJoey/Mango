@@ -66,6 +66,9 @@
     <ClCompile Include="mango\graphics\model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mango\misc\file_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mango\common.h">
@@ -840,6 +843,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mango\graphics\model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\misc\file_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

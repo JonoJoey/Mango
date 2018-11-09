@@ -9,6 +9,7 @@
 
 #include "misc/utility.h"
 #include "misc/maths.h"
+#include "misc/file_parser.h"
 
 // glew
 #define GLEW_STATIC

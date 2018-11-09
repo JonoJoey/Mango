@@ -3,6 +3,14 @@
 #include "mango/mango.h"
 
 
+bool LoadModel(Mango::Model& model, const std::string& file_path)
+{
+	Mango::WavefrontFormat format;
+	if (!Mango::LoadWavefront(file_path, format))
+		return false;
+
+	return true;
+}
 int main()
 {
 	Mango::MangoCore mango;
@@ -27,6 +35,15 @@ int main()
 	unsigned int indices[] = {
 		0, 1, 2
 	};
+
+	Mango::Model new_model;
+	if (!LoadModel(new_model, "res/models/cube.obj"))
+	{
+		DBG_ERROR("Failed to load model");
+		mango.Release();
+		system("pause");
+		return EXIT_FAILURE;
+	}
 
 	Mango::Model cube_model;
 	cube_model.Setup(GL_TRIANGLES, 3, GL_UNSIGNED_INT, indices);
