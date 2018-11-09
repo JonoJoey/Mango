@@ -4,11 +4,14 @@
 
 #include "misc/utility.h"
 
-#include "graphics/renderer_2d.h"
-#include "graphics/renderer_3d.h"
 #include "graphics/wrappers/shader.h"
 #include "graphics/wrappers/buffer_object.h"
 #include "graphics/wrappers/vertex_array.h"
+
+#include "graphics/model.h"
+
+#include "graphics/renderer_2d.h"
+#include "graphics/renderer_3d.h"
 
 namespace Mango
 {

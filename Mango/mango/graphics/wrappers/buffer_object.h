@@ -10,16 +10,14 @@ namespace Mango
 	{
 	public:
 		BufferObject() = default;
-		BufferObject(size_t count, size_t element_size, const void* data, unsigned int usage) { Setup(count, element_size, data, usage); }
+		BufferObject(size_t size, const void* data, unsigned int usage = GL_DYNAMIC_DRAW) { Setup(size, data, usage); }
 		~BufferObject() { Release(); }
 
-		void Setup(size_t count, size_t element_size, const void* data, unsigned int usage)
+		void Setup(size_t size, const void* data, unsigned int usage = GL_DYNAMIC_DRAW)
 		{
-			m_count = count;
-
 			glGenBuffers(1, &m_buffer);
 			glBindBuffer(target, m_buffer);
-			glBufferData(target, count * element_size, data, usage);
+			glBufferData(target, size, data, usage);
 			glBindBuffer(target, 0);
 		}
 		void Release() override
@@ -38,14 +36,37 @@ namespace Mango
 		void Bind() const { glBindBuffer(target, m_buffer); }
 		static void Unbind() { glBindBuffer(target, 0); }
 
+		unsigned int& GetBufferObject() { return m_buffer; }
 		unsigned int GetBufferObject() const { return m_buffer; }
-		size_t GetCount() const { return m_count; }
 
 	private:
 		unsigned int m_buffer = 0xFFFFFFFF;
-		size_t m_count = 0;
 	};
 
-	typedef BufferObject<GL_ELEMENT_ARRAY_BUFFER> IndexBuffer;
+	class IndexBuffer : public BufferObject<GL_ELEMENT_ARRAY_BUFFER>
+	{
+	public:
+		IndexBuffer() = default;
+		IndexBuffer(size_t count, unsigned int index_type, const void* data, unsigned int usage) { Setup(count, index_type, data, usage); }
+
+		void Setup(size_t count, unsigned int index_type, const void* data, unsigned int usage)
+		{
+			m_count = count;
+			m_type = index_type;
+
+			glGenBuffers(1, &GetBufferObject());
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GetBufferObject());
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * GetElementSize(index_type), data, usage);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		}
+
+		size_t GetCount() const { return m_count; }
+		unsigned int GetType() const { return m_type; }
+
+	private:
+		size_t m_count;
+		unsigned int m_type;
+	};
+
 	typedef BufferObject<GL_ARRAY_BUFFER> VertexBuffer;
 } // namespace Mango

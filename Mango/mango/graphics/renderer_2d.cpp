@@ -14,10 +14,6 @@ namespace Mango
 		m_proj_matrix = glm::ortho(0.f, float(window_size[0]), float(window_size[1]), 0.f);
 		m_view_matrix = glm::mat4(1.f);
 
-		// shaders
-		ASSERT(m_basic_shader.Setup(Shader::ReadFile("res/shaders/basic_vs.glsl"), Shader::ReadFile("res/shaders/basic_fs.glsl")));
-		ASSERT(m_texture_shader.Setup(Shader::ReadFile("res/shaders/textured_vs.glsl"), Shader::ReadFile("res/shaders/textured_fs.glsl")));
-
 		return true;
 	}
 	void Renderer2D::Release()
@@ -25,10 +21,6 @@ namespace Mango
 		if (!IsUtilRegistered())
 			return;
 		UnregisterUtil();
-
-		// shaders
-		m_basic_shader.Release();
-		m_texture_shader.Release();
 	}
 
 	void Renderer2D::Start()

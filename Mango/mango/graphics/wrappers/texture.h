@@ -9,6 +9,7 @@ namespace Mango
 	{
 	public:
 		Texture() = default;
+		Texture(const std::string& file_path, float mip_map_lod = 0.f) { ASSERT(Setup(file_path, mip_map_lod)); }
 		~Texture() { Release(); }
 
 		bool Setup(const std::string& file_path, float mip_map_lod = 0.f);

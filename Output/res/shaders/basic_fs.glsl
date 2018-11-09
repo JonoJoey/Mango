@@ -1,13 +1,10 @@
 #version 330 core
 
-layout(location = 0) out vec4 out_Color;
+layout(location = 0) out vec4 out_color;
 
-in vec4 _Color;
+in vec4 _color;
 
 void main()
 {
-    out_Color = _Color;
-    if (out_Color.a < 0.01) {
-      discard;
-    }
+    out_color = _color;
 }
