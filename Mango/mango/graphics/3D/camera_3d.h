@@ -13,11 +13,12 @@ namespace Mango
 
 		glm::mat4 GetViewMatrix() const;
 
-		void SetPosition(const glm::vec3& position) { m_position = position; }
-		glm::vec3 GetPosition() { return m_position; }
+		void Move(const glm::vec3& offset);
+		void SetPosition(const glm::vec3& position);
+		glm::vec3 GetPosition();
 
-		void SetViewangle(const glm::vec3& viewangle) { m_viewangle = viewangle; }
-		glm::vec3 GetViewangle() { return m_viewangle; }
+		void SetViewangle(const glm::vec3& viewangle /* radians */);
+		glm::vec3 GetViewangle();
 
 	private:
 		glm::vec3 m_position = { 0.f, 0.f, 0.f };

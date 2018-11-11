@@ -58,4 +58,7 @@ inline size_t GetElementSize(unsigned int element)
 		case GL_4_BYTES: return 4;
 		case GL_DOUBLE: return sizeof(double);
 	}
+
+	DBG_ERROR("Element type not supported - 0x%X", element);
+	ASSERT(false);
 }

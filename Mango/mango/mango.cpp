@@ -8,6 +8,65 @@ namespace
 		glViewport(0, 0, width, height);
 	}
 
+	// input
+	void MousePositionCallback(GLFWwindow* window, double xpos, double ypos)
+	{
+		for (auto input : Mango::MangoCore::GetInputInterfaces())
+			input->OnMouseMove(float(xpos), float(ypos));
+	}
+	void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+	{
+		ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+
+		for (auto input : Mango::MangoCore::GetInputInterfaces())
+		{
+			for (auto input : Mango::MangoCore::GetInputInterfaces())
+			{
+				switch (action)
+				{
+				case GLFW_PRESS:
+				case GLFW_REPEAT:
+					input->OnMouseButtonPress(button, action == GLFW_REPEAT);
+					break;
+				case GLFW_RELEASE:
+					input->OnMouseButtonRelease(button);
+					break;
+				}
+			}
+		}
+	}
+	void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+	{
+		ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+	}
+	void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+	{
+		ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+
+		auto c_str = glfwGetKeyName(key, scancode);
+		std::string key_name = c_str ? c_str : "";
+
+		// GLFW_PRESS, GLFW_REPEAT or GLFW_RELEASE
+		for (auto input : Mango::MangoCore::GetInputInterfaces())
+		{
+			switch (action)
+			{
+			case GLFW_PRESS:
+			case GLFW_REPEAT:
+				input->OnKeyPress(key, key_name, action == GLFW_REPEAT);
+				break;
+			case GLFW_RELEASE:
+				input->OnKeyRelease(key, key_name);
+				break;
+			}
+		}
+	}
+	void CharCallback(GLFWwindow* window, unsigned int codepoint)
+	{
+		ImGui_ImplGlfw_CharCallback(window, codepoint);
+	}
+
+	// opengl messages
 	void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, 
 		GLsizei length, const GLchar* message, const void* user_param)
 	{
@@ -23,12 +82,12 @@ namespace
 
 namespace Mango
 {
-
-	bool MangoCore::m_is_init = false;
+	bool MangoCore::is_init = false;
+	std::deque<IInputHandler*> MangoCore::input_interfaces;
 
 	bool MangoCore::Setup(const std::string& window_name, const glm::ivec2& window_size)
 	{
-		if (m_is_init)
+		if (is_init)
 		{
 			DBG_ERROR("Cannot have more than 2 MangoCores running at the same time!");
 			return false;
@@ -55,7 +114,14 @@ namespace Mango
 		}
 
 		glfwMakeContextCurrent(m_window);
+
+		// callbacks
 		glfwSetFramebufferSizeCallback(m_window, FramebufferSizeCallback);
+		glfwSetCursorPosCallback(m_window, MousePositionCallback);
+		glfwSetKeyCallback(m_window, KeyCallback);
+		glfwSetMouseButtonCallback(m_window, MouseButtonCallback);
+		glfwSetScrollCallback(m_window, ScrollCallback);
+		glfwSetCharCallback(m_window, CharCallback);
 
 		// init glew
 		if (const auto error = glewInit(); error != GLEW_OK)
@@ -69,7 +135,7 @@ namespace Mango
 		// Setup Dear ImGui binding
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
-		ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+		ImGui_ImplGlfw_InitForOpenGL(m_window, false);
 		ImGui_ImplOpenGL3_Init();
 		ImGui::StyleColorsDark();
 
@@ -117,13 +183,17 @@ namespace Mango
 			return false;
 		}
 
-		m_is_init = true;
+		is_init = true;
+
 		return true;
 	}
 	void MangoCore::Release()
 	{
-		if (!m_is_init)
+		if (!is_init)
 			return;
+
+		is_init = false;
+		input_interfaces.clear();
 
 		Utility::Cleanup();
 
@@ -133,8 +203,6 @@ namespace Mango
 
 		glfwDestroyWindow(m_window);
 		glfwTerminate();
-
-		m_is_init = false;
 	}
 
 	bool MangoCore::NextFrame(const glm::vec3& clear_color)
@@ -150,6 +218,11 @@ namespace Mango
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+		static double last_time = 0.0;
+		const double time = glfwGetTime();
+		m_frame_time = float(time - last_time);
+		last_time = time;
+
 		return true;
 	}
 	void MangoCore::EndFrame()
@@ -162,8 +235,47 @@ namespace Mango
 		glfwPollEvents();
 	}
 
-	void MangoCore::RegisterInput(IInput* input)
+	bool MangoCore::RegisterInputHandler(IInputHandler* input)
 	{
+		ASSERT(input);
+		
+		for (auto i : input_interfaces)
+		{
+			if (i == input)
+			{
+				DBG_ERROR("Input interface already registered");
+				return false;
+			}
+		}
 
+		input_interfaces.push_back(input);
+		return true;
 	}
+	void MangoCore::UnregisterInputHandler(IInputHandler* input)
+	{
+		for (size_t i = 0; i < input_interfaces.size(); i++)
+		{
+			if (input_interfaces[i] == input)
+			{
+				input_interfaces.erase(input_interfaces.begin() + i);
+				return;
+			}
+		}
+	}
+
+	void MangoCore::SetMousePosition(glm::vec2 position)
+	{
+		glfwSetCursorPos(m_window, double(position.x), double(position.y));
+	}
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+#include <GL/wglew.h>
+	void MangoCore::SetVerticalSync(bool on)
+	{
+		static auto SwapInterval = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
+		SwapInterval(on ? 1 : 0);
+	}
+#else
+	void MangoCore::SetVerticalSync(bool on) {}
+#endif
 } // namespace Mango

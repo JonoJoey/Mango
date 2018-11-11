@@ -143,7 +143,6 @@
     <ClCompile Include="mango\graphics\wrappers\vertex_array.cpp" />
     <ClCompile Include="mango\mango.cpp" />
     <ClCompile Include="mango\misc\file_parser.cpp" />
-    <ClCompile Include="mango\misc\input.cpp" />
     <ClCompile Include="mango\misc\maths.cpp" />
     <ClCompile Include="mango\misc\utility.cpp" />
   </ItemGroup>
@@ -406,7 +405,7 @@
     <ClInclude Include="mango\graphics\wrappers\vertex_array.h" />
     <ClInclude Include="mango\mango.h" />
     <ClInclude Include="mango\misc\file_parser.h" />
-    <ClInclude Include="mango\misc\input.h" />
+    <ClInclude Include="mango\misc\input_handler.h" />
     <ClInclude Include="mango\misc\maths.h" />
     <ClInclude Include="mango\misc\utility.h" />
   </ItemGroup>
