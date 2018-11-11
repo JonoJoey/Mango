@@ -72,6 +72,12 @@
     <ClCompile Include="mango\graphics\3D\camera_3d.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mango\graphics\3D\light_3d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mango\graphics\3D\entity_3d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mango\common.h">
@@ -855,6 +861,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mango\misc\input_handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\graphics\3D\materials_3d.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\graphics\3D\light_3d.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\graphics\3D\entity_3d.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

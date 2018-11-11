@@ -3,6 +3,9 @@
 #include "../../common.h"
 
 #include "camera_3d.h"
+#include "light_3d.h"
+#include "entity_3d.h"
+#include "materials_3d.h"
 
 
 namespace Mango
