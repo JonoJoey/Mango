@@ -23,9 +23,16 @@ namespace
 
 namespace Mango
 {
+
+	bool MangoCore::m_is_init = false;
+
 	bool MangoCore::Setup(const std::string& window_name, const glm::ivec2& window_size)
 	{
-		ASSERT(!m_is_init);
+		if (m_is_init)
+		{
+			DBG_ERROR("Cannot have more than 2 MangoCores running at the same time!");
+			return false;
+		}
 
 		// init glfw
 		if (!glfwInit())
@@ -153,5 +160,10 @@ namespace Mango
 
 		glfwSwapBuffers(m_window);
 		glfwPollEvents();
+	}
+
+	void MangoCore::RegisterInput(IInput* input)
+	{
+
 	}
 } // namespace Mango

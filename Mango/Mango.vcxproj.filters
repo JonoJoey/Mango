@@ -42,9 +42,6 @@
     <ClCompile Include="mango\misc\utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mango\graphics\renderer_2d.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mango\graphics\wrappers\shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -60,13 +57,22 @@
     <ClCompile Include="dep\stb\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mango\graphics\renderer_3d.cpp">
+    <ClCompile Include="mango\misc\file_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mango\graphics\2D\renderer_2d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mango\graphics\3D\renderer_3d.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mango\graphics\model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mango\misc\file_parser.cpp">
+    <ClCompile Include="mango\graphics\3D\camera_3d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mango\misc\input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -818,9 +824,6 @@
     <ClInclude Include="mango\misc\utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mango\graphics\renderer_2d.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="mango\graphics\wrappers\shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -839,13 +842,22 @@
     <ClInclude Include="dep\stb\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mango\graphics\renderer_3d.h">
+    <ClInclude Include="mango\misc\file_parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\graphics\2D\renderer_2d.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\graphics\3D\renderer_3d.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mango\graphics\model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mango\misc\file_parser.h">
+    <ClInclude Include="mango\graphics\3D\camera_3d.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\misc\input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

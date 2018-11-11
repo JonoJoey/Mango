@@ -24,11 +24,20 @@ namespace Mango
 
 		int GetUniformLoc(const std::string& name);
 
-		static void SetUniformF1(int location, float v);
-		static void SetUniformF2(int location, float v1, float v2);
-		static void SetUniformF3(int location, float v1, float v2, float v3);
-		static void SetUniformF4(int location, float v1, float v2, float v3, float v4);
-		static void SetUniformMat4(int location, const glm::mat4& mat);
+		void SetUniformF1(int location, float v) const;
+		void SetUniformF1(const std::string& name, float v) { SetUniformF1(GetUniformLoc(name), v); }
+
+		void SetUniformF2(int location, float v1, float v2) const;
+		void SetUniformF2(const std::string& name, float v1, float v2) { SetUniformF2(GetUniformLoc(name), v1, v2); }
+
+		void SetUniformF3(int location, float v1, float v2, float v3) const;
+		void SetUniformF3(const std::string& name, float v1, float v2, float v3) { SetUniformF3(GetUniformLoc(name), v1, v2, v3); }
+
+		void SetUniformF4(int location, float v1, float v2, float v3, float v4) const;
+		void SetUniformF4(const std::string& name, float v1, float v2, float v3, float v4) { SetUniformF4(GetUniformLoc(name), v1, v2, v3, v4); }
+
+		void SetUniformMat4(int location, const glm::mat4& mat) const;
+		void SetUniformMat4(const std::string& name, const glm::mat4& mat) { SetUniformMat4(GetUniformLoc(name), mat); }
 
 	private:
 		unsigned int m_program = 0xFFFFFFFF;

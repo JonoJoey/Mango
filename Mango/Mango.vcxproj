@@ -134,14 +134,16 @@
     <ClCompile Include="dep\imgui\imgui_widgets.cpp" />
     <ClCompile Include="dep\stb\stb_image.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mango\graphics\3D\camera_3d.cpp" />
     <ClCompile Include="mango\graphics\model.cpp" />
-    <ClCompile Include="mango\graphics\renderer_2d.cpp" />
-    <ClCompile Include="mango\graphics\renderer_3d.cpp" />
+    <ClCompile Include="mango\graphics\2D\renderer_2d.cpp" />
+    <ClCompile Include="mango\graphics\3D\renderer_3d.cpp" />
     <ClCompile Include="mango\graphics\wrappers\shader.cpp" />
     <ClCompile Include="mango\graphics\wrappers\texture.cpp" />
     <ClCompile Include="mango\graphics\wrappers\vertex_array.cpp" />
     <ClCompile Include="mango\mango.cpp" />
     <ClCompile Include="mango\misc\file_parser.cpp" />
+    <ClCompile Include="mango\misc\input.cpp" />
     <ClCompile Include="mango\misc\maths.cpp" />
     <ClCompile Include="mango\misc\utility.cpp" />
   </ItemGroup>
@@ -394,15 +396,17 @@
     <ClInclude Include="dep\imgui\imstb_truetype.h" />
     <ClInclude Include="dep\stb\stb_image.h" />
     <ClInclude Include="mango\common.h" />
+    <ClInclude Include="mango\graphics\3D\camera_3d.h" />
     <ClInclude Include="mango\graphics\model.h" />
-    <ClInclude Include="mango\graphics\renderer_2d.h" />
-    <ClInclude Include="mango\graphics\renderer_3d.h" />
+    <ClInclude Include="mango\graphics\2D\renderer_2d.h" />
+    <ClInclude Include="mango\graphics\3D\renderer_3d.h" />
     <ClInclude Include="mango\graphics\wrappers\buffer_object.h" />
     <ClInclude Include="mango\graphics\wrappers\shader.h" />
     <ClInclude Include="mango\graphics\wrappers\texture.h" />
     <ClInclude Include="mango\graphics\wrappers\vertex_array.h" />
     <ClInclude Include="mango\mango.h" />
     <ClInclude Include="mango\misc\file_parser.h" />
+    <ClInclude Include="mango\misc\input.h" />
     <ClInclude Include="mango\misc\maths.h" />
     <ClInclude Include="mango\misc\utility.h" />
   </ItemGroup>

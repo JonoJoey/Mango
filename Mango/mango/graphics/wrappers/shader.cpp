@@ -82,23 +82,23 @@ namespace Mango
 		return location;
 	}
 
-	void Shader::SetUniformF1(int location, float v)
+	void Shader::SetUniformF1(int location, float v) const
 	{
 		glUniform1f(location, v);
 	}
-	void Shader::SetUniformF2(int location, float v1, float v2)
+	void Shader::SetUniformF2(int location, float v1, float v2) const
 	{
 		glUniform2f(location, v1, v2);
 	}
-	void Shader::SetUniformF3(int location, float v1, float v2, float v3)
+	void Shader::SetUniformF3(int location, float v1, float v2, float v3) const
 	{
 		glUniform3f(location, v1, v2, v3);
 	}
-	void Shader::SetUniformF4(int location, float v1, float v2, float v3, float v4)
+	void Shader::SetUniformF4(int location, float v1, float v2, float v3, float v4) const
 	{
 		glUniform4f(location, v1, v2, v3, v4);
 	}
-	void Shader::SetUniformMat4(int location, const glm::mat4& mat)
+	void Shader::SetUniformMat4(int location, const glm::mat4& mat) const
 	{
 		glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
 	}

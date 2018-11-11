@@ -9,8 +9,29 @@ bool LoadModel(Mango::Model& model, const std::string& file_path)
 	if (!Mango::LoadWavefront(file_path, format))
 		return false;
 
+	model.Setup(GL_TRIANGLES, format.m_indices.size() * 3, GL_UNSIGNED_INT, format.m_indices.data());
+	model.GetVAO().Bind();
+
+	auto vbo = &model.AddVBO();
+	vbo->Setup(format.m_positions.size() * 3 * sizeof(float), format.m_positions.data());
+	vbo->Bind();
+	Mango::VertexArray::EnableAttribute(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	vbo = &model.AddVBO();
+	vbo->Setup(format.m_tex_coords.size() * 2 * sizeof(float), format.m_tex_coords.data());
+	vbo->Bind();
+	Mango::VertexArray::EnableAttribute(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	Mango::VertexArray::Unbind();
+
 	return true;
 }
+
+void HandleCamera(Mango::Camera3D& camera)
+{
+
+}
+
 int main()
 {
 	Mango::MangoCore mango;
@@ -21,23 +42,8 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	float vertices[] = {
-		400.f, 500.f, 1.f,
-		100.f, 100.f, 1.f,
-		700.f, 100.f, 1.f
-	};
-	float colors[] = {
-		1.f, 0.f, 0.f, 1.f,
-		0.f, 1.f, 0.f, 1.f,
-		0.f, 0.f, 1.f, 1.f
-	};
-
-	unsigned int indices[] = {
-		0, 1, 2
-	};
-
-	Mango::Model new_model;
-	if (!LoadModel(new_model, "res/models/cube.obj"))
+	Mango::Model cube_model;
+	if (!LoadModel(cube_model, "res/models/cube.obj"))
 	{
 		DBG_ERROR("Failed to load model");
 		mango.Release();
@@ -45,29 +51,10 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	Mango::Model cube_model;
-	cube_model.Setup(GL_TRIANGLES, 3, GL_UNSIGNED_INT, indices);
-	cube_model.GetVAO().Bind();
-
-	auto vbo = &cube_model.AddVBO();
-	vbo->Setup(sizeof(float) * 3 * 3, vertices);
-	vbo->Bind();
-	Mango::VertexArray::EnableAttribute(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	vbo = &cube_model.AddVBO();
-	vbo->Setup(sizeof(float) * 3 * 4, colors);
-	vbo->Bind();
-	Mango::VertexArray::EnableAttribute(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
-
-	Mango::VertexArray::Unbind();
+	Mango::Camera3D camera({ 0.f, 0.f, 1.f });
 
 	Mango::Shader shader(Mango::Shader::ReadFile("res/shaders/basic_vs.glsl"),
 		Mango::Shader::ReadFile("res/shaders/basic_fs.glsl"));
-	shader.Bind();
-	Mango::Shader::SetUniformMat4(shader.GetUniformLoc("u_projection_matrix"), glm::ortho(0.f, 800.f, 0.f, 600.f));
-	Mango::Shader::SetUniformMat4(shader.GetUniformLoc("u_view_matrix"), glm::mat4(1.f));
-	Mango::Shader::SetUniformMat4(shader.GetUniformLoc("u_model_matrix"), glm::mat4(1.f));
-	Mango::Shader::Unbind();
 
 	Mango::Texture texture("res/textures/mango.jpg");
 	
@@ -78,9 +65,14 @@ int main()
 		ImGui::Text("Mango.");
 		ImGui::End();
 
-
 		cube_model.GetVAO().Bind();
+		texture.Bind(0);
 		shader.Bind();
+
+		shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
+		shader.SetUniformMat4("u_view_matrix", camera.GetViewMatrix());
+		shader.SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ 0.f, 0.f, -1.f },
+			{ sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>() }));
 
 		glDrawElements(cube_model.GetMode(), cube_model.GetIBO().GetCount(), cube_model.GetIBO().GetType(), nullptr);
 
