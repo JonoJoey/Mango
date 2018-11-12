@@ -6,15 +6,15 @@
 class MangoInput : public Mango::IInputHandler
 {
 public:
-	MangoInput() { for (int i = 0; i < 8; i++) m_button_states[i] = false; }
+	MangoInput() { for (int i = 0; i < 8; i++) m_button_states[i] = Mango::INPUT_STATE::INPUT_STATE_RELEASE; }
 
 	void OnKeyPress(int key, std::string key_name, bool repeat)
 	{
-		m_key_states[key] = true;
+		m_key_states[key] = repeat ? Mango::INPUT_STATE::INPUT_STATE_REPEAT : Mango::INPUT_STATE::INPUT_STATE_PRESS;
 	}
 	void OnKeyRelease(int key, std::string key_name)
 	{
-		m_key_states[key] = false;
+		m_key_states[key] = Mango::INPUT_STATE::INPUT_STATE_RELEASE;
 	}
 	void OnMouseMove(float xpos, float ypos)
 	{
@@ -22,30 +22,40 @@ public:
 	}
 	void OnMouseButtonPress(int button, bool repeat)
 	{
-		m_button_states[button] = true;
+		m_button_states[button] = repeat ? Mango::INPUT_STATE::INPUT_STATE_REPEAT : Mango::INPUT_STATE::INPUT_STATE_PRESS;
 	}
 	void OnMouseButtonRelease(int button)
 	{
-		m_button_states[button] = false;
+		m_button_states[button] = Mango::INPUT_STATE::INPUT_STATE_REPEAT;
 	}
 
 
-	bool GetKeyState(int key)
+	Mango::INPUT_STATE GetKeyState(int key)
 	{
 		auto res = m_key_states.find(key);
 		if (res == m_key_states.end())
-			return m_key_states[key] = false;
-		return res->second;
+			return m_key_states[key] = Mango::INPUT_STATE::INPUT_STATE_RELEASE;
+
+		const auto ret = res->second;
+		if (ret == Mango::INPUT_STATE::INPUT_STATE_PRESS)
+			res->second = Mango::INPUT_STATE::INPUT_STATE_REPEAT;
+
+		return ret;
 	}
-	bool GetMouseButtonState(int button)
+	Mango::INPUT_STATE GetMouseButtonState(int button)
 	{
 		ASSERT(button >= 0 && button < 8);
-		return m_button_states[button];
+
+		const auto ret = m_button_states[button];
+		if (m_button_states[button] == Mango::INPUT_STATE::INPUT_STATE_PRESS)
+			m_button_states[button] = Mango::INPUT_STATE::INPUT_STATE_RELEASE;
+
+		return ret;
 	}
 
 private:
-	std::unordered_map<int, bool> m_key_states;
-	bool m_button_states[8];
+	std::unordered_map<int, Mango::INPUT_STATE> m_key_states;
+	Mango::INPUT_STATE m_button_states[8];
 } g_mango_input;
 
 
@@ -119,13 +129,11 @@ void HandleCamera(Mango::MangoCore& mango, Mango::Camera3D& camera)
 	}
 
 	// yes this is supposed to be after the above if statement
-	if (g_mango_input.GetKeyState(GLFW_KEY_ENTER))
+	if (g_mango_input.GetKeyState(GLFW_KEY_ESCAPE) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
 	{
-		mouse_toggle = true;
+		mouse_toggle = !mouse_toggle;
 		mango.SetMousePosition(mango.GetWindowSize() / 2);
 	}
-	if (g_mango_input.GetKeyState(GLFW_KEY_ESCAPE))
-		mouse_toggle = false;
 }
 
 int main()
@@ -145,8 +153,8 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	Mango::Model cube_model;
-	if (!LoadModel(cube_model, "res/models/cube.obj"))
+	Mango::Model model;
+	if (!LoadModel(model, "res/models/cube.obj"))
 	{
 		DBG_ERROR("Failed to load model");
 		mango.Release();
@@ -156,11 +164,13 @@ int main()
 
 	Mango::Entity3D cube({ 0.f, 0.f, 0.f });
 	Mango::Camera3D camera({ 0.f, 0.f, 1.f }, { 0.f, 0.f, 0.f });
-	Mango::Light3D light({ -5.f, 5.f, 5.f }, { 1.f, 1.f, 1.f });
+	Mango::Light3D light({ -5.f, 5.f, 5.f });
 	light.SetScale(0.2f);
+	light.SetAmbientColor({ 0.1f, 0.1f, 0.1f });
+	light.SetDiffuseColor({ 1.f, 1.f, 1.f });
+	light.SetSpecularColor({ 1.f, 1.f, 1.f });
 
 	Mango::Material3D cube_material;
-	cube_material.ambient_strength = 0.1f;
 	cube_material.specular_strength = 1.f;
 	cube_material.specular_shininess = 32.f;
 
@@ -169,28 +179,75 @@ int main()
 	Mango::Shader phong_shader(Mango::Shader::ReadFile("res/shaders/phong_vs.glsl"),
 		Mango::Shader::ReadFile("res/shaders/phong_fs.glsl"));
 
-	Mango::Texture texture("res/textures/mango.jpg");
+	Mango::Texture diffuse_map("res/textures/mango.jpg");
 	
 	while (mango.NextFrame({ 0.f, 1.f, 1.f }))
 	{
+		HandleCamera(mango, camera);
+
 		ImGui::Begin("Mango");
 		ImGui::Text("FPS: %.0f", 1.f / mango.GetFrameTime());
 		if (static bool c = true; ImGui::Checkbox("Vertical Sync", &c))
 			mango.SetVerticalSync(c);
+
+		static char texture_string[256] = { "res/textures/mango.jpg" };
+		ImGui::InputText("Texture##texture diffuse map", texture_string, 255);
+		ImGui::SameLine();
+		if (ImGui::Button("Load texture##texture diffuse map"))
+		{
+			diffuse_map.Release();
+			diffuse_map.Setup(texture_string);
+		}
+
+		static char model_string[256] = { "res/models/cube.obj" };
+		ImGui::InputText("Model##model", model_string, 255);
+		ImGui::SameLine();
+		if (ImGui::Button("Load model##model"))
+		{
+			model.Release();
+			if (!LoadModel(model, model_string))
+			{
+				DBG_ERROR("Failed to load model");
+				mango.Release();
+				system("pause");
+				return EXIT_FAILURE;
+			}
+		}
+
+		ImGui::Separator();
+		ImGui::TextColored(ImColor(0.f, 1.f, 1.f), "Material");
+		if (float value = cube_material.specular_strength; ImGui::InputFloat("Specular strength##material", &value))
+			cube_material.specular_strength = value;
+		if (float value = cube_material.specular_shininess; ImGui::InputFloat("Specular shininess##material", &value))
+			cube_material.specular_shininess = value;
+
+		ImGui::Separator();
+		ImGui::TextColored(ImColor(0.f, 1.f, 1.f), "Light");
+		if (ImGui::Button("Set position"))
+			light.SetPosition(camera.GetPosition());
+		if (glm::vec3 value = light.GetPosition(); ImGui::InputFloat3("Position##light", &value[0]))
+			light.SetPosition(value);
+		if (glm::vec3 value = light.GetAmbientColor(); ImGui::ColorEdit3("Ambient color##light", &value[0]))
+			light.SetAmbientColor(value);
+		if (glm::vec3 value = light.GetDiffuseColor(); ImGui::ColorEdit3("Diffuse color##light", &value[0]))
+			light.SetDiffuseColor(value);
+		if (glm::vec3 value = light.GetSpecularColor(); ImGui::ColorEdit3("Specular color##light", &value[0]))
+			light.SetSpecularColor(value);
+
 		ImGui::End();
 
-		HandleCamera(mango, camera);
-
-		cube_model.GetVAO().Bind();
+		model.GetVAO().Bind();
 
 		flat_shader.Bind();
 		flat_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
 		flat_shader.SetUniformMat4("u_view_matrix", camera.GetViewMatrix());
 		flat_shader.SetUniformMat4("u_model_matrix", light.GetModelMatrix());
-		flat_shader.SetUniformF3("flat_color", light.GetColor().r, light.GetColor().g, light.GetColor().b);
-		glDrawElements(cube_model.GetMode(), cube_model.GetIBO().GetCount(), cube_model.GetIBO().GetType(), nullptr);
+		flat_shader.SetUniformF3("flat_color", light.GetDiffuseColor().r, light.GetDiffuseColor().g, light.GetDiffuseColor().b);
+		glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
 
 		phong_shader.Bind();
+
+		cube.SetRotation({ sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>() });
 
 		// matrices
 		phong_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
@@ -199,20 +256,25 @@ int main()
 		phong_shader.SetUniformMat3("u_normal_matrix", Mango::Maths::CreateNormalMatrix(cube.GetModelMatrix()));
 
 		// material
-		phong_shader.SetUniformF1("u_material.ambient_strength", cube_material.ambient_strength);
 		phong_shader.SetUniformF1("u_material.specular_strength", cube_material.specular_strength);
 		phong_shader.SetUniformF1("u_material.specular_shininess", cube_material.specular_shininess);
+		phong_shader.SetUniformI1("u_material.diffuse_map", 0);
 
 		// light
 		phong_shader.SetUniformF3("u_light.position", light.GetPosition().x, light.GetPosition().y, light.GetPosition().z);
-		phong_shader.SetUniformF3("u_light.color", light.GetColor().r, light.GetColor().g, light.GetColor().b);
+		phong_shader.SetUniformF3("u_light.ambient", light.GetAmbientColor().r, light.GetAmbientColor().g, light.GetAmbientColor().b);
+		phong_shader.SetUniformF3("u_light.diffuse", light.GetDiffuseColor().r, light.GetDiffuseColor().g, light.GetDiffuseColor().b);
+		phong_shader.SetUniformF3("u_light.specular", light.GetSpecularColor().r, light.GetSpecularColor().g, light.GetSpecularColor().b);
 
 		// camera
 		phong_shader.SetUniformF3("u_camera_position", camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
 
-		texture.Bind();
-		glDrawElements(cube_model.GetMode(), cube_model.GetIBO().GetCount(), cube_model.GetIBO().GetType(), nullptr);
+		// textures
+		diffuse_map.Bind(0);
 
+		glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
+
+		Mango::Texture::Unbind();
 		Mango::Shader::Unbind();
 		Mango::VertexArray::Unbind();
 

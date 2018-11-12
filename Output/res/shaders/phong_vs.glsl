@@ -11,7 +11,9 @@ out vec3 _world_position;
 struct Light
 {
     vec3 position;
-    vec3 color;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
 };
 
 uniform mat4 u_projection_matrix;

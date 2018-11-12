@@ -6,6 +6,13 @@
 
 namespace Mango
 {
+	enum INPUT_STATE
+	{
+		INPUT_STATE_RELEASE,
+		INPUT_STATE_PRESS,
+		INPUT_STATE_REPEAT
+	};
+
 	// input interface
 	// TODO: custom keycode mapping
 	class IInputHandler

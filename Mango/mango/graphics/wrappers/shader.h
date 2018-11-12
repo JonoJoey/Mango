@@ -36,6 +36,9 @@ namespace Mango
 		void SetUniformF4(int location, float v1, float v2, float v3, float v4) const;
 		void SetUniformF4(const std::string& name, float v1, float v2, float v3, float v4) { SetUniformF4(GetUniformLoc(name), v1, v2, v3, v4); }
 
+		void SetUniformI1(int location, int v) const;
+		void SetUniformI1(const std::string& name, int v) { SetUniformI1(GetUniformLoc(name), v); }
+
 		void SetUniformMat3(int location, const glm::mat3& mat) const;
 		void SetUniformMat3(const std::string& name, const glm::mat3& mat) { SetUniformMat3(GetUniformLoc(name), mat); }
 
