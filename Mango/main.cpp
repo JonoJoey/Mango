@@ -214,6 +214,19 @@ int main()
 			}
 		}
 
+		// object
+		ImGui::Separator();
+		ImGui::TextColored(ImColor(0.f, 1.f, 1.f), "Object");
+		if (glm::vec3 value = cube.GetPosition(); ImGui::InputFloat3("Position##object", &value[0]))
+			cube.SetPosition(value);
+		if (glm::vec3 value = cube.GetRotation(); ImGui::InputFloat3("Rotation##object", &value[0]))
+			cube.SetRotation(value);
+		if (float value = cube.GetScale(); ImGui::InputFloat("Scale##object", &value))
+			cube.SetScale(value);
+		if (static bool value = false; ImGui::Checkbox("Rotate##object", &value) || value)
+			cube.SetRotation({ sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>() });
+
+		// material
 		ImGui::Separator();
 		ImGui::TextColored(ImColor(0.f, 1.f, 1.f), "Material");
 		if (float value = cube_material.specular_strength; ImGui::InputFloat("Specular strength##material", &value))
@@ -221,6 +234,7 @@ int main()
 		if (float value = cube_material.specular_shininess; ImGui::InputFloat("Specular shininess##material", &value))
 			cube_material.specular_shininess = value;
 
+		// light
 		ImGui::Separator();
 		ImGui::TextColored(ImColor(0.f, 1.f, 1.f), "Light");
 		if (ImGui::Button("Set position"))
@@ -246,8 +260,6 @@ int main()
 		glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
 
 		phong_shader.Bind();
-
-		cube.SetRotation({ sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>() });
 
 		// matrices
 		phong_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
