@@ -3,10 +3,10 @@
 
 namespace Mango
 {
-	class Material3D
+	struct Material3D
 	{
-	public:
-
-	private:
+		float ambient_strength;
+		float specular_strength;
+		float specular_shininess;
 	};
 } // namespace Mango

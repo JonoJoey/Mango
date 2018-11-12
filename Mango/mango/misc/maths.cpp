@@ -27,4 +27,8 @@ namespace Mango::Maths
 	{
 		return glm::perspective(glm::radians(fov), aspect_ratio, znear, zfar);
 	}
+	glm::mat3 CreateNormalMatrix(const glm::mat4& model_matrix)
+	{
+		return glm::mat3(glm::transpose(glm::inverse(model_matrix)));
+	}
 } // namespace Mango::Maths

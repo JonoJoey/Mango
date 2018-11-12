@@ -58,15 +58,23 @@ bool LoadModel(Mango::Model& model, const std::string& file_path)
 	model.Setup(GL_TRIANGLES, format.m_indices.size() * 3, GL_UNSIGNED_INT, format.m_indices.data());
 	model.GetVAO().Bind();
 
+	// positions
 	auto vbo = &model.AddVBO();
 	vbo->Setup(format.m_positions.size() * 3 * sizeof(float), format.m_positions.data());
 	vbo->Bind();
 	Mango::VertexArray::EnableAttribute(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+	// tex coords
 	vbo = &model.AddVBO();
 	vbo->Setup(format.m_tex_coords.size() * 2 * sizeof(float), format.m_tex_coords.data());
 	vbo->Bind();
 	Mango::VertexArray::EnableAttribute(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	// normals
+	vbo = &model.AddVBO();
+	vbo->Setup(format.m_normals.size() * 3 * sizeof(float), format.m_normals.data());
+	vbo->Bind();
+	Mango::VertexArray::EnableAttribute(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	Mango::VertexArray::Unbind();
 
@@ -76,7 +84,7 @@ bool LoadModel(Mango::Model& model, const std::string& file_path)
 void HandleCamera(Mango::MangoCore& mango, Mango::Camera3D& camera)
 {
 	static constexpr float move_speed = 2.f; // units per second
-	static constexpr float camera_speed = 0.01f;
+	static constexpr float camera_speed = 0.002f;
 
 	const auto frame_time = mango.GetFrameTime();
 
@@ -138,7 +146,7 @@ int main()
 	}
 
 	Mango::Model cube_model;
-	if (!LoadModel(cube_model, "res/models/dragon.obj"))
+	if (!LoadModel(cube_model, "res/models/cube.obj"))
 	{
 		DBG_ERROR("Failed to load model");
 		mango.Release();
@@ -146,10 +154,20 @@ int main()
 		return EXIT_FAILURE;
 	}
 
+	Mango::Entity3D cube({ 0.f, 0.f, 0.f });
 	Mango::Camera3D camera({ 0.f, 0.f, 1.f }, { 0.f, 0.f, 0.f });
+	Mango::Light3D light({ -5.f, 5.f, 5.f }, { 1.f, 1.f, 1.f });
+	light.SetScale(0.2f);
 
-	Mango::Shader shader(Mango::Shader::ReadFile("res/shaders/basic_vs.glsl"),
-		Mango::Shader::ReadFile("res/shaders/basic_fs.glsl"));
+	Mango::Material3D cube_material;
+	cube_material.ambient_strength = 0.1f;
+	cube_material.specular_strength = 1.f;
+	cube_material.specular_shininess = 32.f;
+
+	Mango::Shader flat_shader(Mango::Shader::ReadFile("res/shaders/flat_vs.glsl"),
+		Mango::Shader::ReadFile("res/shaders/flat_fs.glsl"));
+	Mango::Shader phong_shader(Mango::Shader::ReadFile("res/shaders/phong_vs.glsl"),
+		Mango::Shader::ReadFile("res/shaders/phong_fs.glsl"));
 
 	Mango::Texture texture("res/textures/mango.jpg");
 	
@@ -164,13 +182,35 @@ int main()
 		HandleCamera(mango, camera);
 
 		cube_model.GetVAO().Bind();
-		texture.Bind(0);
 
-		shader.Bind();
-		shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
-		shader.SetUniformMat4("u_view_matrix", camera.GetViewMatrix());
-		shader.SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ 0.f, 0.f, -1.f }, { 0.f, 0.f, 0.f }));
+		flat_shader.Bind();
+		flat_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
+		flat_shader.SetUniformMat4("u_view_matrix", camera.GetViewMatrix());
+		flat_shader.SetUniformMat4("u_model_matrix", light.GetModelMatrix());
+		flat_shader.SetUniformF3("flat_color", light.GetColor().r, light.GetColor().g, light.GetColor().b);
+		glDrawElements(cube_model.GetMode(), cube_model.GetIBO().GetCount(), cube_model.GetIBO().GetType(), nullptr);
 
+		phong_shader.Bind();
+
+		// matrices
+		phong_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
+		phong_shader.SetUniformMat4("u_view_matrix", camera.GetViewMatrix());
+		phong_shader.SetUniformMat4("u_model_matrix", cube.GetModelMatrix());
+		phong_shader.SetUniformMat3("u_normal_matrix", Mango::Maths::CreateNormalMatrix(cube.GetModelMatrix()));
+
+		// material
+		phong_shader.SetUniformF1("u_material.ambient_strength", cube_material.ambient_strength);
+		phong_shader.SetUniformF1("u_material.specular_strength", cube_material.specular_strength);
+		phong_shader.SetUniformF1("u_material.specular_shininess", cube_material.specular_shininess);
+
+		// light
+		phong_shader.SetUniformF3("u_light.position", light.GetPosition().x, light.GetPosition().y, light.GetPosition().z);
+		phong_shader.SetUniformF3("u_light.color", light.GetColor().r, light.GetColor().g, light.GetColor().b);
+
+		// camera
+		phong_shader.SetUniformF3("u_camera_position", camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
+
+		texture.Bind();
 		glDrawElements(cube_model.GetMode(), cube_model.GetIBO().GetCount(), cube_model.GetIBO().GetType(), nullptr);
 
 		Mango::Shader::Unbind();

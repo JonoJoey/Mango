@@ -9,8 +9,10 @@ namespace Mango
 	{
 	public:
 		Entity3D() = default;
-		Entity3D(const glm::vec3& position, const glm::vec3& rotation, float scale = 1.f)
+		Entity3D(const glm::vec3& position, const glm::vec3& rotation = { 0.f, 0.f, 0.f }, float scale = 1.f)
 			: m_position(position), m_rotation(rotation), m_scale(scale) {};
+
+		glm::mat4 GetModelMatrix() const;
 
 		void SetPosition(const glm::vec3& position) { m_position = position; }
 		glm::vec3 GetPosition() const { return m_position; }

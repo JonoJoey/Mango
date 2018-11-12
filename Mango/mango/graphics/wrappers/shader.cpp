@@ -98,6 +98,11 @@ namespace Mango
 	{
 		glUniform4f(location, v1, v2, v3, v4);
 	}
+
+	void Shader::SetUniformMat3(int location, const glm::mat3& mat) const
+	{
+		glUniformMatrix3fv(location, 1, GL_FALSE, &mat[0][0]);
+	}
 	void Shader::SetUniformMat4(int location, const glm::mat4& mat) const
 	{
 		glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
