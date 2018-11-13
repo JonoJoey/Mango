@@ -16,7 +16,7 @@ namespace Mango
 		void Release() override;
 
 		void Bind(unsigned int slot = 0) const;
-		static void Unbind();
+		static void Unbind(unsigned int slot = 0);
 
 		glm::ivec2 GetSize() const { return m_size; }
 

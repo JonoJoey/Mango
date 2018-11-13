@@ -210,8 +210,8 @@ namespace Mango
 		if (glfwWindowShouldClose(m_window))
 			return false;
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		// imgui
 		ImGui_ImplOpenGL3_NewFrame();

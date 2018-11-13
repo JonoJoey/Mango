@@ -1,11 +1,14 @@
 #pragma once
 
+#include "../wrappers/texture.h"
+
 
 namespace Mango
 {
 	struct Material3D
 	{
-		float specular_strength;
-		float specular_shininess;
+		Texture* diffuse_map = nullptr;
+		Texture* specular_map = nullptr;
+		float shine_damper;
 	};
 } // namespace Mango

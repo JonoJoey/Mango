@@ -153,6 +153,15 @@ int main()
 		return EXIT_FAILURE;
 	}
 
+	Mango::Model cube_model;
+	if (!LoadModel(cube_model, "res/models/cube.obj"))
+	{
+		DBG_ERROR("Failed to load cube model");
+		mango.Release();
+		system("pause");
+		return EXIT_FAILURE;
+	}
+
 	Mango::Model model;
 	if (!LoadModel(model, "res/models/cube.obj"))
 	{
@@ -162,7 +171,7 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	Mango::Entity3D cube({ 0.f, 0.f, 0.f });
+	Mango::Entity3D object({ 0.f, 0.f, 0.f });
 	Mango::Camera3D camera({ 0.f, 0.f, 1.f }, { 0.f, 0.f, 0.f });
 	Mango::Light3D light({ -5.f, 5.f, 5.f });
 	light.SetScale(0.2f);
@@ -171,128 +180,166 @@ int main()
 	light.SetSpecularColor({ 1.f, 1.f, 1.f });
 
 	Mango::Material3D cube_material;
-	cube_material.specular_strength = 1.f;
-	cube_material.specular_shininess = 32.f;
+	cube_material.shine_damper = 32.f;
 
 	Mango::Shader flat_shader(Mango::Shader::ReadFile("res/shaders/flat_vs.glsl"),
 		Mango::Shader::ReadFile("res/shaders/flat_fs.glsl"));
 	Mango::Shader phong_shader(Mango::Shader::ReadFile("res/shaders/phong_vs.glsl"),
 		Mango::Shader::ReadFile("res/shaders/phong_fs.glsl"));
 
-	Mango::Texture diffuse_map("res/textures/mango.jpg");
+	Mango::Texture diffuse_map("res/textures/diffuse_map.png");
+	Mango::Texture specular_map("res/textures/specular_map.png");
+
+	glDisable(GL_DEPTH_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	
-	while (mango.NextFrame({ 0.f, 1.f, 1.f }))
+	while (mango.NextFrame({ 0.f, 0.f, 0.f }))
 	{
 		HandleCamera(mango, camera);
 
-		ImGui::Begin("Mango");
-		ImGui::Text("FPS: %.0f", 1.f / mango.GetFrameTime());
-		if (static bool c = true; ImGui::Checkbox("Vertical Sync", &c))
-			mango.SetVerticalSync(c);
-
-		static char texture_string[256] = { "res/textures/mango.jpg" };
-		ImGui::InputText("Texture##texture diffuse map", texture_string, 255);
-		ImGui::SameLine();
-		if (ImGui::Button("Load texture##texture diffuse map"))
+		// ImGui
 		{
-			diffuse_map.Release();
-			diffuse_map.Setup(texture_string);
+			ImGui::Begin("Mango");
+			ImGui::Text("FPS: %.0f", 1.f / mango.GetFrameTime());
+			if (static bool c = true; ImGui::Checkbox("Vertical Sync", &c))
+				mango.SetVerticalSync(c);
+
+			// object
+			ImGui::Separator();
+			ImGui::TextColored(ImColor(0.f, 1.f, 1.f), "Object");
+			if (glm::vec3 value = object.GetPosition(); ImGui::InputFloat3("Position##object", &value[0]))
+				object.SetPosition(value);
+			if (glm::vec3 value = object.GetRotation(); ImGui::InputFloat3("Rotation##object", &value[0]))
+				object.SetRotation(value);
+			if (float value = object.GetScale(); ImGui::InputFloat("Scale##object", &value))
+				object.SetScale(value);
+
+			static char model_string[256] = { "res/models/cube.obj" };
+			ImGui::InputText("Model##object model", model_string, 255);
+			ImGui::SameLine();
+			if (ImGui::Button("Load##object model"))
+			{
+				model.Release();
+				if (!LoadModel(model, model_string))
+				{
+					DBG_ERROR("Failed to load model");
+					mango.Release();
+					system("pause");
+					return EXIT_FAILURE;
+				}
+			}
+
+			if (static bool value = false; ImGui::Checkbox("Rotate##object", &value) || value)
+				object.SetRotation({ sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>() });
+
+			// material
+			ImGui::Separator();
+			ImGui::TextColored(ImColor(0.f, 1.f, 1.f), "Material");
+			if (float value = cube_material.shine_damper; ImGui::InputFloat("Shine damper##material", &value))
+				cube_material.shine_damper = value;
+
+			static char diffuse_map_string[256] = { "res/textures/diffuse_map.png" };
+			ImGui::InputText("Diffuse map##texture diffuse map", diffuse_map_string, 255);
+			ImGui::SameLine();
+			if (ImGui::Button("Load##texture diffuse map"))
+			{
+				diffuse_map.Release();
+				diffuse_map.Setup(diffuse_map_string);
+			}
+
+			static char specular_map_string[256] = { "res/textures/specular_map.png" };
+			ImGui::InputText("Specular map##texture specular map", specular_map_string, 255);
+			ImGui::SameLine();
+			if (ImGui::Button("Load##texture specular map"))
+			{
+				specular_map.Release();
+				specular_map.Setup(specular_map_string);
+			}
+
+			// light
+			ImGui::Separator();
+			ImGui::TextColored(ImColor(0.f, 1.f, 1.f), "Light");
+			if (ImGui::Button("Set position"))
+				light.SetPosition(camera.GetPosition());
+			if (glm::vec3 value = light.GetPosition(); ImGui::InputFloat3("Position##light", &value[0]))
+				light.SetPosition(value);
+			if (glm::vec3 value = light.GetAmbientColor(); ImGui::ColorEdit3("Ambient color##light", &value[0]))
+				light.SetAmbientColor(value);
+			if (glm::vec3 value = light.GetDiffuseColor(); ImGui::ColorEdit3("Diffuse color##light", &value[0]))
+				light.SetDiffuseColor(value);
+			if (glm::vec3 value = light.GetSpecularColor(); ImGui::ColorEdit3("Specular color##light", &value[0]))
+				light.SetSpecularColor(value);
+
+			ImGui::End();
 		}
 
-		static char model_string[256] = { "res/models/cube.obj" };
-		ImGui::InputText("Model##model", model_string, 255);
-		ImGui::SameLine();
-		if (ImGui::Button("Load model##model"))
+		// light cube
 		{
-			model.Release();
-			if (!LoadModel(model, model_string))
+			cube_model.GetVAO().Bind();
+
+			flat_shader.Bind();
+			flat_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
+			flat_shader.SetUniformMat4("u_view_matrix", camera.GetViewMatrix());
+			flat_shader.SetUniformMat4("u_model_matrix", light.GetModelMatrix());
+			flat_shader.SetUniformF3("flat_color", 1.f, 1.f, 1.f);
+			glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
+		}
+
+		// our model
+		{
+			model.GetVAO().Bind();
+
+			// glow
+			glClearStencil(0);
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+
 			{
-				DBG_ERROR("Failed to load model");
-				mango.Release();
-				system("pause");
-				return EXIT_FAILURE;
+				flat_shader.Bind();
+				flat_shader.SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix(object.GetPosition(), object.GetRotation(), object.GetScale() + 0.02f));
+				flat_shader.SetUniformF3("flat_color", 1.f, 0.f, 0.f);
+
+				glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
+			}
+
+			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			glStencilMask(0x00);
+
+			{
+				phong_shader.Bind();
+
+				// matrices
+				phong_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
+				phong_shader.SetUniformMat4("u_view_matrix", camera.GetViewMatrix());
+				phong_shader.SetUniformMat4("u_model_matrix", object.GetModelMatrix());
+				phong_shader.SetUniformMat3("u_normal_matrix", Mango::Maths::CreateNormalMatrix(object.GetModelMatrix()));
+
+				// material
+				phong_shader.SetUniformF1("u_material.shine_damper", cube_material.shine_damper);
+				phong_shader.SetUniformI1("u_material.diffuse_map", 0);
+				phong_shader.SetUniformI1("u_material.specular_map", 1);
+
+				// light
+				phong_shader.SetUniformF3("u_light.position", light.GetPosition().x, light.GetPosition().y, light.GetPosition().z);
+				phong_shader.SetUniformF3("u_light.ambient", light.GetAmbientColor().r, light.GetAmbientColor().g, light.GetAmbientColor().b);
+				phong_shader.SetUniformF3("u_light.diffuse", light.GetDiffuseColor().r, light.GetDiffuseColor().g, light.GetDiffuseColor().b);
+				phong_shader.SetUniformF3("u_light.specular", light.GetSpecularColor().r, light.GetSpecularColor().g, light.GetSpecularColor().b);
+
+				// camera
+				phong_shader.SetUniformF3("u_camera_position", camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
+
+				// textures
+				diffuse_map.Bind(0);
+				specular_map.Bind(1);
+
+				glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
 			}
 		}
-
-		// object
-		ImGui::Separator();
-		ImGui::TextColored(ImColor(0.f, 1.f, 1.f), "Object");
-		if (glm::vec3 value = cube.GetPosition(); ImGui::InputFloat3("Position##object", &value[0]))
-			cube.SetPosition(value);
-		if (glm::vec3 value = cube.GetRotation(); ImGui::InputFloat3("Rotation##object", &value[0]))
-			cube.SetRotation(value);
-		if (float value = cube.GetScale(); ImGui::InputFloat("Scale##object", &value))
-			cube.SetScale(value);
-		if (static bool value = false; ImGui::Checkbox("Rotate##object", &value) || value)
-			cube.SetRotation({ sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>() });
-
-		// material
-		ImGui::Separator();
-		ImGui::TextColored(ImColor(0.f, 1.f, 1.f), "Material");
-		if (float value = cube_material.specular_strength; ImGui::InputFloat("Specular strength##material", &value))
-			cube_material.specular_strength = value;
-		if (float value = cube_material.specular_shininess; ImGui::InputFloat("Specular shininess##material", &value))
-			cube_material.specular_shininess = value;
-
-		// light
-		ImGui::Separator();
-		ImGui::TextColored(ImColor(0.f, 1.f, 1.f), "Light");
-		if (ImGui::Button("Set position"))
-			light.SetPosition(camera.GetPosition());
-		if (glm::vec3 value = light.GetPosition(); ImGui::InputFloat3("Position##light", &value[0]))
-			light.SetPosition(value);
-		if (glm::vec3 value = light.GetAmbientColor(); ImGui::ColorEdit3("Ambient color##light", &value[0]))
-			light.SetAmbientColor(value);
-		if (glm::vec3 value = light.GetDiffuseColor(); ImGui::ColorEdit3("Diffuse color##light", &value[0]))
-			light.SetDiffuseColor(value);
-		if (glm::vec3 value = light.GetSpecularColor(); ImGui::ColorEdit3("Specular color##light", &value[0]))
-			light.SetSpecularColor(value);
-
-		ImGui::End();
-
-		model.GetVAO().Bind();
-
-		flat_shader.Bind();
-		flat_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
-		flat_shader.SetUniformMat4("u_view_matrix", camera.GetViewMatrix());
-		flat_shader.SetUniformMat4("u_model_matrix", light.GetModelMatrix());
-		flat_shader.SetUniformF3("flat_color", light.GetDiffuseColor().r, light.GetDiffuseColor().g, light.GetDiffuseColor().b);
-		glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
-
-		phong_shader.Bind();
-
-		// matrices
-		phong_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
-		phong_shader.SetUniformMat4("u_view_matrix", camera.GetViewMatrix());
-		phong_shader.SetUniformMat4("u_model_matrix", cube.GetModelMatrix());
-		phong_shader.SetUniformMat3("u_normal_matrix", Mango::Maths::CreateNormalMatrix(cube.GetModelMatrix()));
-
-		// material
-		phong_shader.SetUniformF1("u_material.specular_strength", cube_material.specular_strength);
-		phong_shader.SetUniformF1("u_material.specular_shininess", cube_material.specular_shininess);
-		phong_shader.SetUniformI1("u_material.diffuse_map", 0);
-
-		// light
-		phong_shader.SetUniformF3("u_light.position", light.GetPosition().x, light.GetPosition().y, light.GetPosition().z);
-		phong_shader.SetUniformF3("u_light.ambient", light.GetAmbientColor().r, light.GetAmbientColor().g, light.GetAmbientColor().b);
-		phong_shader.SetUniformF3("u_light.diffuse", light.GetDiffuseColor().r, light.GetDiffuseColor().g, light.GetDiffuseColor().b);
-		phong_shader.SetUniformF3("u_light.specular", light.GetSpecularColor().r, light.GetSpecularColor().g, light.GetSpecularColor().b);
-
-		// camera
-		phong_shader.SetUniformF3("u_camera_position", camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
-
-		// textures
-		diffuse_map.Bind(0);
-
-		glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
-
-		Mango::Texture::Unbind();
-		Mango::Shader::Unbind();
-		Mango::VertexArray::Unbind();
 
 		mango.EndFrame();
 	}
 
 	mango.Release();
+	system("pause");
 	return EXIT_SUCCESS;
 }

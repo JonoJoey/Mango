@@ -52,8 +52,9 @@ namespace Mango
 		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_2D, m_texture);
 	}
-	void Texture::Unbind()
+	void Texture::Unbind(unsigned int slot)
 	{
+		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 } // namespace Mango
