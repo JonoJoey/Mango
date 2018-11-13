@@ -190,9 +190,8 @@ int main()
 	Mango::Texture diffuse_map("res/textures/diffuse_map.png");
 	Mango::Texture specular_map("res/textures/specular_map.png");
 
-	glDisable(GL_DEPTH_TEST);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-	
+	glm::vec3 border_color = { 1.f, 1.f, 1.f };
+
 	while (mango.NextFrame({ 0.f, 0.f, 0.f }))
 	{
 		HandleCamera(mango, camera);
@@ -228,6 +227,8 @@ int main()
 					return EXIT_FAILURE;
 				}
 			}
+
+			ImGui::ColorEdit3("Border color##object border color", &border_color[0]);
 
 			if (static bool value = false; ImGui::Checkbox("Rotate##object", &value) || value)
 				object.SetRotation({ sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>(), sin(glfwGetTime()) * glm::pi<float>() });
@@ -273,6 +274,8 @@ int main()
 			ImGui::End();
 		}
 
+		glDisable(GL_STENCIL_TEST);
+
 		// light cube
 		{
 			cube_model.GetVAO().Bind();
@@ -289,21 +292,12 @@ int main()
 		{
 			model.GetVAO().Bind();
 
+			glEnable(GL_STENCIL_TEST);
+
 			// glow
-			glClearStencil(0);
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			glStencilMask(0xFF);
-
-			{
-				flat_shader.Bind();
-				flat_shader.SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix(object.GetPosition(), object.GetRotation(), object.GetScale() + 0.02f));
-				flat_shader.SetUniformF3("flat_color", 1.f, 0.f, 0.f);
-
-				glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
-			}
-
-			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-			glStencilMask(0x00);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 			{
 				phong_shader.Bind();
@@ -334,6 +328,20 @@ int main()
 
 				glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
 			}
+
+			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			glStencilMask(0xFF);
+
+			{
+				flat_shader.Bind();
+				flat_shader.SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix(object.GetPosition(), object.GetRotation(), object.GetScale() + 0.02f));
+				flat_shader.SetUniformF3("flat_color", border_color.r, border_color.g, border_color.b);
+			
+				glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
+			}
+
+			glDisable(GL_STENCIL_TEST);
 		}
 
 		mango.EndFrame();
