@@ -147,6 +147,7 @@
     <ClCompile Include="mango\mango.cpp" />
     <ClCompile Include="mango\misc\file_parser.cpp" />
     <ClCompile Include="mango\misc\maths.cpp" />
+    <ClCompile Include="mango\misc\misc.cpp" />
     <ClCompile Include="mango\misc\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -414,6 +415,7 @@
     <ClInclude Include="mango\misc\file_parser.h" />
     <ClInclude Include="mango\misc\event_handler.h" />
     <ClInclude Include="mango\misc\maths.h" />
+    <ClInclude Include="mango\misc\misc.h" />
     <ClInclude Include="mango\misc\utility.h" />
   </ItemGroup>
   <ItemGroup>

@@ -81,6 +81,9 @@
     <ClCompile Include="mango\graphics\wrappers\framebuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mango\misc\misc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mango\common.h">
@@ -876,6 +879,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mango\misc\event_handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\misc\misc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

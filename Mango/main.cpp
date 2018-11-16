@@ -36,7 +36,7 @@ public:
 
 		framebuffer.Release();
 		framebuffer.Setup({ width, height });
-		DBG_LOG("Resize");
+		DBG_LOG("Resize [%i, %i]", width, height);
 	}
 
 
@@ -69,6 +69,78 @@ private:
 } g_mango_event_handler;
 
 
+bool LoadCubeMap(Mango::Model& model, Mango::CubeTexture& texture, std::array<std::string, 6> file_paths)
+{
+	static const float positions[108] = {
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f
+	};
+	static const unsigned int indices[36] = {
+		0, 1, 2,
+		3, 4, 5,
+		6, 7, 8,
+		9, 10, 11,
+		12, 13, 14,
+		15, 16, 17,
+		18, 19, 20,
+		21, 22, 23,
+		24, 25, 26,
+		27, 28, 29,
+		30, 31, 32,
+		33, 34, 35
+	};
+
+	model.Setup(GL_TRIANGLES, 36, GL_UNSIGNED_INT, indices);
+	model.GetVAO().Bind();
+
+	// positions
+	auto vbo = &model.AddVBO();
+	vbo->Setup(108 * sizeof(float), positions);
+	vbo->Bind();
+	Mango::VertexArray::EnableAttribute(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	Mango::VertexArray::Unbind();
+
+	return texture.Setup(file_paths);
+}
 bool LoadModel(Mango::Model& model, const std::string& file_path)
 {
 	Mango::WavefrontFormat format;
@@ -189,7 +261,6 @@ int main()
 		Mango::VertexArray::EnableAttribute(1, 2, GL_FLOAT, false, sizeof(float) * 4, sizeof(float) * 2);
 	}
 
-
 	Mango::Model cube_model;
 	if (!LoadModel(cube_model, "res/models/cube.obj"))
 	{
@@ -208,6 +279,16 @@ int main()
 		return EXIT_FAILURE;
 	}
 
+	Mango::Model skybox_model;
+	Mango::CubeTexture skybox_texture;
+	LoadCubeMap(skybox_model, skybox_texture, { "res/textures/skybox_2/right.jpg", 
+		"res/textures/skybox_2/left.jpg", 
+		"res/textures/skybox_2/top.jpg", 
+		"res/textures/skybox_2/bottom.jpg", 
+		"res/textures/skybox_2/back.jpg",
+		"res/textures/skybox_2/front.jpg" 
+	});
+
 	Mango::Entity3D object({ 0.f, 0.f, 0.f });
 	Mango::Camera3D camera({ 0.f, 0.f, 1.f }, { 0.f, 0.f, 0.f });
 	Mango::Light3D light({ -5.f, 5.f, 5.f });
@@ -225,6 +306,8 @@ int main()
 		Mango::Shader::ReadFile("res/shaders/flat_fs.glsl"));
 	Mango::Shader phong_shader(Mango::Shader::ReadFile("res/shaders/phong_vs.glsl"),
 		Mango::Shader::ReadFile("res/shaders/phong_fs.glsl"));
+	Mango::Shader skybox_shader(Mango::Shader::ReadFile("res/shaders/skybox_vs.glsl"),
+		Mango::Shader::ReadFile("res/shaders/skybox_fs.glsl"));
 
 	Mango::Texture diffuse_map("res/textures/diffuse_map.png");
 	Mango::Texture specular_map("res/textures/specular_map.png");
@@ -387,6 +470,19 @@ int main()
 			}
 
 			glDisable(GL_STENCIL_TEST);
+		}
+
+		// skybox 
+		{
+			skybox_shader.Bind();
+
+			skybox_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
+			skybox_shader.SetUniformMat4("u_view_matrix", glm::mat4(glm::mat3(camera.GetViewMatrix())));
+
+			skybox_texture.Bind();
+			skybox_model.GetVAO().Bind();
+
+			glDrawElements(skybox_model.GetMode(), skybox_model.GetIBO().GetCount(), skybox_model.GetIBO().GetType(), nullptr);
 		}
 
 		// render framebuffer
