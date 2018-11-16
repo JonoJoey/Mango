@@ -293,7 +293,7 @@ int main()
 	Mango::Camera3D camera({ 0.f, 0.f, 1.f }, { 0.f, 0.f, 0.f });
 	Mango::Light3D light({ -5.f, 5.f, 5.f });
 	light.SetScale(0.2f);
-	light.SetAmbientColor({ 0.1f, 0.1f, 0.1f });
+	light.SetAmbientColor({ 0.05f, 0.05f, 0.05f });
 	light.SetDiffuseColor({ 1.f, 1.f, 1.f });
 	light.SetSpecularColor({ 1.f, 1.f, 1.f });
 
@@ -487,6 +487,8 @@ int main()
 
 		// render framebuffer
 		{
+			glEnable(GL_FRAMEBUFFER_SRGB);
+
 			Mango::Framebuffer::Unbind();
 			
 			framebuffer.GetTexture().Bind();
@@ -495,6 +497,8 @@ int main()
 
 			quad_model.GetVAO().Bind();
 			glDrawElements(quad_model.GetMode(), quad_model.GetIBO().GetCount(), quad_model.GetIBO().GetType(), nullptr);
+
+			glDisable(GL_FRAMEBUFFER_SRGB);
 
 		}
 		mango.EndFrame();
