@@ -3,10 +3,12 @@
 #include "mango/mango.h"
 
 
-class MangoInput : public Mango::IInputHandler
+Mango::Framebuffer framebuffer;
+
+class MangoEventHandler : public Mango::IEventHandler
 {
 public:
-	MangoInput() { for (int i = 0; i < 8; i++) m_button_states[i] = Mango::INPUT_STATE::INPUT_STATE_RELEASE; }
+	MangoEventHandler() { for (int i = 0; i < 8; i++) m_button_states[i] = Mango::INPUT_STATE::INPUT_STATE_RELEASE; }
 
 	void OnKeyPress(int key, std::string key_name, bool repeat)
 	{
@@ -27,6 +29,14 @@ public:
 	void OnMouseButtonRelease(int button)
 	{
 		m_button_states[button] = Mango::INPUT_STATE::INPUT_STATE_REPEAT;
+	}
+	void OnWindowResize(int width, int height)
+	{
+		glViewport(0, 0, width, height);
+
+		framebuffer.Release();
+		framebuffer.Setup({ width, height });
+		DBG_LOG("Resize");
 	}
 
 
@@ -56,7 +66,7 @@ public:
 private:
 	std::unordered_map<int, Mango::INPUT_STATE> m_key_states;
 	Mango::INPUT_STATE m_button_states[8];
-} g_mango_input;
+} g_mango_event_handler;
 
 
 bool LoadModel(Mango::Model& model, const std::string& file_path)
@@ -90,7 +100,6 @@ bool LoadModel(Mango::Model& model, const std::string& file_path)
 
 	return true;
 }
-
 void HandleCamera(Mango::MangoCore& mango, Mango::Camera3D& camera)
 {
 	static constexpr float move_speed = 2.f; // units per second
@@ -102,17 +111,17 @@ void HandleCamera(Mango::MangoCore& mango, Mango::Camera3D& camera)
 	const auto forward_dir = Mango::Maths::AngleVector(glm::vec3(camera.GetViewangle().x, 0.f, 0.f));
 	const auto right_dir = glm::normalize(glm::cross(forward_dir, up_dir));
 
-	if (g_mango_input.GetKeyState(' '))
+	if (g_mango_event_handler.GetKeyState(' '))
 		camera.Move(up_dir * frame_time * move_speed);
-	if (g_mango_input.GetKeyState(GLFW_KEY_LEFT_SHIFT))
+	if (g_mango_event_handler.GetKeyState(GLFW_KEY_LEFT_SHIFT))
 		camera.Move(-up_dir * frame_time * move_speed);
-	if (g_mango_input.GetKeyState('W'))
+	if (g_mango_event_handler.GetKeyState('W'))
 		camera.Move(forward_dir * frame_time * move_speed);
-	if (g_mango_input.GetKeyState('A'))
+	if (g_mango_event_handler.GetKeyState('A'))
 		camera.Move(-right_dir * frame_time * move_speed);
-	if (g_mango_input.GetKeyState('S'))
+	if (g_mango_event_handler.GetKeyState('S'))
 		camera.Move(-forward_dir * frame_time * move_speed);
-	if (g_mango_input.GetKeyState('D'))
+	if (g_mango_event_handler.GetKeyState('D'))
 		camera.Move(right_dir * frame_time * move_speed);
 
 	static bool mouse_toggle = false;
@@ -129,12 +138,13 @@ void HandleCamera(Mango::MangoCore& mango, Mango::Camera3D& camera)
 	}
 
 	// yes this is supposed to be after the above if statement
-	if (g_mango_input.GetKeyState(GLFW_KEY_ESCAPE) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
+	if (g_mango_event_handler.GetKeyState(GLFW_KEY_ESCAPE) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
 	{
 		mouse_toggle = !mouse_toggle;
 		mango.SetMousePosition(mango.GetWindowSize() / 2);
 	}
 }
+
 
 int main()
 {
@@ -146,12 +156,39 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	if (!mango.RegisterInputHandler(&g_mango_input))
+	if (!mango.RegisterEventHandler(&g_mango_event_handler))
 	{
-		DBG_ERROR("Failed to setup input handler");
+		DBG_ERROR("Failed to setup event handler");
 		system("pause");
 		return EXIT_FAILURE;
 	}
+
+	float quad_vertices[] =
+	{
+		-1.f,  1.f,  0.f, 1.f,
+		-1.f, -1.f,  0.f, 0.f,
+		 1.f, -1.f,  1.f, 0.f,
+
+		-1.f,  1.f,  0.f, 1.f,
+		 1.f, -1.f,  1.f, 0.f,
+		 1.f,  1.f,  1.f, 1.f
+	};
+	unsigned int quad_indices[] =
+	{
+		0, 1, 2,
+		3, 4, 5
+	};
+
+	Mango::Model quad_model(GL_TRIANGLES, 6, GL_UNSIGNED_INT, quad_indices);
+	{
+		quad_model.GetVAO().Bind();
+		auto* vbo = &quad_model.AddVBO();
+		vbo->Setup(sizeof(float) * 4 * 6, quad_vertices);
+		vbo->Bind();
+		Mango::VertexArray::EnableAttribute(0, 2, GL_FLOAT, false, sizeof(float) * 4, 0);
+		Mango::VertexArray::EnableAttribute(1, 2, GL_FLOAT, false, sizeof(float) * 4, sizeof(float) * 2);
+	}
+
 
 	Mango::Model cube_model;
 	if (!LoadModel(cube_model, "res/models/cube.obj"))
@@ -182,6 +219,8 @@ int main()
 	Mango::Material3D cube_material;
 	cube_material.shine_damper = 32.f;
 
+	Mango::Shader simple_shader(Mango::Shader::ReadFile("res/shaders/simple_vs.glsl"),
+		Mango::Shader::ReadFile("res/shaders/simple_fs.glsl"));
 	Mango::Shader flat_shader(Mango::Shader::ReadFile("res/shaders/flat_vs.glsl"),
 		Mango::Shader::ReadFile("res/shaders/flat_fs.glsl"));
 	Mango::Shader phong_shader(Mango::Shader::ReadFile("res/shaders/phong_vs.glsl"),
@@ -190,8 +229,9 @@ int main()
 	Mango::Texture diffuse_map("res/textures/diffuse_map.png");
 	Mango::Texture specular_map("res/textures/specular_map.png");
 
-	glm::vec3 border_color = { 1.f, 1.f, 1.f };
+	framebuffer.Setup({ 800, 600 });
 
+	glm::vec3 border_color = { 1.f, 1.f, 1.f };
 	while (mango.NextFrame({ 0.f, 0.f, 0.f }))
 	{
 		HandleCamera(mango, camera);
@@ -274,6 +314,10 @@ int main()
 			ImGui::End();
 		}
 
+		framebuffer.Bind();
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
 		glDisable(GL_STENCIL_TEST);
 
 		// light cube
@@ -294,7 +338,6 @@ int main()
 
 			glEnable(GL_STENCIL_TEST);
 
-			// glow
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			glStencilMask(0xFF);
 			glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -329,10 +372,12 @@ int main()
 				glDrawElements(model.GetMode(), model.GetIBO().GetCount(), model.GetIBO().GetType(), nullptr);
 			}
 
+			
 			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 			glStencilMask(0xFF);
 
+			// glow
 			{
 				flat_shader.Bind();
 				flat_shader.SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix(object.GetPosition(), object.GetRotation(), object.GetScale() + 0.02f));
@@ -344,6 +389,18 @@ int main()
 			glDisable(GL_STENCIL_TEST);
 		}
 
+		// render framebuffer
+		{
+			Mango::Framebuffer::Unbind();
+			
+			framebuffer.GetTexture().Bind();
+
+			simple_shader.Bind();
+
+			quad_model.GetVAO().Bind();
+			glDrawElements(quad_model.GetMode(), quad_model.GetIBO().GetCount(), quad_model.GetIBO().GetType(), nullptr);
+
+		}
 		mango.EndFrame();
 	}
 

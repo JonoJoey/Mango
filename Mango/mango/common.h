@@ -61,4 +61,5 @@ inline size_t GetElementSize(unsigned int element)
 
 	DBG_ERROR("Element type not supported - 0x%X", element);
 	ASSERT(false);
+	return 0;
 }

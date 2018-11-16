@@ -5,33 +5,31 @@ namespace
 {
 	void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 	{
-		glViewport(0, 0, width, height);
+		for (auto input : Mango::MangoCore::GetEventInterfaces())
+			input->OnWindowResize(width, height);
 	}
 
 	// input
 	void MousePositionCallback(GLFWwindow* window, double xpos, double ypos)
 	{
-		for (auto input : Mango::MangoCore::GetInputInterfaces())
+		for (auto input : Mango::MangoCore::GetEventInterfaces())
 			input->OnMouseMove(float(xpos), float(ypos));
 	}
 	void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 	{
 		ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
 
-		for (auto input : Mango::MangoCore::GetInputInterfaces())
+		for (auto input : Mango::MangoCore::GetEventInterfaces())
 		{
-			for (auto input : Mango::MangoCore::GetInputInterfaces())
+			switch (action)
 			{
-				switch (action)
-				{
-				case GLFW_PRESS:
-				case GLFW_REPEAT:
-					input->OnMouseButtonPress(button, action == GLFW_REPEAT);
-					break;
-				case GLFW_RELEASE:
-					input->OnMouseButtonRelease(button);
-					break;
-				}
+			case GLFW_PRESS:
+			case GLFW_REPEAT:
+				input->OnMouseButtonPress(button, action == GLFW_REPEAT);
+				break;
+			case GLFW_RELEASE:
+				input->OnMouseButtonRelease(button);
+				break;
 			}
 		}
 	}
@@ -47,7 +45,7 @@ namespace
 		std::string key_name = c_str ? c_str : "";
 
 		// GLFW_PRESS, GLFW_REPEAT or GLFW_RELEASE
-		for (auto input : Mango::MangoCore::GetInputInterfaces())
+		for (auto input : Mango::MangoCore::GetEventInterfaces())
 		{
 			switch (action)
 			{
@@ -83,7 +81,7 @@ namespace
 namespace Mango
 {
 	bool MangoCore::is_init = false;
-	std::deque<IInputHandler*> MangoCore::input_interfaces;
+	std::deque<IEventHandler*> MangoCore::event_interfaces;
 
 	bool MangoCore::Setup(const std::string& window_name, const glm::ivec2& window_size)
 	{
@@ -193,7 +191,7 @@ namespace Mango
 			return;
 
 		is_init = false;
-		input_interfaces.clear();
+		event_interfaces.clear();
 
 		Utility::Cleanup();
 
@@ -210,7 +208,7 @@ namespace Mango
 		if (glfwWindowShouldClose(m_window))
 			return false;
 
-		//glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.f);
+		glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		// imgui
@@ -235,29 +233,29 @@ namespace Mango
 		glfwPollEvents();
 	}
 
-	bool MangoCore::RegisterInputHandler(IInputHandler* input)
+	bool MangoCore::RegisterEventHandler(IEventHandler* event_handler)
 	{
-		ASSERT(input);
+		ASSERT(event_handler);
 		
-		for (auto i : input_interfaces)
+		for (auto i : event_interfaces)
 		{
-			if (i == input)
+			if (i == event_handler)
 			{
 				DBG_ERROR("Input interface already registered");
 				return false;
 			}
 		}
 
-		input_interfaces.push_back(input);
+		event_interfaces.push_back(event_handler);
 		return true;
 	}
-	void MangoCore::UnregisterInputHandler(IInputHandler* input)
+	void MangoCore::UnregisterEventHandler(IEventHandler* event_handler)
 	{
-		for (size_t i = 0; i < input_interfaces.size(); i++)
+		for (size_t i = 0; i < event_interfaces.size(); i++)
 		{
-			if (input_interfaces[i] == input)
+			if (event_interfaces[i] == event_handler)
 			{
-				input_interfaces.erase(input_interfaces.begin() + i);
+				event_interfaces.erase(event_interfaces.begin() + i);
 				return;
 			}
 		}

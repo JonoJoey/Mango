@@ -34,6 +34,10 @@ namespace Mango
 
 		return true;
 	}
+	void Texture::Setup(unsigned int texture)
+	{
+		m_texture = texture;
+	}
 	void Texture::Release()
 	{
 		if (!IsUtilRegistered())
@@ -44,6 +48,7 @@ namespace Mango
 			return;
 
 		glDeleteTextures(1, &m_texture);
+		m_texture = 0xFFFFFFFF;
 	}
 
 	void Texture::Bind(unsigned int slot) const

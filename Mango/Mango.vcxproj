@@ -140,6 +140,7 @@
     <ClCompile Include="mango\graphics\model.cpp" />
     <ClCompile Include="mango\graphics\2D\renderer_2d.cpp" />
     <ClCompile Include="mango\graphics\3D\renderer_3d.cpp" />
+    <ClCompile Include="mango\graphics\wrappers\framebuffer.cpp" />
     <ClCompile Include="mango\graphics\wrappers\shader.cpp" />
     <ClCompile Include="mango\graphics\wrappers\texture.cpp" />
     <ClCompile Include="mango\graphics\wrappers\vertex_array.cpp" />
@@ -405,12 +406,13 @@
     <ClInclude Include="mango\graphics\2D\renderer_2d.h" />
     <ClInclude Include="mango\graphics\3D\renderer_3d.h" />
     <ClInclude Include="mango\graphics\wrappers\buffer_object.h" />
+    <ClInclude Include="mango\graphics\wrappers\framebuffer.h" />
     <ClInclude Include="mango\graphics\wrappers\shader.h" />
     <ClInclude Include="mango\graphics\wrappers\texture.h" />
     <ClInclude Include="mango\graphics\wrappers\vertex_array.h" />
     <ClInclude Include="mango\mango.h" />
     <ClInclude Include="mango\misc\file_parser.h" />
-    <ClInclude Include="mango\misc\input_handler.h" />
+    <ClInclude Include="mango\misc\event_handler.h" />
     <ClInclude Include="mango\misc\maths.h" />
     <ClInclude Include="mango\misc\utility.h" />
   </ItemGroup>
