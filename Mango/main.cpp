@@ -139,7 +139,7 @@ bool LoadCubeMap(Mango::Model& model, Mango::CubeTexture& texture, std::array<st
 	Mango::VertexArray::EnableAttribute(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	Mango::VertexArray::Unbind();
 
-	return texture.Setup(file_paths);
+	return texture.Setup(file_paths, true);
 }
 bool LoadModel(Mango::Model& model, const std::string& file_path)
 {
@@ -293,23 +293,25 @@ int main()
 	Mango::Camera3D camera({ 0.f, 0.f, 1.f }, { 0.f, 0.f, 0.f });
 	Mango::Light3D light({ -5.f, 5.f, 5.f });
 	light.SetScale(0.2f);
-	light.SetAmbientColor({ 0.05f, 0.05f, 0.05f });
+	light.SetAmbientColor({ 0.1f, 0.1f, 0.1f });
 	light.SetDiffuseColor({ 1.f, 1.f, 1.f });
 	light.SetSpecularColor({ 1.f, 1.f, 1.f });
 
 	Mango::Material3D cube_material;
 	cube_material.shine_damper = 32.f;
 
-	Mango::Shader simple_shader(Mango::Shader::ReadFile("res/shaders/simple_vs.glsl"),
-		Mango::Shader::ReadFile("res/shaders/simple_fs.glsl"));
+	Mango::Shader post_process_shader(Mango::Shader::ReadFile("res/shaders/post_process_vs.glsl"),
+		Mango::Shader::ReadFile("res/shaders/post_process_fs.glsl"));
 	Mango::Shader flat_shader(Mango::Shader::ReadFile("res/shaders/flat_vs.glsl"),
 		Mango::Shader::ReadFile("res/shaders/flat_fs.glsl"));
 	Mango::Shader phong_shader(Mango::Shader::ReadFile("res/shaders/phong_vs.glsl"),
 		Mango::Shader::ReadFile("res/shaders/phong_fs.glsl"));
+	Mango::Shader blinn_phong_shader(Mango::Shader::ReadFile("res/shaders/blinn_phong_vs.glsl"),
+		Mango::Shader::ReadFile("res/shaders/blinn_phong_fs.glsl"));
 	Mango::Shader skybox_shader(Mango::Shader::ReadFile("res/shaders/skybox_vs.glsl"),
 		Mango::Shader::ReadFile("res/shaders/skybox_fs.glsl"));
 
-	Mango::Texture diffuse_map("res/textures/diffuse_map.png");
+	Mango::Texture diffuse_map("res/textures/diffuse_map.png", true);
 	Mango::Texture specular_map("res/textures/specular_map.png");
 
 	framebuffer.Setup({ 800, 600 });
@@ -426,27 +428,27 @@ int main()
 			glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 			{
-				phong_shader.Bind();
+				blinn_phong_shader.Bind();
 
 				// matrices
-				phong_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
-				phong_shader.SetUniformMat4("u_view_matrix", camera.GetViewMatrix());
-				phong_shader.SetUniformMat4("u_model_matrix", object.GetModelMatrix());
-				phong_shader.SetUniformMat3("u_normal_matrix", Mango::Maths::CreateNormalMatrix(object.GetModelMatrix()));
+				blinn_phong_shader.SetUniformMat4("u_projection_matrix", Mango::Maths::CreateProjectionMatrix(60.f, mango.GetAspectRatio(), 0.1f, 300.f));
+				blinn_phong_shader.SetUniformMat4("u_view_matrix", camera.GetViewMatrix());
+				blinn_phong_shader.SetUniformMat4("u_model_matrix", object.GetModelMatrix());
+				blinn_phong_shader.SetUniformMat3("u_normal_matrix", Mango::Maths::CreateNormalMatrix(object.GetModelMatrix()));
 
 				// material
-				phong_shader.SetUniformF1("u_material.shine_damper", cube_material.shine_damper);
-				phong_shader.SetUniformI1("u_material.diffuse_map", 0);
-				phong_shader.SetUniformI1("u_material.specular_map", 1);
+				blinn_phong_shader.SetUniformF1("u_material.shine_damper", cube_material.shine_damper);
+				blinn_phong_shader.SetUniformI1("u_material.diffuse_map", 0);
+				blinn_phong_shader.SetUniformI1("u_material.specular_map", 1);
 
 				// light
-				phong_shader.SetUniformF3("u_light.position", light.GetPosition().x, light.GetPosition().y, light.GetPosition().z);
-				phong_shader.SetUniformF3("u_light.ambient", light.GetAmbientColor().r, light.GetAmbientColor().g, light.GetAmbientColor().b);
-				phong_shader.SetUniformF3("u_light.diffuse", light.GetDiffuseColor().r, light.GetDiffuseColor().g, light.GetDiffuseColor().b);
-				phong_shader.SetUniformF3("u_light.specular", light.GetSpecularColor().r, light.GetSpecularColor().g, light.GetSpecularColor().b);
+				blinn_phong_shader.SetUniformF3("u_light.position", light.GetPosition().x, light.GetPosition().y, light.GetPosition().z);
+				blinn_phong_shader.SetUniformF3("u_light.ambient", light.GetAmbientColor().r, light.GetAmbientColor().g, light.GetAmbientColor().b);
+				blinn_phong_shader.SetUniformF3("u_light.diffuse", light.GetDiffuseColor().r, light.GetDiffuseColor().g, light.GetDiffuseColor().b);
+				blinn_phong_shader.SetUniformF3("u_light.specular", light.GetSpecularColor().r, light.GetSpecularColor().g, light.GetSpecularColor().b);
 
 				// camera
-				phong_shader.SetUniformF3("u_camera_position", camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
+				blinn_phong_shader.SetUniformF3("u_camera_position", camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
 
 				// textures
 				diffuse_map.Bind(0);
@@ -487,18 +489,14 @@ int main()
 
 		// render framebuffer
 		{
-			glEnable(GL_FRAMEBUFFER_SRGB);
-
 			Mango::Framebuffer::Unbind();
 			
 			framebuffer.GetTexture().Bind();
 
-			simple_shader.Bind();
+			post_process_shader.Bind();
 
 			quad_model.GetVAO().Bind();
 			glDrawElements(quad_model.GetMode(), quad_model.GetIBO().GetCount(), quad_model.GetIBO().GetType(), nullptr);
-
-			glDisable(GL_FRAMEBUFFER_SRGB);
 
 		}
 		mango.EndFrame();
