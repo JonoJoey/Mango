@@ -9,11 +9,11 @@ namespace Mango
 	{
 	public:
 		Texture() = default;
-		Texture(const std::string& file_path, bool alpha_channel = false, float mip_map_lod = 0.f) { ASSERT(Setup(file_path, alpha_channel, mip_map_lod)); }
+		Texture(const std::string& file_path, bool srgb = false, bool alpha_channel = false, float mip_map_lod = 0.f) { ASSERT(Setup(file_path, srgb, alpha_channel, mip_map_lod)); }
 		Texture(unsigned int texture) { Setup(texture); }
 		~Texture() { Release(); }
 
-		bool Setup(const std::string& file_path, bool alpha_channel = false, float mip_map_lod = 0.f);
+		bool Setup(const std::string& file_path, bool srgb = false, bool alpha_channel = false, float mip_map_lod = 0.f);
 		void Setup(unsigned int texture);
 		void Release() override;
 
@@ -32,7 +32,7 @@ namespace Mango
 		CubeTexture() = default;
 		~CubeTexture() { Release(); }
 
-		bool Setup(const std::array<std::string, 6> file_paths, bool alpha_channel = false);
+		bool Setup(const std::array<std::string, 6> file_paths, bool srgb = false, bool alpha_channel = false);
 		void Release() override;
 
 		void Bind(unsigned int slot = 0) const;

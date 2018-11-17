@@ -3,7 +3,7 @@
 
 namespace Mango
 {
-	bool Texture::Setup(const std::string& file_path, bool alpha_channel, float mip_map_lod)
+	bool Texture::Setup(const std::string& file_path, bool srgb, bool alpha_channel, float mip_map_lod)
 	{
 		int num_components; glm::ivec2 size;
 		stbi_set_flip_vertically_on_load(1);
@@ -16,7 +16,7 @@ namespace Mango
 
 		glGenTextures(1, &m_texture);
 		glBindTexture(GL_TEXTURE_2D, m_texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, alpha_channel ? GL_RGBA8 : GL_RGB8, size.x, size.y, 0, alpha_channel ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, buffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, alpha_channel ? (srgb ? GL_SRGB8_ALPHA8 : GL_RGBA8) : (srgb ? GL_SRGB8 : GL_RGB8), size.x, size.y, 0, alpha_channel ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, buffer);
 
 		// mipmap stuffs
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -64,7 +64,7 @@ namespace Mango
 	}
 
 
-	bool CubeTexture::Setup(const std::array<std::string, 6> file_paths, bool alpha_channel)
+	bool CubeTexture::Setup(const std::array<std::string, 6> file_paths, bool srgb, bool alpha_channel)
 	{
 		glGenTextures(1, &m_texture);
 		Bind();
@@ -81,7 +81,7 @@ namespace Mango
 				return false;
 			}
 			
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, alpha_channel ? GL_RGBA8 : GL_RGB8,
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, alpha_channel ? (srgb ? GL_SRGB8_ALPHA8 : GL_RGBA8) : (srgb ? GL_SRGB8 : GL_RGB8),
 				size.x, size.y, 0, alpha_channel ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, buffer);
 			stbi_image_free(buffer);
 		}
