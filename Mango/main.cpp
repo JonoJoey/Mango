@@ -218,6 +218,12 @@ void HandleCamera(Mango::MangoCore& mango, Mango::Camera3D& camera)
 }
 
 
+NEW_COMPONENT(PositionComponent)
+{
+	float x, y, z;
+}; COMPONENT_INFO(PositionComponent, "position");
+
+
 int main()
 {
 	Mango::MangoCore mango;
@@ -315,6 +321,8 @@ int main()
 	Mango::Texture specular_map("res/textures/specular_map.png");
 
 	framebuffer.Setup({ 800, 600 });
+
+
 
 	glm::vec3 border_color = { 1.f, 1.f, 1.f };
 	while (mango.NextFrame({ 0.f, 0.f, 0.f }))
