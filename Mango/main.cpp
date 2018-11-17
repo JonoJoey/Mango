@@ -220,8 +220,14 @@ void HandleCamera(Mango::MangoCore& mango, Mango::Camera3D& camera)
 
 NEW_COMPONENT(PositionComponent)
 {
+	PositionComponent(float X, float Y, float Z) : x(X), y(Y), z(Z) {}
 	float x, y, z;
 }; COMPONENT_INFO(PositionComponent, "position");
+
+NEW_COMPONENT(VelocityComponent)
+{
+	float x, y, z;
+}; COMPONENT_INFO(VelocityComponent, "velocity");
 
 
 int main()
@@ -323,6 +329,43 @@ int main()
 	framebuffer.Setup({ 800, 600 });
 
 
+	auto entity = Mango::ECS::CreateEntity();
+
+	Mango::ECS::AddComponent<PositionComponent>(entity, 69.f, 420.f, 69.f);
+	Mango::ECS::AddComponent<VelocityComponent>(entity);
+
+	Mango::ECS::Test(entity, [](std::deque<std::shared_ptr<Mango::ECS::BaseComponent>> components) 
+	{
+		for (auto comp : components)
+		{
+			DBG_LOG("%s", comp->name);
+
+			if (comp->id == PositionComponent::ID)
+			{
+				auto pos = reinterpret_cast<PositionComponent*>(comp->GetPtr());
+				DBG_LOG("%f %f %f", pos->x, pos->y, pos->z);
+				pos->x = 1.f;
+				pos->y = 2.f;
+				pos->z = 3.f;
+			}
+		}
+	});
+
+	Mango::ECS::Test(entity, [](std::deque<std::shared_ptr<Mango::ECS::BaseComponent>> components)
+	{
+		for (auto comp : components)
+		{
+			DBG_LOG("%s", comp->name);
+
+			if (comp->id == PositionComponent::ID)
+			{
+				auto pos = reinterpret_cast<PositionComponent*>(comp->GetPtr());
+				DBG_LOG("%f %f %f", pos->x, pos->y, pos->z);
+			}
+		}
+	});
+
+	Mango::ECS::RemoveEntity(entity);
 
 	glm::vec3 border_color = { 1.f, 1.f, 1.f };
 	while (mango.NextFrame({ 0.f, 0.f, 0.f }))
