@@ -3,10 +3,9 @@
 
 namespace Mango::ECS
 {
-	int NextID()
+	COMPONENT_ID NextID()
 	{
-		// start at 1, not 0
-		static int id = 1;
+		static COMPONENT_ID id = 0;
 		return id++;
 	}
 } // namespace Mango::ECS

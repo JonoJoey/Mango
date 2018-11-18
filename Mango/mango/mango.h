@@ -14,7 +14,7 @@
 
 #include "misc/event_handler.h"
 
-#include "ecs/ecs.h"
+#include "ecs/ecs_core.h"
 
 
 namespace Mango

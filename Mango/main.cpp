@@ -218,17 +218,17 @@ void HandleCamera(Mango::MangoCore& mango, Mango::Camera3D& camera)
 }
 
 
-NEW_COMPONENT(PositionComponent)
+struct PositionComponent : public Mango::ECS::Component<PositionComponent>
 {
-	PositionComponent(float X, float Y, float Z) : x(X), y(Y), z(Z) {}
-	float x, y, z;
+	PositionComponent() = default;
+	PositionComponent(float X, float Y, float Z) : pos_x(X), pos_y(Y), pos_z(Z) {}
+	float pos_x, pos_y, pos_z;
 }; COMPONENT_INFO(PositionComponent, "position");
 
-NEW_COMPONENT(VelocityComponent)
+struct VelocityComponent : public Mango::ECS::Component<VelocityComponent>
 {
-	float x, y, z;
+	float vel_x, vel_y, vel_z;
 }; COMPONENT_INFO(VelocityComponent, "velocity");
-
 
 int main()
 {
@@ -328,44 +328,52 @@ int main()
 
 	framebuffer.Setup({ 800, 600 });
 
+	Mango::ECS::ECSCore ecs_core;
 
-	auto entity = Mango::ECS::CreateEntity();
+	const auto entity = ecs_core.CreateEntity();
+	const auto entity2 = ecs_core.CreateEntity();
 
-	Mango::ECS::AddComponent<PositionComponent>(entity, 69.f, 420.f, 69.f);
-	Mango::ECS::AddComponent<VelocityComponent>(entity);
+	ecs_core.AttachComponent<PositionComponent>(entity, 1.f, 2.f, 3.f);
+	ecs_core.AttachComponent<VelocityComponent>(entity);
 
-	Mango::ECS::Test(entity, [](std::deque<std::shared_ptr<Mango::ECS::BaseComponent>> components) 
+	ecs_core.AttachComponent<PositionComponent>(entity2, 3.f, 2.f, 1.f);
+	ecs_core.AttachComponent<VelocityComponent>(entity2);
+
+	ecs_core.AttachSystem({ VelocityComponent::ID }, 
+		[](std::deque<Mango::ECS::ENTITY_HANDLE> entities, std::unordered_map<Mango::ECS::COMPONENT_ID, std::deque<Mango::ECS::BaseComponent*>> components) -> void
 	{
-		for (auto comp : components)
-		{
-			DBG_LOG("%s", comp->name);
+		DBG_LOG("Start 1");
 
-			if (comp->id == PositionComponent::ID)
+		for (size_t i = 0; i < entities.size(); i++)
+		{
+			DBG_LOG("0x%X", entities[i]);
+			for (auto comp_list : components)
 			{
-				auto pos = reinterpret_cast<PositionComponent*>(comp->GetPtr());
-				DBG_LOG("%f %f %f", pos->x, pos->y, pos->z);
-				pos->x = 1.f;
-				pos->y = 2.f;
-				pos->z = 3.f;
+				DBG_LOG("  %s", comp_list.second[i]->name);
 			}
 		}
+
+		DBG_LOG("End 1");
 	});
 
-	Mango::ECS::Test(entity, [](std::deque<std::shared_ptr<Mango::ECS::BaseComponent>> components)
+	ecs_core.AttachSystem({ PositionComponent::ID },
+		[](std::deque<Mango::ECS::ENTITY_HANDLE> entities, std::unordered_map<Mango::ECS::COMPONENT_ID, std::deque<Mango::ECS::BaseComponent*>> components) -> void
 	{
-		for (auto comp : components)
-		{
-			DBG_LOG("%s", comp->name);
+		DBG_LOG("Start 2");
 
-			if (comp->id == PositionComponent::ID)
+		for (size_t i = 0; i < entities.size(); i++)
+		{
+			DBG_LOG("0x%X", entities[i]);
+			for (auto comp_list : components)
 			{
-				auto pos = reinterpret_cast<PositionComponent*>(comp->GetPtr());
-				DBG_LOG("%f %f %f", pos->x, pos->y, pos->z);
+				DBG_LOG("  %s", comp_list.second[i]->name);
 			}
 		}
+
+		DBG_LOG("End 2");
 	});
 
-	Mango::ECS::RemoveEntity(entity);
+	ecs_core.Process();
 
 	glm::vec3 border_color = { 1.f, 1.f, 1.f };
 	while (mango.NextFrame({ 0.f, 0.f, 0.f }))
@@ -553,6 +561,7 @@ int main()
 		mango.EndFrame();
 	}
 
+	ecs_core.Release();
 	mango.Release();
 	system("pause");
 	return EXIT_SUCCESS;

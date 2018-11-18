@@ -2,35 +2,32 @@
 
 #include <string>
 
-#define NEW_COMPONENT(component) struct component : public Mango::ECS::Component<component>
-#define COMPONENT_INFO(component, name) const char* Mango::ECS::Component<component>::NAME = name; const size_t Mango::ECS::Component<component>::SIZE = sizeof(component)
-
-#define ENTITY_HANDLE uint32_t
-#define INVALID_ENTITY_HANDLE ENTITY_HANDLE(0)
+#define COMPONENT_INFO(component, name) const char* const Mango::ECS::Component<component>::NAME = name; const size_t Mango::ECS::Component<component>::SIZE = sizeof(component)
 
 
 namespace Mango::ECS
 {
-	int NextID();
+	typedef uint32_t COMPONENT_ID;
+
+	COMPONENT_ID NextID();
 
 	struct BaseComponent
 	{
-		ENTITY_HANDLE entity;
+		COMPONENT_ID id;
 		const char* name;
 		size_t size;
-		int id;
 
-		void* GetPtr() { return this; }
+		BaseComponent* GetPtr() { return this; }
 	};
 
 	template <typename T>
 	struct Component : public BaseComponent
 	{
-		static const int ID;
-		static const char* NAME;
+		static const COMPONENT_ID ID;
+		static const char* const NAME;
 		static const size_t SIZE;
 	};
 
 	template <typename T>
-	const int Component<T>::ID = NextID();
+	const COMPONENT_ID Component<T>::ID = NextID();
 } // namespace Mango::ECS

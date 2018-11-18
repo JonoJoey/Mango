@@ -90,7 +90,7 @@
     <ClCompile Include="mango\ecs\component.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mango\ecs\entity.cpp">
+    <ClCompile Include="mango\ecs\ecs_core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -896,13 +896,10 @@
     <ClInclude Include="mango\ecs\component.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mango\ecs\ecs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="mango\ecs\system.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mango\ecs\entity.h">
+    <ClInclude Include="mango\ecs\ecs_core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -6,6 +6,7 @@
 #include <array>
 #include <deque>
 #include <vector>
+#include <algorithm>
 
 #include "misc/utility.h"
 #include "misc/maths.h"

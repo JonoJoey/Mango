@@ -135,7 +135,7 @@
     <ClCompile Include="dep\stb\stb_image.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mango\ecs\component.cpp" />
-    <ClCompile Include="mango\ecs\entity.cpp" />
+    <ClCompile Include="mango\ecs\ecs_core.cpp" />
     <ClCompile Include="mango\ecs\system.cpp" />
     <ClCompile Include="mango\graphics\3D\camera_3d.cpp" />
     <ClCompile Include="mango\graphics\3D\entity_3d.cpp" />
@@ -402,8 +402,7 @@
     <ClInclude Include="dep\imgui\imstb_truetype.h" />
     <ClInclude Include="dep\stb\stb_image.h" />
     <ClInclude Include="mango\common.h" />
-    <ClInclude Include="mango\ecs\ecs.h" />
-    <ClInclude Include="mango\ecs\entity.h" />
+    <ClInclude Include="mango\ecs\ecs_core.h" />
     <ClInclude Include="mango\ecs\system.h" />
     <ClInclude Include="mango\graphics\3D\camera_3d.h" />
     <ClInclude Include="mango\graphics\3D\entity_3d.h" />
