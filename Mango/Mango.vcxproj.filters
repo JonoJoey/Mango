@@ -84,9 +84,6 @@
     <ClCompile Include="mango\misc\misc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mango\ecs\system.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mango\ecs\component.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

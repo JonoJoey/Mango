@@ -8,4 +8,5 @@ namespace Mango::ECS
 		static COMPONENT_ID id = 0;
 		return id++;
 	}
+
 } // namespace Mango::ECS

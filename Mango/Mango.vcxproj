@@ -136,7 +136,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mango\ecs\component.cpp" />
     <ClCompile Include="mango\ecs\ecs_core.cpp" />
-    <ClCompile Include="mango\ecs\system.cpp" />
     <ClCompile Include="mango\graphics\3D\camera_3d.cpp" />
     <ClCompile Include="mango\graphics\3D\entity_3d.cpp" />
     <ClCompile Include="mango\graphics\3D\light_3d.cpp" />

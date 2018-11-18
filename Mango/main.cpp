@@ -221,14 +221,78 @@ void HandleCamera(Mango::MangoCore& mango, Mango::Camera3D& camera)
 struct PositionComponent : public Mango::ECS::Component<PositionComponent>
 {
 	PositionComponent() = default;
-	PositionComponent(float X, float Y, float Z) : pos_x(X), pos_y(Y), pos_z(Z) {}
-	float pos_x, pos_y, pos_z;
+	PositionComponent(float X, float Y, float Z) : x(X), y(Y), z(Z) {}
+	float x, y, z;
 }; COMPONENT_INFO(PositionComponent, "position");
 
 struct VelocityComponent : public Mango::ECS::Component<VelocityComponent>
 {
-	float vel_x, vel_y, vel_z;
+	VelocityComponent() = default;
+	VelocityComponent(float X, float Y, float Z) : x(X), y(Y), z(Z) {}
+	float x, y, z;
 }; COMPONENT_INFO(VelocityComponent, "velocity");
+
+
+class RenderSystem : public Mango::ECS::ECSSystem
+{
+public:
+	void OnAttach() override
+	{
+		SetFilter({ PositionComponent::ID, VelocityComponent::ID });
+	}
+	void OnFrame(std::unordered_map<Mango::ECS::COMPONENT_ID, const std::unordered_map<Mango::ECS::ENTITY_HANDLE, std::shared_ptr<Mango::ECS::BaseComponent>>*> components) override
+	{
+
+	}
+
+} render_system;
+
+class MovementSystem : public Mango::ECS::ECSSystem
+{
+public:
+	void OnAttach() override
+	{
+		SetFilter({ PositionComponent::ID, VelocityComponent::ID });
+	}
+
+	void OnTick(std::unordered_map<Mango::ECS::COMPONENT_ID, const std::unordered_map<Mango::ECS::ENTITY_HANDLE, std::shared_ptr<Mango::ECS::BaseComponent>>*> components) override
+	{
+		auto positions = components[PositionComponent::ID];
+		auto velocities = components[VelocityComponent::ID];
+
+		for (auto pos_it = positions->begin(); pos_it != positions->end(); pos_it++)
+		{
+			if (auto vel_it = velocities->find(pos_it->first); vel_it != velocities->end())
+			{
+				auto position = reinterpret_cast<PositionComponent*>(pos_it->second->GetPtr());
+				auto velocity = reinterpret_cast<VelocityComponent*>(vel_it->second->GetPtr());
+				
+				position->x += velocity->x;
+				position->y += velocity->y;
+				position->z += velocity->z;
+			}
+		}
+	}
+} movement_system;
+
+class DebugSystem : public Mango::ECS::ECSSystem
+{
+public:
+	void OnAttach() override
+	{
+		SetFilter({  });
+	}
+	void OnFrame(std::unordered_map<Mango::ECS::COMPONENT_ID, const std::unordered_map<Mango::ECS::ENTITY_HANDLE, std::shared_ptr<Mango::ECS::BaseComponent>>*> components) override
+	{
+		auto positions = components[PositionComponent::ID];
+		for (auto pos_it = positions->begin(); pos_it != positions->end(); pos_it++)
+		{
+			auto position = reinterpret_cast<PositionComponent*>(pos_it->second->GetPtr());
+			DBG_LOG("0x%X - %f %f %f", pos_it->first, position->x, position->y, position->z);
+		}
+	}
+} debug_system;
+
 
 int main()
 {
@@ -334,50 +398,18 @@ int main()
 	const auto entity2 = ecs_core.CreateEntity();
 
 	ecs_core.AttachComponent<PositionComponent>(entity, 1.f, 2.f, 3.f);
-	ecs_core.AttachComponent<VelocityComponent>(entity);
+	ecs_core.AttachComponent<VelocityComponent>(entity, 1.f, 1.f, 1.f);
 
-	ecs_core.AttachComponent<PositionComponent>(entity2, 3.f, 2.f, 1.f);
-	ecs_core.AttachComponent<VelocityComponent>(entity2);
-
-	ecs_core.AttachSystem({ VelocityComponent::ID }, 
-		[](std::deque<Mango::ECS::ENTITY_HANDLE> entities, std::unordered_map<Mango::ECS::COMPONENT_ID, std::deque<Mango::ECS::BaseComponent*>> components) -> void
-	{
-		DBG_LOG("Start 1");
-
-		for (size_t i = 0; i < entities.size(); i++)
-		{
-			DBG_LOG("0x%X", entities[i]);
-			for (auto comp_list : components)
-			{
-				DBG_LOG("  %s", comp_list.second[i]->name);
-			}
-		}
-
-		DBG_LOG("End 1");
-	});
-
-	ecs_core.AttachSystem({ PositionComponent::ID },
-		[](std::deque<Mango::ECS::ENTITY_HANDLE> entities, std::unordered_map<Mango::ECS::COMPONENT_ID, std::deque<Mango::ECS::BaseComponent*>> components) -> void
-	{
-		DBG_LOG("Start 2");
-
-		for (size_t i = 0; i < entities.size(); i++)
-		{
-			DBG_LOG("0x%X", entities[i]);
-			for (auto comp_list : components)
-			{
-				DBG_LOG("  %s", comp_list.second[i]->name);
-			}
-		}
-
-		DBG_LOG("End 2");
-	});
-
-	ecs_core.Process();
+	ecs_core.AttachSystem(&movement_system);
+	ecs_core.AttachSystem(&render_system);
+	ecs_core.AttachSystem(&debug_system);
 
 	glm::vec3 border_color = { 1.f, 1.f, 1.f };
 	while (mango.NextFrame({ 0.f, 0.f, 0.f }))
 	{
+		ecs_core.OnTick();
+		ecs_core.OnFrame();
+
 		HandleCamera(mango, camera);
 
 		// ImGui

@@ -3,32 +3,49 @@
 
 namespace Mango::ECS
 {
-	void ECSCore::Process()
+	void ECSCore::OnTick()
 	{
 		for (auto system : m_systems)
 		{
-			std::deque<ENTITY_HANDLE> entities;
-			std::unordered_map<COMPONENT_ID, std::deque<BaseComponent*>> components;
+			std::unordered_map<COMPONENT_ID, const std::unordered_map<ENTITY_HANDLE, std::shared_ptr<BaseComponent>>*> comps;
 
-			for (auto entity : m_entities)
+			const auto& filter = system->GetFilter();
+			if (filter.empty())
 			{
-				std::deque<BaseComponent*> comps;
-				for (auto comp : entity.second->components)
-				{
-					if (std::find(system.filter.begin(), system.filter.end(), comp->id) != system.filter.end())
-						comps.push_back(comp->GetPtr());
-				}
-				if (comps.size() != system.filter.size())
-					continue;
-
-				entities.push_back(entity.first);
-				for (auto comp : comps)
-					components[comp->id].push_back(comp);
+				for (const auto comp : m_components)
+					comps[comp.first] = &m_components[comp.first];
+			}
+			else
+			{
+				for (const auto comp_id : filter)
+					comps[comp_id] = &m_components[comp_id];
 			}
 
-			system.callback(entities, components);
+			system->OnTick(comps);
 		}
 	}
+	void ECSCore::OnFrame()
+	{
+		for (auto system : m_systems)
+		{
+			std::unordered_map<COMPONENT_ID, const std::unordered_map<ENTITY_HANDLE, std::shared_ptr<BaseComponent>>*> comps;
+
+			const auto& filter = system->GetFilter();
+			if (filter.empty())
+			{
+				for (const auto comp : m_components)
+					comps[comp.first] = &m_components[comp.first];
+			}
+			else
+			{
+				for (const auto comp_id : filter)
+					comps[comp_id] = &m_components[comp_id];
+			}
+
+			system->OnFrame(comps);
+		}
+	}
+
 	void ECSCore::Release()
 	{
 		m_entities.clear();
@@ -38,9 +55,9 @@ namespace Mango::ECS
 	{
 		const auto handle = GenerateNewEntityHandle();
 
-		auto entity = new Entity;
-		entity->handle = handle;
-		m_entities[handle] = std::shared_ptr<Entity>(entity);
+		Entity entity;
+		entity.handle = handle;
+		m_entities[handle] = entity;
 
 		return handle;
 	}
@@ -61,13 +78,13 @@ namespace Mango::ECS
 		return handle;
 	}
 
-	void ECSCore::AttachComponent(ENTITY_HANDLE handle, BaseComponent* comp)
+	void ECSCore::AttachComponent(BaseComponent* comp)
 	{
-		m_entities.at(handle)->components.emplace_back(comp);
+		m_components[comp->id][comp->entity] = std::shared_ptr<BaseComponent>(comp);
 	}
-	void ECSCore::AttachSystem(std::vector<COMPONENT_ID> filter, ECS_SYSTEM_CALLBACK callback)
+	void ECSCore::AttachSystem(ECSSystem* system)
 	{
-		if (!filter.empty())
-			m_systems.push_back({ filter, callback });
+		system->OnAttach();
+		m_systems.push_back(system);
 	}
 } // namespace Mango::ECS
