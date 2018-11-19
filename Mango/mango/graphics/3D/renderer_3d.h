@@ -20,6 +20,7 @@ namespace Mango
 
 		bool Setup(MangoCore* mango);
 		void Release() override;
+		void Resize(int width, int height);
 
 		void Start();
 		void End();

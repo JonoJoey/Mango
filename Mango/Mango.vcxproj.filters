@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mango\mango.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -88,6 +85,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mango\ecs\ecs_core.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="app\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="app\event_handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="app\mango_app.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -897,6 +903,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mango\ecs\ecs_core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app\event_handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app\mango_app.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app\components.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

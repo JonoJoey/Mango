@@ -67,7 +67,7 @@ namespace Mango
 						break;
 					case 2:
 						for (int i = 0; i < 3; i++)
-							ASSERT(sscanf_s(tokens[i + 1].c_str(), "%i/%i/%i", &face[i * 3], &face[i * 3 + 1], &face[i * 3 + 2]) >= 2);
+							ASSERT(sscanf_s(tokens[i + 1].c_str(), "%i/%i/%i", &face[i * 3], &face[i * 3 + 1], &face[i * 3 + 2]) == 3);
 						break;
 					}
 

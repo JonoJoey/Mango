@@ -28,8 +28,9 @@ namespace Mango
 		bool Setup(const std::string& window_name, const glm::ivec2& window_size);
 		void Release();
 
-		bool NextFrame(const glm::vec3& clear_color);
+		bool NextFrame();
 		void EndFrame();
+		void Clear(glm::vec3 color);
 
 		void SetVerticalSync(bool on);
 		void SetMousePosition(glm::vec2 position);

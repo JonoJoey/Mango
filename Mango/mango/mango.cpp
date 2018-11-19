@@ -203,13 +203,10 @@ namespace Mango
 		glfwTerminate();
 	}
 
-	bool MangoCore::NextFrame(const glm::vec3& clear_color)
+	bool MangoCore::NextFrame()
 	{
 		if (glfwWindowShouldClose(m_window))
 			return false;
-
-		glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		// imgui
 		ImGui_ImplOpenGL3_NewFrame();
@@ -231,6 +228,11 @@ namespace Mango
 
 		glfwSwapBuffers(m_window);
 		glfwPollEvents();
+	}
+	void MangoCore::Clear(glm::vec3 color)
+	{
+		glClearColor(color.r, color.g, color.b, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	}
 
 	bool MangoCore::RegisterEventHandler(IEventHandler* event_handler)

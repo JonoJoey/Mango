@@ -7,6 +7,8 @@
 #include "../wrappers/buffer_object.h"
 #include "../wrappers/texture.h"
 
+#include "../model.h"
+
 
 namespace Mango
 {
@@ -20,19 +22,20 @@ namespace Mango
 
 		bool Setup(MangoCore* mango);
 		void Release() override;
+		void Resize(int width, int height);
 
 		void Start();
 		void End();
 
-		void SetProjMatrix(const glm::mat4& mat) { m_proj_matrix = mat; }
-		const glm::mat4& GetProjMatrix() const { return m_proj_matrix; }
-
-		void SetViewMatrix(const glm::mat4& mat) { m_view_matrix = mat; }
-		const glm::mat4& GetViewMatrix() const { return m_view_matrix; }
+		void RenderQuad(glm::ivec2 pos1, glm::ivec2 pos2, glm::vec3 color);
+		void RenderTexturedQuad(glm::ivec2 pos1, glm::ivec2 pos2);
 
 	private:
 		MangoCore* m_mango = nullptr;
-		glm::mat4 m_proj_matrix,
-			m_view_matrix;
+		glm::mat4 m_proj_matrix;
+		Shader m_flat_shader,
+			m_texture_shader;
+
+		Model m_quad_model;
 	};
 } // namespace Mango

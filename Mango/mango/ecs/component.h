@@ -2,6 +2,7 @@
 
 #include <string>
 
+#define NEW_COMPONENT(component) struct component : public Mango::ECS::Component<component>
 #define COMPONENT_INFO(component, name) const char* const Mango::ECS::Component<component>::NAME = name;
 
 
