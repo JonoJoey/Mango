@@ -16,6 +16,7 @@
 #include "misc/input_handler.h"
 #include "misc/file_parser.h"
 #include "misc/rescource_pool.h"
+#include "misc/drpc.h"
 
 
 namespace Mango

@@ -117,7 +117,17 @@ void MangoApp::Run()
 void MangoApp::OnInit()
 {
 	Mango::RescourcePool<Mango::Texture>::Get()->AddRes("mango", "res/textures/mango.png", true, true);
+
+	Mango::DiscordRPC::Setup("514257473654489098");
+	Mango::DiscordRPC::Update("you are", "a noob", "mango", "mAnGo", "m_fancy", "MaNgO", Mango::DiscordRPC::GetStartTime(), 0);
 }
+void MangoApp::OnRelease()
+{
+	Mango::DiscordRPC::Release();
+
+	Mango::RescourcePool<Mango::Texture>::Get()->Release();
+}
+
 void MangoApp::OnTick()
 {
 

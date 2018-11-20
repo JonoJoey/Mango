@@ -90,6 +90,9 @@
     <ClCompile Include="app\mango_app.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mango\misc\drpc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mango\common.h">
@@ -900,6 +903,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mango\misc\rescource_pool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\misc\drpc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

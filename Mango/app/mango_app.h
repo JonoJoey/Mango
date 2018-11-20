@@ -16,6 +16,8 @@ public:
 
 private:
 	void OnInit();
+	void OnRelease();
+
 	void OnTick();
 	void OnFrame(float lerptime);
 

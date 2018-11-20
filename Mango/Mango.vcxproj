@@ -74,8 +74,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Output\</OutDir>
-    <IncludePath>$(ProjectDir)dep\glfw\include;$(ProjectDir)dep\glew\include;$(ProjectDir)dep\glm;$(ProjectDir)dep\imgui;$(ProjectDir)dep\stb;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)dep\glfw\lib-vc2015;$(ProjectDir)dep\glew\lib\Release\Win32;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)dep\glfw\include;$(ProjectDir)dep\glew\include;$(ProjectDir)dep\glm;$(ProjectDir)dep\imgui;$(ProjectDir)dep\stb;$(ProjectDir)dep\discord-rpc\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)dep\glfw\lib-vc2015;$(ProjectDir)dep\glew\lib\Release\Win32;$(ProjectDir)dep\discord-rpc\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -147,6 +147,7 @@
     <ClCompile Include="mango\graphics\wrappers\texture.cpp" />
     <ClCompile Include="mango\graphics\wrappers\vertex_array.cpp" />
     <ClCompile Include="mango\mango.cpp" />
+    <ClCompile Include="mango\misc\drpc.cpp" />
     <ClCompile Include="mango\misc\file_parser.cpp" />
     <ClCompile Include="mango\misc\maths.cpp" />
     <ClCompile Include="mango\misc\misc.cpp" />
@@ -416,6 +417,7 @@
     <ClInclude Include="mango\graphics\wrappers\texture.h" />
     <ClInclude Include="mango\graphics\wrappers\vertex_array.h" />
     <ClInclude Include="mango\mango.h" />
+    <ClInclude Include="mango\misc\drpc.h" />
     <ClInclude Include="mango\misc\file_parser.h" />
     <ClInclude Include="mango\misc\event_handler.h" />
     <ClInclude Include="mango\misc\input_handler.h" />
