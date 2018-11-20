@@ -10,9 +10,10 @@ public:
 	void OnKeyPress(int key, std::string key_name, bool repeat);
 	void OnKeyRelease(int key, std::string key_name);
 
-	void OnMouseMove(float xpos, float ypos);
 	void OnMouseButtonPress(int button, bool repeat);
 	void OnMouseButtonRelease(int button);
+
+	void OnMouseMove(float xpos, float ypos);
 
 	void OnWindowResize(int width, int height);
 

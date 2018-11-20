@@ -28,8 +28,16 @@ void EventHandler::OnMouseButtonRelease(int button)
 void EventHandler::OnWindowResize(int width, int height)
 {
 	DBG_LOG("Resize [%i, %i]", width, height);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, width, height);
+
+	m_mango_app->GetFramebuffer()->Release();
+	m_mango_app->GetFramebuffer()->Setup({ width, height });
 
 	m_mango_app->GetMangoCore()->GetRenderer2D().Resize(width, height);
 	m_mango_app->GetMangoCore()->GetRenderer3D().Resize(width, height);
+
+	m_mango_app->GetMangoCore()->GetRenderer3D().SetProjMatrix(Mango::Maths::CreateProjectionMatrix(
+		60.f, m_mango_app->GetMangoCore()->GetAspectRatio(), 0.1f, 100.f));
 }

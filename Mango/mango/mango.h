@@ -13,8 +13,9 @@
 #include "graphics/3D/renderer_3d.h"
 
 #include "misc/event_handler.h"
-
-#include "ecs/ecs_core.h"
+#include "misc/input_handler.h"
+#include "misc/file_parser.h"
+#include "misc/rescource_pool.h"
 
 
 namespace Mango

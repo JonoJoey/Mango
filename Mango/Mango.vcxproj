@@ -136,8 +136,6 @@
     <ClCompile Include="dep\imgui\imgui_widgets.cpp" />
     <ClCompile Include="dep\stb\stb_image.cpp" />
     <ClCompile Include="app\main.cpp" />
-    <ClCompile Include="mango\ecs\component.cpp" />
-    <ClCompile Include="mango\ecs\ecs_core.cpp" />
     <ClCompile Include="mango\graphics\3D\camera_3d.cpp" />
     <ClCompile Include="mango\graphics\3D\entity_3d.cpp" />
     <ClCompile Include="mango\graphics\3D\light_3d.cpp" />
@@ -155,7 +153,6 @@
     <ClCompile Include="mango\misc\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="app\components.h" />
     <ClInclude Include="app\event_handler.h" />
     <ClInclude Include="app\mango_app.h" />
     <ClInclude Include="dep\glm\common.hpp" />
@@ -406,13 +403,10 @@
     <ClInclude Include="dep\imgui\imstb_truetype.h" />
     <ClInclude Include="dep\stb\stb_image.h" />
     <ClInclude Include="mango\common.h" />
-    <ClInclude Include="mango\ecs\ecs_core.h" />
-    <ClInclude Include="mango\ecs\system.h" />
     <ClInclude Include="mango\graphics\3D\camera_3d.h" />
     <ClInclude Include="mango\graphics\3D\entity_3d.h" />
     <ClInclude Include="mango\graphics\3D\light_3d.h" />
     <ClInclude Include="mango\graphics\3D\materials_3d.h" />
-    <ClInclude Include="mango\ecs\component.h" />
     <ClInclude Include="mango\graphics\model.h" />
     <ClInclude Include="mango\graphics\2D\renderer_2d.h" />
     <ClInclude Include="mango\graphics\3D\renderer_3d.h" />
@@ -424,8 +418,10 @@
     <ClInclude Include="mango\mango.h" />
     <ClInclude Include="mango\misc\file_parser.h" />
     <ClInclude Include="mango\misc\event_handler.h" />
+    <ClInclude Include="mango\misc\input_handler.h" />
     <ClInclude Include="mango\misc\maths.h" />
     <ClInclude Include="mango\misc\misc.h" />
+    <ClInclude Include="mango\misc\rescource_pool.h" />
     <ClInclude Include="mango\misc\utility.h" />
   </ItemGroup>
   <ItemGroup>

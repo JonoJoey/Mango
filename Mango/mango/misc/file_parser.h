@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-#include <array>
-#include <string>
+#include "../common.h"
+
+#include "../graphics/model.h"
 
 
 namespace Mango
@@ -16,4 +16,5 @@ namespace Mango
 	};
 
 	bool LoadWavefront(const std::string& file_path, WavefrontFormat& format);
+	bool LoadWavefrontModel(Model& model, const std::string& file_path);
 } // namespace Mango

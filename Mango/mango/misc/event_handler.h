@@ -20,13 +20,14 @@ namespace Mango
 	class IEventHandler
 	{
 	public:
-		virtual void OnKeyPress(int key, std::string key_name, bool repeat) {};
-		virtual void OnKeyRelease(int key, std::string key_name) {};
+		virtual void OnKeyPress(int key, std::string key_name, bool repeat) {}
+		virtual void OnKeyRelease(int key, std::string key_name) {}
 
-		virtual void OnMouseMove(float xpos, float ypos) {};
-		virtual void OnMouseButtonPress(int button, bool repeat) {};
-		virtual void OnMouseButtonRelease(int button) {};
+		virtual void OnMouseButtonPress(int button, bool repeat) {}
+		virtual void OnMouseButtonRelease(int button) {}
 
-		virtual void OnWindowResize(int width, int height) {};
+		virtual void OnMouseMove(float xpos, float ypos) {}
+
+		virtual void OnWindowResize(int width, int height) {}
 	};
 } // namespace Mango

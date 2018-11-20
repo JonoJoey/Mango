@@ -111,4 +111,35 @@ namespace Mango
 
 		return true;
 	}
+	bool LoadWavefrontModel(Model& model, const std::string& file_path)
+	{
+		WavefrontFormat format;
+		if (!LoadWavefront(file_path, format))
+			return false;
+
+		model.Setup(GL_TRIANGLES, format.m_indices.size() * 3, GL_UNSIGNED_INT, format.m_indices.data());
+		model.GetVAO().Bind();
+
+		// positions
+		auto vbo = &model.AddVBO();
+		vbo->Setup(format.m_positions.size() * 3 * sizeof(float), format.m_positions.data());
+		vbo->Bind();
+		VertexArray::EnableAttribute(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		// tex coords
+		vbo = &model.AddVBO();
+		vbo->Setup(format.m_tex_coords.size() * 2 * sizeof(float), format.m_tex_coords.data());
+		vbo->Bind();
+		VertexArray::EnableAttribute(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+		// normals
+		vbo = &model.AddVBO();
+		vbo->Setup(format.m_normals.size() * 3 * sizeof(float), format.m_normals.data());
+		vbo->Bind();
+		VertexArray::EnableAttribute(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		VertexArray::Unbind();
+
+		return true;
+	}
 } // namespace Mango

@@ -208,6 +208,8 @@ namespace Mango
 		if (glfwWindowShouldClose(m_window))
 			return false;
 
+		glfwPollEvents();
+
 		// imgui
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -227,7 +229,6 @@ namespace Mango
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwSwapBuffers(m_window);
-		glfwPollEvents();
 	}
 	void MangoCore::Clear(glm::vec3 color)
 	{

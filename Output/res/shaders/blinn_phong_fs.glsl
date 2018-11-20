@@ -26,12 +26,16 @@ uniform vec3 u_camera_position;
 
 void main()
 {
+    // textures
+    vec4 dcol = texture(u_material.diffuse_map, _tex_coord);
+    if (dcol.a < 0.01)
+        discard;
+        
+    vec3 diffuse_color = dcol.xyz;
+    vec3 specular_color =vec3(texture(u_material.specular_map, _tex_coord));
+
     vec3 normal = normalize(_normal);
     vec3 to_light_dir = normalize(u_light.position - _world_position);
-
-    // textures
-    vec3 diffuse_color = vec3(texture(u_material.diffuse_map, _tex_coord));
-    vec3 specular_color =vec3(texture(u_material.specular_map, _tex_coord));
 
     // ambient
     vec3 ambient = u_light.ambient * diffuse_color;

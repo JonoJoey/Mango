@@ -81,12 +81,6 @@
     <ClCompile Include="mango\misc\misc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mango\ecs\component.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="mango\ecs\ecs_core.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="app\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -896,22 +890,16 @@
     <ClInclude Include="mango\misc\misc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mango\ecs\component.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mango\ecs\system.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mango\ecs\ecs_core.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="app\event_handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="app\mango_app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="app\components.h">
+    <ClInclude Include="mango\misc\input_handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mango\misc\rescource_pool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
