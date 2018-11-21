@@ -179,7 +179,7 @@ namespace Mango
 
 		m_quad_model.GetVAO().Bind();
 		m_flat_shader.Bind();
-		m_flat_shader.SetUniformF3("u_flat_color", color[0], color[1], color[2]);
+		m_flat_shader.SetUniformF3("u_flat_color", color);
 
 		m_quad_model.GetVBOs()[0].Bind();
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);

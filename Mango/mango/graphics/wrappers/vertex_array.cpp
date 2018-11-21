@@ -29,9 +29,20 @@ namespace Mango
 		glBindVertexArray(0);
 	}
 
-	void VertexArray::EnableAttribute(unsigned int index, size_t count, unsigned int type, bool normalize, size_t stride, size_t offset)
+	void VertexArray::EnableAttribute(unsigned int index, size_t count, unsigned int type, bool normalize, size_t stride, size_t offset, unsigned int diviser)
 	{
 		glEnableVertexAttribArray(index);
 		glVertexAttribPointer(index, count, type, normalize, stride, reinterpret_cast<void*>(offset));
+		
+		if (diviser)
+			glVertexAttribDivisor(index, diviser);
+	}
+	void VertexArray::EnableAttributeInt(unsigned int index, size_t count, unsigned int type, size_t stride, size_t offset, unsigned int diviser)
+	{
+		glEnableVertexAttribArray(index);
+		glVertexAttribIPointer(index, count, type, stride, reinterpret_cast<void*>(offset));
+
+		if (diviser)
+			glVertexAttribDivisor(index, diviser);
 	}
 } // namespace Mango

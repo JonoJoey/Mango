@@ -37,7 +37,4 @@ void EventHandler::OnWindowResize(int width, int height)
 
 	m_mango_app->GetMangoCore()->GetRenderer2D().Resize(width, height);
 	m_mango_app->GetMangoCore()->GetRenderer3D().Resize(width, height);
-
-	m_mango_app->GetMangoCore()->GetRenderer3D().SetProjMatrix(Mango::Maths::CreateProjectionMatrix(
-		60.f, m_mango_app->GetMangoCore()->GetAspectRatio(), 0.1f, 100.f));
 }

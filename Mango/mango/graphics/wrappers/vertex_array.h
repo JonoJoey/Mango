@@ -17,7 +17,8 @@ namespace Mango
 		void Bind() const;
 		static void Unbind();
 
-		static void EnableAttribute(unsigned int index, size_t count, unsigned int type, bool normalize, size_t stride, size_t offset);
+		static void EnableAttribute(unsigned int index, size_t count, unsigned int type, bool normalize, size_t stride, size_t offset, unsigned int diviser = 0);
+		static void EnableAttributeInt(unsigned int index, size_t count, unsigned int type, size_t stride, size_t offset, unsigned int diviser = 0);
 
 	private:
 		unsigned int m_vertex_array = 0xFFFFFFFF;

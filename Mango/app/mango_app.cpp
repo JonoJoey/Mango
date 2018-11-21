@@ -2,6 +2,7 @@
 
 
 
+
 void MangoApp::Run()
 {
 	// mango core
@@ -84,8 +85,6 @@ void MangoApp::Run()
 		colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 	}
 
-	m_mango_core.GetRenderer3D().SetProjMatrix(Mango::Maths::CreateProjectionMatrix(60.f, m_mango_core.GetAspectRatio(), 0.1f, 100.f));
-
 	// framebuffer
 	m_framebuffer.Setup(m_mango_core.GetWindowSize());
 
@@ -105,7 +104,7 @@ void MangoApp::Run()
 			OnTick();
 		}
 
-		OnFrame(accumulated_time / m_interval_per_tick);
+		OnFrame(frame_time, accumulated_time / m_interval_per_tick);
 
 		m_mango_core.EndFrame();
 	}
@@ -118,6 +117,54 @@ void MangoApp::OnInit()
 {
 	Mango::RescourcePool<Mango::Texture>::Get()->AddRes("mango", "res/textures/mango.png", true, true);
 
+	Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader", 
+		Mango::Shader::ReadFile("res/shaders/cube_vs.glsl"), 
+		Mango::Shader::ReadFile("res/shaders/cube_fs.glsl"));
+
+	auto cube_model = Mango::RescourcePool<Mango::Model>::Get()->AddRes("cube");
+	Mango::LoadCubeModel(*cube_model);
+
+	std::string block_names_to_add[] =
+	{
+		"grass",
+		"cobblestone",
+		"emerald_ore",
+		"diamond_ore",
+		"crafting_table"
+	};
+
+	m_block_names.push_back("none");
+	for (auto block_name : block_names_to_add)
+	{
+		Mango::RescourcePool<Mango::CubeTexture>::Get()->AddRes(block_name, std::array<std::string, 6>({
+			"res/textures/blocks/" + block_name + "/side.png",
+			"res/textures/blocks/" + block_name + "/side.png",
+			"res/textures/blocks/" + block_name + "/top.png",
+			"res/textures/blocks/" + block_name + "/bottom.png",
+			"res/textures/blocks/" + block_name + "/side.png",
+			"res/textures/blocks/" + block_name + "/side.png",
+			}), false, false, false);
+
+		m_block_names.push_back(block_name);
+	}
+
+	m_chunk.Setup();
+
+	for (int x = 0; x < 16; x++)
+	{
+		for (int y = 0; y < 256; y++)
+		{
+			for (int z = 0; z < 16; z++)
+			{
+				m_chunk.SetBlock(x, y, z, uint8_t((x + y + z) % m_block_names.size()));
+			}
+		}
+	}
+
+	m_chunk.Update();
+
+	m_camera.SetPosition({ 0.f, 0.f, 2.f });
+
 	Mango::DiscordRPC::Setup("514257473654489098");
 	Mango::DiscordRPC::Update("you are", "a noob", "mango", "mAnGo", "m_fancy", "MaNgO", Mango::DiscordRPC::GetStartTime(), 0);
 }
@@ -125,15 +172,63 @@ void MangoApp::OnRelease()
 {
 	Mango::DiscordRPC::Release();
 
+	m_chunk.Release();
+
+	Mango::RescourcePool<Mango::Model>::Get()->Release();
+	Mango::RescourcePool<Mango::Shader>::Get()->Release();
 	Mango::RescourcePool<Mango::Texture>::Get()->Release();
+	Mango::RescourcePool<Mango::CubeTexture>::Get()->Release();
 }
 
 void MangoApp::OnTick()
 {
+	// handle movement
+	{
+		static constexpr float MOVE_SPEED = 10.f;
 
+		static const glm::vec3 up_dir = { 0.f, 1.f, 0.f };
+		const auto forward_dir = Mango::Maths::AngleVector({ m_camera.GetViewangle().x, 0.f, 0.f });
+		const auto right_dir = glm::normalize(glm::cross(forward_dir, up_dir));
+
+		if (m_input_handler.GetKeyState('W'))
+			m_camera.Move(forward_dir * m_interval_per_tick * MOVE_SPEED);
+		if (m_input_handler.GetKeyState('S'))
+			m_camera.Move(-forward_dir * m_interval_per_tick * MOVE_SPEED);
+		if (m_input_handler.GetKeyState('D'))
+			m_camera.Move(right_dir * m_interval_per_tick * MOVE_SPEED);
+		if (m_input_handler.GetKeyState('A'))
+			m_camera.Move(-right_dir * m_interval_per_tick * MOVE_SPEED);
+		if (m_input_handler.GetKeyState(GLFW_KEY_SPACE))
+			m_camera.Move(up_dir * m_interval_per_tick * MOVE_SPEED);
+		if (m_input_handler.GetKeyState(GLFW_KEY_LEFT_SHIFT))
+			m_camera.Move(-up_dir * m_interval_per_tick * MOVE_SPEED);
+	}
 }
-void MangoApp::OnFrame(float lerptime)
+void MangoApp::OnFrame(float frame_time, float lerptime)
 {
+	// mouse input
+	{
+		static constexpr float CAMERA_SPEED = 0.005f;
+		const auto screen_center = m_mango_core.GetWindowSize() / 2;
+
+		static bool toggle = false;
+		if (toggle)
+		{
+			const auto offset = glm::vec2(m_mango_core.GetMousePosition().x - screen_center.x, m_mango_core.GetMousePosition().y - screen_center.y);
+			const auto new_viewangle = m_camera.GetViewangle() + glm::vec3(offset[0], -offset[1], 0.f) * CAMERA_SPEED;
+			m_camera.SetViewangle(new_viewangle);
+			m_mango_core.SetMousePosition(screen_center);
+		}
+
+		// toggle
+		if (m_input_handler.GetButtonState(2) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
+		{
+			toggle = !toggle;
+			if (toggle)
+				m_mango_core.SetMousePosition(screen_center);
+		}
+	}
+
 	auto& renderer_2d = m_mango_core.GetRenderer2D();
 	auto& renderer_3d = m_mango_core.GetRenderer3D();
 
@@ -144,6 +239,36 @@ void MangoApp::OnFrame(float lerptime)
 	{
 		renderer_3d.Start();
 
+		auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->GetRes("cube_shader");
+		auto cube_model = Mango::RescourcePool<Mango::Model>::Get()->GetRes("cube");
+
+		// model
+		cube_model->GetVAO().Bind();
+
+		m_chunk.GetVBO()->Bind();
+		Mango::VertexArray::EnableAttributeInt(1, 1, GL_UNSIGNED_BYTE, 1, 0, 1);
+		Mango::VertexBuffer::Unbind();
+
+		// shader
+		cube_shader->Bind();
+
+		cube_shader->SetUniformMat4("u_projection_matrix", renderer_3d.GetProjMatrix());
+		cube_shader->SetUniformMat4("u_view_matrix", m_camera.GetViewMatrix());
+		cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }));
+
+		int values[16];
+		for (int i = 0; i < 16; i++)
+			values[i] = i;
+		glUniform1iv(cube_shader->GetUniformLoc("u_textures[]"), 16, values);
+
+		for (size_t i = 0; i < m_block_names.size() - 1; i++)
+			Mango::RescourcePool<Mango::CubeTexture>::Get()->GetRes(m_block_names[i + 1])->Bind(i);
+
+		glDrawElementsInstanced(cube_model->GetMode(), cube_model->GetIBO().GetCount(), cube_model->GetIBO().GetType(), nullptr, Chunk::WIDTH * Chunk::HEIGHT * Chunk::DEPTH);
+
+		Mango::Shader::Unbind();
+		Mango::CubeTexture::Unbind();
+		Mango::VertexArray::Unbind();
 		renderer_3d.End();
 	}
 
@@ -152,7 +277,7 @@ void MangoApp::OnFrame(float lerptime)
 		renderer_2d.Start();
 
 		Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
-		renderer_2d.RenderTexturedQuad(m_input_handler.GetMousePosition() - 10.f, m_input_handler.GetMousePosition() + 10.f);
+		renderer_2d.RenderTexturedQuad(m_mango_core.GetMousePosition() - 10.f, m_mango_core.GetMousePosition() + 10.f);
 
 		renderer_2d.End();
 	}

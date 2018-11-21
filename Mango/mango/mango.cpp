@@ -71,10 +71,7 @@ namespace
 		if (type != GL_DEBUG_TYPE_ERROR)
 			return;
 
-		if (type == GL_DEBUG_TYPE_ERROR)
-			DBG_ERROR("severity = 0x%x, message = %s", severity, message);
-		else
-			DBG_LOG("Message - type: 0x%x, severity = 0x%x, message = %s", type, severity, message);
+		printf("%s\n", message);
 	}
 } // namespace
 
@@ -208,8 +205,6 @@ namespace Mango
 		if (glfwWindowShouldClose(m_window))
 			return false;
 
-		glfwPollEvents();
-
 		// imgui
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -229,6 +224,7 @@ namespace Mango
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwSwapBuffers(m_window);
+		glfwPollEvents();
 	}
 	void MangoCore::Clear(glm::vec3 color)
 	{

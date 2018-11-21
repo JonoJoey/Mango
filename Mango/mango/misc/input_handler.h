@@ -30,13 +30,9 @@ namespace Mango
 
 		void OnMouseMove(float xpos, float ypos)
 		{
-			m_mouse_pos = { xpos, ypos };
+
 		}
 
-		glm::vec2 GetMousePosition()
-		{
-			return m_mouse_pos;
-		}
 		INPUT_STATE GetKeyState(int key)
 		{
 			if (auto pair = m_key_states.find(key); pair != m_key_states.end())
@@ -60,6 +56,5 @@ namespace Mango
 	private:
 		std::unordered_map<int, INPUT_STATE> m_key_states;
 		std::array<INPUT_STATE, 8> m_button_states;
-		glm::vec2 m_mouse_pos;
 	};
 } // namespace Mango

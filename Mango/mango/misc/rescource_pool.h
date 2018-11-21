@@ -25,7 +25,7 @@ namespace Mango
 		template <typename ...pack>
 		std::shared_ptr<T> AddRes(const std::string& name, pack... args)
 		{
-			printf("%s", name.c_str());
+			printf("%s\n", name.c_str());
 
 			auto ptr = std::shared_ptr<T>(new T(args...));
 			m_rescources[name] = ptr;

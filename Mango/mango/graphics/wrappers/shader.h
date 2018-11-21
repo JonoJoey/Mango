@@ -27,14 +27,14 @@ namespace Mango
 		void SetUniformF1(int location, float v) const;
 		void SetUniformF1(const std::string& name, float v) { SetUniformF1(GetUniformLoc(name), v); }
 
-		void SetUniformF2(int location, float v1, float v2) const;
-		void SetUniformF2(const std::string& name, float v1, float v2) { SetUniformF2(GetUniformLoc(name), v1, v2); }
+		void SetUniformF2(int location, glm::fvec2 v) const;
+		void SetUniformF2(const std::string& name, glm::fvec2 v) { SetUniformF2(GetUniformLoc(name), v); }
 
-		void SetUniformF3(int location, float v1, float v2, float v3) const;
-		void SetUniformF3(const std::string& name, float v1, float v2, float v3) { SetUniformF3(GetUniformLoc(name), v1, v2, v3); }
+		void SetUniformF3(int location, glm::fvec3 v) const;
+		void SetUniformF3(const std::string& name, glm::fvec3 v) { SetUniformF3(GetUniformLoc(name), v); }
 
-		void SetUniformF4(int location, float v1, float v2, float v3, float v4) const;
-		void SetUniformF4(const std::string& name, float v1, float v2, float v3, float v4) { SetUniformF4(GetUniformLoc(name), v1, v2, v3, v4); }
+		void SetUniformF4(int location, glm::fvec4 v) const;
+		void SetUniformF4(const std::string& name, glm::fvec4 v) { SetUniformF4(GetUniformLoc(name), v); }
 
 		void SetUniformI1(int location, int v) const;
 		void SetUniformI1(const std::string& name, int v) { SetUniformI1(GetUniformLoc(name), v); }

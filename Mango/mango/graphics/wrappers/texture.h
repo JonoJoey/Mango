@@ -9,11 +9,11 @@ namespace Mango
 	{
 	public:
 		Texture() = default;
-		Texture(const std::string& file_path, bool srgb = false, bool alpha_channel = false, float mip_map_lod = 0.f) { ASSERT(Setup(file_path, srgb, alpha_channel, mip_map_lod)); }
+		Texture(const std::string& file_path, bool srgb = false, bool alpha_channel = false, bool linear = false, float mip_map_lod = 0.f) { ASSERT(Setup(file_path, srgb, alpha_channel, linear, mip_map_lod)); }
 		Texture(unsigned int texture) { Setup(texture); }
 		~Texture() { Release(); }
 
-		bool Setup(const std::string& file_path, bool srgb = false, bool alpha_channel = false, float mip_map_lod = 0.f);
+		bool Setup(const std::string& file_path, bool srgb = false, bool alpha_channel = false, bool linear = false, float mip_map_lod = 0.f);
 		void Setup(unsigned int texture);
 		void Release() override;
 
@@ -30,9 +30,14 @@ namespace Mango
 	{
 	public:
 		CubeTexture() = default;
+		CubeTexture(const std::array<std::string, 6> file_paths, bool srgb = false, bool alpha_channel = false, bool linear = true)
+		{
+			ASSERT(Setup(file_paths, srgb, alpha_channel, linear));
+		}
 		~CubeTexture() { Release(); }
 
-		bool Setup(const std::array<std::string, 6> file_paths, bool srgb = false, bool alpha_channel = false);
+		// right, left, top, bottom, back, front
+		bool Setup(const std::array<std::string, 6> file_paths, bool srgb = false, bool alpha_channel = false, bool linear = true);
 		void Release() override;
 
 		void Bind(unsigned int slot = 0) const;

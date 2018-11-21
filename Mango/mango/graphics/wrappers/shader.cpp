@@ -15,7 +15,8 @@ namespace Mango
 			const auto shader = glCreateShader(type);
 			const char* source = src.c_str();
 
-			glShaderSource(shader, 1, &source, nullptr);
+			int size = int(src.size());
+			glShaderSource(shader, 1, &source, &size);
 			glCompileShader(shader);
 
 			int status; glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
@@ -41,6 +42,13 @@ namespace Mango
 		glAttachShader(m_program, fragment_shader);
 		glLinkProgram(m_program);
 		glValidateProgram(m_program);
+
+		int status; glGetProgramiv(m_program, GL_VALIDATE_STATUS, &status);
+		if (status != GL_TRUE)
+		{
+			DBG_ERROR("Failed to validate program");
+			return false;
+		}
 
 		glDeleteShader(vertex_shader);
 		glDeleteShader(fragment_shader);
@@ -84,19 +92,19 @@ namespace Mango
 
 	void Shader::SetUniformF1(int location, float v) const
 	{
-		glUniform1f(location, v);
+		glUniform1fv(location, 1, &v);
 	}
-	void Shader::SetUniformF2(int location, float v1, float v2) const
+	void Shader::SetUniformF2(int location, glm::fvec2 v) const
 	{
-		glUniform2f(location, v1, v2);
+		glUniform2fv(location, 1, &v[0]);
 	}
-	void Shader::SetUniformF3(int location, float v1, float v2, float v3) const
+	void Shader::SetUniformF3(int location, glm::fvec3 v) const
 	{
-		glUniform3f(location, v1, v2, v3);
+		glUniform3fv(location, 1, &v[0]);
 	}
-	void Shader::SetUniformF4(int location, float v1, float v2, float v3, float v4) const
+	void Shader::SetUniformF4(int location, glm::fvec4 v) const
 	{
-		glUniform4f(location, v1, v2, v3, v4);
+		glUniform4fv(location, 1, &v[0]);
 	}
 
 	void Shader::SetUniformI1(int location, int v) const

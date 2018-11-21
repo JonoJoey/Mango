@@ -3,6 +3,7 @@
 #include "../common.h"
 
 #include "../graphics/model.h"
+#include "../graphics/wrappers/texture.h"
 
 
 namespace Mango
@@ -17,4 +18,6 @@ namespace Mango
 
 	bool LoadWavefront(const std::string& file_path, WavefrontFormat& format);
 	bool LoadWavefrontModel(Model& model, const std::string& file_path);
+
+	void LoadCubeModel(Mango::Model& model);
 } // namespace Mango

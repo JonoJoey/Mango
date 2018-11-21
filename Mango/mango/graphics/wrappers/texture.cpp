@@ -3,7 +3,7 @@
 
 namespace Mango
 {
-	bool Texture::Setup(const std::string& file_path, bool srgb, bool alpha_channel, float mip_map_lod)
+	bool Texture::Setup(const std::string& file_path, bool srgb, bool alpha_channel, bool linear, float mip_map_lod)
 	{
 		int num_components; glm::ivec2 size;
 		stbi_set_flip_vertically_on_load(1);
@@ -20,9 +20,9 @@ namespace Mango
 
 		// mipmap stuffs
 		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, linear ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, mip_map_lod);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, linear ? GL_LINEAR : GL_NEAREST);
 
 		// repeat
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -65,7 +65,7 @@ namespace Mango
 	}
 
 
-	bool CubeTexture::Setup(const std::array<std::string, 6> file_paths, bool srgb, bool alpha_channel)
+	bool CubeTexture::Setup(const std::array<std::string, 6> file_paths, bool srgb, bool alpha_channel, bool linear)
 	{
 		glGenTextures(1, &m_texture);
 		Bind();
@@ -87,8 +87,8 @@ namespace Mango
 			stbi_image_free(buffer);
 		}
 
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, linear ? GL_LINEAR : GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, linear ? GL_LINEAR : GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
