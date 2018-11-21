@@ -1,6 +1,6 @@
 #include "mango_app.h"
 
-
+#include <filesystem>
 
 
 void MangoApp::Run()
@@ -124,25 +124,29 @@ void MangoApp::OnInit()
 	auto cube_model = Mango::RescourcePool<Mango::Model>::Get()->AddRes("cube");
 	Mango::LoadCubeModel(*cube_model);
 
-	std::string block_names_to_add[] =
+	const auto GetDirectories = [](const std::string& s) -> std::vector<std::string>
 	{
-		"grass",
-		"cobblestone",
-		"emerald_ore",
-		"diamond_ore",
-		"crafting_table"
+		std::vector<std::string> r;
+		for (auto& p : std::filesystem::recursive_directory_iterator(s))
+			if (p.status().type() == std::filesystem::file_type::directory)
+				r.push_back(p.path().filename().string());
+		return r;
 	};
+
+	std::deque<std::string> block_names_to_add;
+	for (auto dir : GetDirectories("res/textures/blocks/"))
+		block_names_to_add.push_back(dir);
 
 	m_block_names.push_back("none");
 	for (auto block_name : block_names_to_add)
 	{
 		Mango::RescourcePool<Mango::CubeTexture>::Get()->AddRes(block_name, std::array<std::string, 6>({
-			"res/textures/blocks/" + block_name + "/side.png",
-			"res/textures/blocks/" + block_name + "/side.png",
+			"res/textures/blocks/" + block_name + "/right.png",
+			"res/textures/blocks/" + block_name + "/left.png",
 			"res/textures/blocks/" + block_name + "/top.png",
 			"res/textures/blocks/" + block_name + "/bottom.png",
-			"res/textures/blocks/" + block_name + "/side.png",
-			"res/textures/blocks/" + block_name + "/side.png",
+			"res/textures/blocks/" + block_name + "/front.png",
+			"res/textures/blocks/" + block_name + "/back.png",
 			}), false, false, false);
 
 		m_block_names.push_back(block_name);
