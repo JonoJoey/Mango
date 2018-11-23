@@ -40,11 +40,12 @@ public:
 
 	void Setup(int x, int z);
 	void Release();
-	void Update();
+	void Update(std::deque<std::shared_ptr<Chunk>>& render_chunks);
 
 	int GetX() const { return m_x; }
 	int GetZ() const { return m_z; }
 
+	void SetUpdate() { m_needs_update = true; }
 	void SetBlock(int x, int y, int z, const Block& block) { m_needs_update = true; m_blocks[x + (y * WIDTH) + (z * WIDTH * HEIGHT)] = block; }
 	Block GetBlock(int x, int y, int z) { return m_blocks[x + (y * WIDTH) + (z * WIDTH * HEIGHT)]; }
 	Mango::Model* GetModel() { return &m_model; }

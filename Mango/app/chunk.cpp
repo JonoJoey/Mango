@@ -22,7 +22,7 @@ void Chunk::Release()
 	delete[] m_blocks;
 	m_blocks = nullptr;
 }
-void Chunk::Update()
+void Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 {
 	if (!m_needs_update)
 		return;
@@ -33,15 +33,111 @@ void Chunk::Update()
 	std::vector<float> vertices;
 	std::vector<unsigned int> indices;
 
-	const auto MakeBlock = [&vertices, &indices, this](int x, int y, int z) -> void
+	const auto MakeBlock = [&vertices, &indices, &render_chunks, this](int x, int y, int z) -> void
 	{
 		if (!GetBlock(x, y, z).m_is_active)
 			return;
 
 		const unsigned int start = vertices.size() / 3;
 
+		const auto FindChunk = [&render_chunks](int chunk_x, int chunk_z) -> Chunk*
+		{
+			for (auto chunk : render_chunks)
+			{
+				if (chunk->GetX() == chunk_x && chunk->GetZ() == chunk_z)
+					return &*chunk;
+			}
+
+			return nullptr;
+		};
+		const auto IsBlockActive = [FindChunk, this](int x, int y, int z, bool bx, bool by, bool bz) -> bool
+		{
+			const int chunk_x = m_x,
+				chunk_z = m_z;
+
+			// false = draw
+			// true = dont draw
+
+			if (bx)
+			{
+				if (x < 0)
+				{
+					auto chunk = FindChunk(chunk_x - 1, chunk_z);
+					if (!chunk)
+						return false;
+
+					return chunk->GetBlock(WIDTH - 1, y, z).m_is_active;
+
+				}
+				else if (x >= WIDTH)
+				{
+					//return false;
+
+					auto chunk = FindChunk(chunk_x + 1, chunk_z);
+					if (!chunk)
+						return false;
+
+					return chunk->GetBlock(0, y, z).m_is_active;
+				}
+				else
+					return GetBlock(x, y, z).m_is_active;
+			}
+			else if (by)
+			{
+
+			}
+			else if (bz)
+			{
+				if (z < 0)
+				{
+					auto chunk = FindChunk(chunk_x, chunk_z - 1);
+					if (!chunk)
+						return false;
+
+					return chunk->GetBlock(x, y, DEPTH - 1).m_is_active;
+
+				}
+				else if (z >= WIDTH)
+				{
+					//return false;
+
+					auto chunk = FindChunk(chunk_x, chunk_z + 1);
+					if (!chunk)
+						return false;
+
+					return chunk->GetBlock(x, y, 0).m_is_active;
+				}
+				else
+					return GetBlock(x, y, z).m_is_active;
+
+				//// front face
+//if (z <= 0 || !GetBlock(x, y, z - 1).m_is_active)
+//{
+//	indices.push_back(start + 0);
+//	indices.push_back(start + 2);
+//	indices.push_back(start + 1);
+//	indices.push_back(start + 0);
+//	indices.push_back(start + 3);
+//	indices.push_back(start + 2);
+//}
+//
+//// back
+//if (z >= DEPTH - 1 || !GetBlock(x, y, z + 1).m_is_active)
+//{
+//	indices.push_back(start + 4);
+//	indices.push_back(start + 5);
+//	indices.push_back(start + 6);
+//	indices.push_back(start + 4);
+//	indices.push_back(start + 6);
+//	indices.push_back(start + 7);
+//}
+			}
+
+			return true;
+		};
+
 		// front face
-		if (z <= 0 || !GetBlock(x, y, z - 1).m_is_active)
+		if (!IsBlockActive(x, y, z - 1, false, false, true))
 		{
 			indices.push_back(start + 0);
 			indices.push_back(start + 2);
@@ -52,7 +148,7 @@ void Chunk::Update()
 		}
 
 		// back
-		if (z >= DEPTH - 1 || !GetBlock(x, y, z + 1).m_is_active)
+		if (!IsBlockActive(x, y, z + 1, false, false, true))
 		{
 			indices.push_back(start + 4);
 			indices.push_back(start + 5);
@@ -62,8 +158,30 @@ void Chunk::Update()
 			indices.push_back(start + 7);
 		}
 
+		//// front face
+		//if (z <= 0 || !GetBlock(x, y, z - 1).m_is_active)
+		//{
+		//	indices.push_back(start + 0);
+		//	indices.push_back(start + 2);
+		//	indices.push_back(start + 1);
+		//	indices.push_back(start + 0);
+		//	indices.push_back(start + 3);
+		//	indices.push_back(start + 2);
+		//}
+		//
+		//// back
+		//if (z >= DEPTH - 1 || !GetBlock(x, y, z + 1).m_is_active)
+		//{
+		//	indices.push_back(start + 4);
+		//	indices.push_back(start + 5);
+		//	indices.push_back(start + 6);
+		//	indices.push_back(start + 4);
+		//	indices.push_back(start + 6);
+		//	indices.push_back(start + 7);
+		//}
+
 		// right
-		if (x >= WIDTH - 1 || !GetBlock(x + 1, y, z).m_is_active)
+		if (!IsBlockActive(x + 1, y, z, true, false, false))
 		{
 			indices.push_back(start + 1);
 			indices.push_back(start + 6);
@@ -74,7 +192,7 @@ void Chunk::Update()
 		}
 
 		// left
-		if (x <= 0 || !GetBlock(x - 1, y, z).m_is_active)
+		if (!IsBlockActive(x - 1, y, z, true, false, false))
 		{
 			indices.push_back(start + 0);
 			indices.push_back(start + 4);
@@ -83,6 +201,27 @@ void Chunk::Update()
 			indices.push_back(start + 7);
 			indices.push_back(start + 3);
 		}
+		//// right
+		//if (x >= WIDTH - 1 || !GetBlock(x + 1, y, z).m_is_active)
+		//{
+		//	indices.push_back(start + 1);
+		//	indices.push_back(start + 6);
+		//	indices.push_back(start + 5);
+		//	indices.push_back(start + 1);
+		//	indices.push_back(start + 2);
+		//	indices.push_back(start + 6);
+		//}
+		//
+		//// left
+		//if (x <= 0 || !GetBlock(x - 1, y, z).m_is_active)
+		//{
+		//	indices.push_back(start + 0);
+		//	indices.push_back(start + 4);
+		//	indices.push_back(start + 7);
+		//	indices.push_back(start + 0);
+		//	indices.push_back(start + 7);
+		//	indices.push_back(start + 3);
+		//}
 
 		// top
 		if (y >= HEIGHT - 1 || !GetBlock(x, y + 1, z).m_is_active)
@@ -218,6 +357,8 @@ void World::Update(glm::fvec3 position)
 		{
 			auto chunk = GenerateChunk(x_chunk, z_chunk);
 
+			for (auto chunk : m_chunks)
+				chunk->SetUpdate();
 		}
 	}
 
@@ -232,7 +373,7 @@ void World::Update(glm::fvec3 position)
 		}
 
 		for (auto chunk : m_render_chunks)
-			chunk->Update();
+			chunk->Update(m_render_chunks);
 	}
 }
 void World::Release()
