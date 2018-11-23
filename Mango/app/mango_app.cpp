@@ -115,6 +115,8 @@ void MangoApp::Run()
 
 void MangoApp::OnInit()
 {
+	m_mango_core.SetVerticalSync(false);
+
 	Mango::RescourcePool<Mango::Texture>::Get()->AddRes("mango", "res/textures/mango.png", true, true);
 
 	auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader", 
@@ -152,7 +154,7 @@ void MangoApp::OnInit()
 		m_block_names.push_back(block_name);
 	}
 
-	m_camera.SetPosition({ 0.f, 128.f, 0.f });
+	m_camera.SetPosition({ 0.f, 128.f, 2.f });
 	m_world.Setup(m_camera.GetPosition());
 
 	Mango::DiscordRPC::Setup("514257473654489098");
@@ -242,7 +244,7 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		//m_mango_core.SetWireFrame(true);
 
 		//Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
-		Mango::RescourcePool<Mango::Texture>::Get()->GetOrAddRes("test", "res/textures/test.png", true, true)->Bind();
+		Mango::RescourcePool<Mango::Texture>::Get()->GetOrAddRes("cobble", "res/textures/blocks/cobblestone/right.png")->Bind();
 		for (auto chunk : m_world.GetRenderChunks())
 		{
 			cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ Chunk::WIDTH * chunk->GetX(), 0, Chunk::DEPTH * chunk->GetZ() }, { 0.f, 0.f, 0.f }));
@@ -306,7 +308,7 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_world.GetRenderChunks().size());
 
-		if (static bool c = true; ImGui::Checkbox("Vertical Sync", &c))
+		if (static bool c = false; ImGui::Checkbox("Vertical Sync", &c))
 			m_mango_core.SetVerticalSync(c);
 
 		ImGui::End();

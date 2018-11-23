@@ -40,8 +40,6 @@ bool Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 		if (!GetBlock(x, y, z).m_is_active)
 			return;
 
-		const unsigned int start = vertices.size() / 3;
-
 		const auto FindChunk = [&render_chunks](int chunk_x, int chunk_z) -> Chunk*
 		{
 			for (auto chunk : render_chunks)
@@ -112,57 +110,196 @@ bool Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 			return true;
 		};
 
+		const float f_x = float(x),
+			f_y = float(y),
+			f_z = float(z);
+
 		// front face
-		if (!IsBlockActive(x, y, z - 1, false, true))
+		if (!IsBlockActive(x, y, z + 1, false, true))
 		{
+			const unsigned int start = vertices.size() / 3;
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(1.f);
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(1.f);
+
 			indices.push_back(start + 0);
-			indices.push_back(start + 2);
 			indices.push_back(start + 1);
-			indices.push_back(start + 0);
-			indices.push_back(start + 3);
 			indices.push_back(start + 2);
+
+			indices.push_back(start + 0);
+			indices.push_back(start + 2);
+			indices.push_back(start + 3);
 		}
 
 		// back
-		if (!IsBlockActive(x, y, z + 1, false, true))
+		if (!IsBlockActive(x, y, z - 1, false, true))
 		{
-			indices.push_back(start + 4);
-			indices.push_back(start + 5);
-			indices.push_back(start + 6);
-			indices.push_back(start + 4);
-			indices.push_back(start + 6);
-			indices.push_back(start + 7);
+			const unsigned int start = vertices.size() / 3;
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(1.f);
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(1.f);
+
+			indices.push_back(start + 1);
+			indices.push_back(start + 0);
+			indices.push_back(start + 3);
+
+			indices.push_back(start + 1);
+			indices.push_back(start + 3);
+			indices.push_back(start + 2);
 		}
 
 		// right
 		if (!IsBlockActive(x + 1, y, z, true, false))
 		{
-			indices.push_back(start + 1);
-			indices.push_back(start + 6);
-			indices.push_back(start + 5);
+			const unsigned int start = vertices.size() / 3;
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(1.f);
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(1.f);
+
+			indices.push_back(start + 0);
 			indices.push_back(start + 1);
 			indices.push_back(start + 2);
-			indices.push_back(start + 6);
+
+			indices.push_back(start + 0);
+			indices.push_back(start + 2);
+			indices.push_back(start + 3);
 		}
 
 		// left
 		if (!IsBlockActive(x - 1, y, z, true, false))
 		{
+			const unsigned int start = vertices.size() / 3;
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(1.f);
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(1.f);
+
 			indices.push_back(start + 0);
-			indices.push_back(start + 4);
-			indices.push_back(start + 7);
+			indices.push_back(start + 1);
+			indices.push_back(start + 2);
+
 			indices.push_back(start + 0);
-			indices.push_back(start + 7);
+			indices.push_back(start + 2);
 			indices.push_back(start + 3);
 		}
 
 		// top
 		if (y >= HEIGHT - 1 || !GetBlock(x, y + 1, z).m_is_active)
 		{
-			indices.push_back(start + 7);
-			indices.push_back(start + 6);
+			const unsigned int start = vertices.size() / 3;
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(1.f);
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y + 1.f);
+			vertices.push_back(f_z);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(1.f);
+
+			indices.push_back(start + 0);
+			indices.push_back(start + 1);
 			indices.push_back(start + 2);
-			indices.push_back(start + 7);
+
+			indices.push_back(start + 0);
 			indices.push_back(start + 2);
 			indices.push_back(start + 3);
 		}
@@ -170,81 +307,40 @@ bool Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 		// bottom
 		if (y <= 0 || !GetBlock(x, y - 1, z).m_is_active)
 		{
-			indices.push_back(start + 4);
-			indices.push_back(start + 1);
-			indices.push_back(start + 5);
-			indices.push_back(start + 4);
+			const unsigned int start = vertices.size() / 3;
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(0.f);
+
+			vertices.push_back(f_x + 1.f);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(1.f);
+			tex_coords.push_back(1.f);
+
+			vertices.push_back(f_x);
+			vertices.push_back(f_y);
+			vertices.push_back(f_z + 1.f);
+			tex_coords.push_back(0.f);
+			tex_coords.push_back(1.f);
+
 			indices.push_back(start + 0);
 			indices.push_back(start + 1);
+			indices.push_back(start + 2);
+
+			indices.push_back(start + 0);
+			indices.push_back(start + 2);
+			indices.push_back(start + 3);
 		}
-
-		const float f_x = float(x),
-			f_y = float(y),
-			f_z = float(z);
-
-		// 0
-		vertices.push_back(f_x);
-		vertices.push_back(f_y);
-		vertices.push_back(f_z);
-
-		tex_coords.push_back(1.f);
-		tex_coords.push_back(0.f);
-
-		// 1
-		vertices.push_back(f_x + 1.f);
-		vertices.push_back(f_y);
-		vertices.push_back(f_z);
-
-		tex_coords.push_back(0.f);
-		tex_coords.push_back(0.f);
-
-		// 2
-		vertices.push_back(f_x + 1.f);
-		vertices.push_back(f_y + 1.f);
-		vertices.push_back(f_z);
-
-		tex_coords.push_back(0.f);
-		tex_coords.push_back(1.f);
-
-		// 3
-		vertices.push_back(f_x);
-		vertices.push_back(f_y + 1.f);
-		vertices.push_back(f_z);
-
-		tex_coords.push_back(1.f);
-		tex_coords.push_back(1.f);
-
-		// 4
-		vertices.push_back(f_x);
-		vertices.push_back(f_y);
-		vertices.push_back(f_z + 1.f);
-
-		tex_coords.push_back(0.f);
-		tex_coords.push_back(0.f);
-
-		// 5
-		vertices.push_back(f_x + 1.f);
-		vertices.push_back(f_y);
-		vertices.push_back(f_z + 1.f);
-
-		tex_coords.push_back(1.f);
-		tex_coords.push_back(0.f);
-
-		// 6
-		vertices.push_back(f_x + 1.f);
-		vertices.push_back(f_y + 1.f);
-		vertices.push_back(f_z + 1.f);
-
-		tex_coords.push_back(1.f);
-		tex_coords.push_back(1.f);
-
-		// 7
-		vertices.push_back(f_x);
-		vertices.push_back(f_y + 1.f);
-		vertices.push_back(f_z + 1.f);
-
-		tex_coords.push_back(0.f);
-		tex_coords.push_back(1.f);
 	};
 
 	for (int x = 0; x < WIDTH; x++)
@@ -373,7 +469,7 @@ std::shared_ptr<Chunk> World::GenerateChunk(int x, int z)
 		{
 			const auto noise = m_perlin_noise.noise(float(x + (chunk->GetX() * Chunk::WIDTH)) / MULTIPLIER, float(z + (chunk->GetZ() * Chunk::DEPTH)) / MULTIPLIER);
 			const int height = MIN_HEIGHT + int((noise + 1.f) * 0.5f * (MAX_HEIGHT - MIN_HEIGHT));
-
+	
 			for (int i = 0; i < height; i++)
 				chunk->SetBlock(x, i, z, Block::Create(1));
 		}
