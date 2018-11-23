@@ -50,7 +50,7 @@ void Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 
 			return nullptr;
 		};
-		const auto IsBlockActive = [FindChunk, this](int x, int y, int z, bool bx, bool by, bool bz) -> bool
+		const auto IsBlockActive = [FindChunk, this](int x, int y, int z, bool bx, bool bz) -> bool
 		{
 			const int chunk_x = m_x,
 				chunk_z = m_z;
@@ -82,10 +82,6 @@ void Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 				else
 					return GetBlock(x, y, z).m_is_active;
 			}
-			else if (by)
-			{
-
-			}
 			else if (bz)
 			{
 				if (z < 0)
@@ -109,35 +105,13 @@ void Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 				}
 				else
 					return GetBlock(x, y, z).m_is_active;
-
-				//// front face
-//if (z <= 0 || !GetBlock(x, y, z - 1).m_is_active)
-//{
-//	indices.push_back(start + 0);
-//	indices.push_back(start + 2);
-//	indices.push_back(start + 1);
-//	indices.push_back(start + 0);
-//	indices.push_back(start + 3);
-//	indices.push_back(start + 2);
-//}
-//
-//// back
-//if (z >= DEPTH - 1 || !GetBlock(x, y, z + 1).m_is_active)
-//{
-//	indices.push_back(start + 4);
-//	indices.push_back(start + 5);
-//	indices.push_back(start + 6);
-//	indices.push_back(start + 4);
-//	indices.push_back(start + 6);
-//	indices.push_back(start + 7);
-//}
 			}
 
 			return true;
 		};
 
 		// front face
-		if (!IsBlockActive(x, y, z - 1, false, false, true))
+		if (!IsBlockActive(x, y, z - 1, false, true))
 		{
 			indices.push_back(start + 0);
 			indices.push_back(start + 2);
@@ -148,7 +122,7 @@ void Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 		}
 
 		// back
-		if (!IsBlockActive(x, y, z + 1, false, false, true))
+		if (!IsBlockActive(x, y, z + 1, false, true))
 		{
 			indices.push_back(start + 4);
 			indices.push_back(start + 5);
@@ -158,30 +132,8 @@ void Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 			indices.push_back(start + 7);
 		}
 
-		//// front face
-		//if (z <= 0 || !GetBlock(x, y, z - 1).m_is_active)
-		//{
-		//	indices.push_back(start + 0);
-		//	indices.push_back(start + 2);
-		//	indices.push_back(start + 1);
-		//	indices.push_back(start + 0);
-		//	indices.push_back(start + 3);
-		//	indices.push_back(start + 2);
-		//}
-		//
-		//// back
-		//if (z >= DEPTH - 1 || !GetBlock(x, y, z + 1).m_is_active)
-		//{
-		//	indices.push_back(start + 4);
-		//	indices.push_back(start + 5);
-		//	indices.push_back(start + 6);
-		//	indices.push_back(start + 4);
-		//	indices.push_back(start + 6);
-		//	indices.push_back(start + 7);
-		//}
-
 		// right
-		if (!IsBlockActive(x + 1, y, z, true, false, false))
+		if (!IsBlockActive(x + 1, y, z, true, false))
 		{
 			indices.push_back(start + 1);
 			indices.push_back(start + 6);
@@ -192,7 +144,7 @@ void Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 		}
 
 		// left
-		if (!IsBlockActive(x - 1, y, z, true, false, false))
+		if (!IsBlockActive(x - 1, y, z, true, false))
 		{
 			indices.push_back(start + 0);
 			indices.push_back(start + 4);
@@ -201,27 +153,6 @@ void Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 			indices.push_back(start + 7);
 			indices.push_back(start + 3);
 		}
-		//// right
-		//if (x >= WIDTH - 1 || !GetBlock(x + 1, y, z).m_is_active)
-		//{
-		//	indices.push_back(start + 1);
-		//	indices.push_back(start + 6);
-		//	indices.push_back(start + 5);
-		//	indices.push_back(start + 1);
-		//	indices.push_back(start + 2);
-		//	indices.push_back(start + 6);
-		//}
-		//
-		//// left
-		//if (x <= 0 || !GetBlock(x - 1, y, z).m_is_active)
-		//{
-		//	indices.push_back(start + 0);
-		//	indices.push_back(start + 4);
-		//	indices.push_back(start + 7);
-		//	indices.push_back(start + 0);
-		//	indices.push_back(start + 7);
-		//	indices.push_back(start + 3);
-		//}
 
 		// top
 		if (y >= HEIGHT - 1 || !GetBlock(x, y + 1, z).m_is_active)
@@ -355,10 +286,19 @@ void World::Update(glm::fvec3 position)
 
 		if (!DoesChunkExist(x_chunk, z_chunk))
 		{
-			auto chunk = GenerateChunk(x_chunk, z_chunk);
+			GenerateChunk(x_chunk, z_chunk);
 
-			for (auto chunk : m_chunks)
-				chunk->SetUpdate();
+			auto chunk = GetChunk(x_chunk + 1, z_chunk);
+			if (chunk) chunk->SetUpdate();
+
+			chunk = GetChunk(x_chunk - 1, z_chunk);
+			if (chunk) chunk->SetUpdate();
+
+			chunk = GetChunk(x_chunk, z_chunk + 1);
+			if (chunk) chunk->SetUpdate();
+
+			chunk = GetChunk(x_chunk, z_chunk - 1);
+			if (chunk) chunk->SetUpdate();
 		}
 	}
 
