@@ -239,9 +239,10 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 
 		Mango::RescourcePool<Mango::CubeTexture>::Get()->GetRes("cobblestone")->Bind();
 
-		m_mango_core.SetWireFrame(true);
+		//m_mango_core.SetWireFrame(true);
 
 		//Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
+		Mango::RescourcePool<Mango::Texture>::Get()->GetOrAddRes("test", "res/textures/test.png", true, true)->Bind();
 		for (auto chunk : m_world.GetRenderChunks())
 		{
 			cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ Chunk::WIDTH * chunk->GetX(), 0, Chunk::DEPTH * chunk->GetZ() }, { 0.f, 0.f, 0.f }));
@@ -252,7 +253,7 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 			glDrawElements(model->GetMode(), model->GetIBO().GetCount(), model->GetIBO().GetType(), nullptr);
 		}
 
-		m_mango_core.SetWireFrame(false);
+		//m_mango_core.SetWireFrame(false);
 
 		Mango::Shader::Unbind();
 		Mango::CubeTexture::Unbind();

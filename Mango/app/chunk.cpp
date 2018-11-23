@@ -11,6 +11,7 @@ void Chunk::Setup(int x, int z)
 
 	m_model.Setup(GL_TRIANGLES, 0, GL_UNSIGNED_INT, nullptr);
 	m_model.AddVBO().Setup(0, nullptr);
+	m_model.AddVBO().Setup(0, nullptr);
 }
 void Chunk::Release()
 {
@@ -31,9 +32,10 @@ bool Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 	DBG_LOG("[~] chunk: [%i, %i]", m_x, m_z);
 
 	std::vector<float> vertices;
+	std::vector<float> tex_coords;
 	std::vector<unsigned int> indices;
 
-	const auto MakeBlock = [&vertices, &indices, &render_chunks, this](int x, int y, int z) -> void
+	const auto MakeBlock = [&vertices, &tex_coords, &indices, &render_chunks, this](int x, int y, int z) -> void
 	{
 		if (!GetBlock(x, y, z).m_is_active)
 			return;
@@ -185,40 +187,64 @@ bool Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 		vertices.push_back(f_y);
 		vertices.push_back(f_z);
 
+		tex_coords.push_back(1.f);
+		tex_coords.push_back(0.f);
+
 		// 1
 		vertices.push_back(f_x + 1.f);
 		vertices.push_back(f_y);
 		vertices.push_back(f_z);
+
+		tex_coords.push_back(0.f);
+		tex_coords.push_back(0.f);
 
 		// 2
 		vertices.push_back(f_x + 1.f);
 		vertices.push_back(f_y + 1.f);
 		vertices.push_back(f_z);
 
+		tex_coords.push_back(0.f);
+		tex_coords.push_back(1.f);
+
 		// 3
 		vertices.push_back(f_x);
 		vertices.push_back(f_y + 1.f);
 		vertices.push_back(f_z);
+
+		tex_coords.push_back(1.f);
+		tex_coords.push_back(1.f);
 
 		// 4
 		vertices.push_back(f_x);
 		vertices.push_back(f_y);
 		vertices.push_back(f_z + 1.f);
 
+		tex_coords.push_back(0.f);
+		tex_coords.push_back(0.f);
+
 		// 5
 		vertices.push_back(f_x + 1.f);
 		vertices.push_back(f_y);
 		vertices.push_back(f_z + 1.f);
+
+		tex_coords.push_back(1.f);
+		tex_coords.push_back(0.f);
 
 		// 6
 		vertices.push_back(f_x + 1.f);
 		vertices.push_back(f_y + 1.f);
 		vertices.push_back(f_z + 1.f);
 
+		tex_coords.push_back(1.f);
+		tex_coords.push_back(1.f);
+
 		// 7
 		vertices.push_back(f_x);
 		vertices.push_back(f_y + 1.f);
 		vertices.push_back(f_z + 1.f);
+
+		tex_coords.push_back(0.f);
+		tex_coords.push_back(1.f);
 	};
 
 	for (int x = 0; x < WIDTH; x++)
@@ -234,7 +260,8 @@ bool Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 	if (indices.empty())
 		return false;
 
-	auto vertex_buffer = &m_model.GetVBOs().front();
+	auto positions_buffer = &m_model.GetVBOs()[0];
+	auto tex_coords_buffer = &m_model.GetVBOs()[1];
 	auto index_buffer = &m_model.GetIBO();
 
 	m_model.GetVAO().Bind();
@@ -244,10 +271,15 @@ bool Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 	index_buffer->SetCount(indices.size());
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
 
-	// vertex buffer
-	vertex_buffer->Bind();
+	// positions
+	positions_buffer->Bind();
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
 	Mango::VertexArray::EnableAttribute(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+
+	// tex_coords
+	tex_coords_buffer->Bind();
+	glBufferData(GL_ARRAY_BUFFER, tex_coords.size() * sizeof(float), tex_coords.data(), GL_DYNAMIC_DRAW);
+	Mango::VertexArray::EnableAttribute(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
 	Mango::VertexArray::Unbind();
 
