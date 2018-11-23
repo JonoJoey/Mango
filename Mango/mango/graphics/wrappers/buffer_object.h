@@ -47,9 +47,9 @@ namespace Mango
 	{
 	public:
 		IndexBuffer() = default;
-		IndexBuffer(size_t count, unsigned int index_type, const void* data, unsigned int usage) { Setup(count, index_type, data, usage); }
+		IndexBuffer(size_t count, unsigned int index_type, const void* data, unsigned int usage = GL_DYNAMIC_DRAW) { Setup(count, index_type, data, usage); }
 
-		void Setup(size_t count, unsigned int index_type, const void* data, unsigned int usage)
+		void Setup(size_t count, unsigned int index_type, const void* data, unsigned int usage = GL_DYNAMIC_DRAW)
 		{
 			m_count = count;
 			m_type = index_type;
@@ -60,6 +60,7 @@ namespace Mango
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		}
 
+		void SetCount(size_t count) { m_count = count; }
 		size_t GetCount() const { return m_count; }
 		unsigned int GetType() const { return m_type; }
 

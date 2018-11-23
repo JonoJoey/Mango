@@ -36,6 +36,8 @@
 // stb
 #include <stb_image.h>
 
+#include <PerlinNoise.hpp>
+
 
 #define DBG_LOG(x, ...) printf_s("[line:%i - func:%s()] " x "\n", __LINE__, __func__, __VA_ARGS__)
 #define DBG_ERROR(x, ...) printf_s("[ERROR][line:%i - func:%s()] " x "\n", __LINE__, __func__, __VA_ARGS__)

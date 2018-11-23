@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{D37CE69A-0E9D-4F84-83EB-788198B88029}</ProjectGuid>
     <RootNamespace>Mango</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -74,7 +74,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Output\</OutDir>
-    <IncludePath>$(ProjectDir)dep\glfw\include;$(ProjectDir)dep\glew\include;$(ProjectDir)dep\glm;$(ProjectDir)dep\imgui;$(ProjectDir)dep\stb;$(ProjectDir)dep\discord-rpc\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)dep\glfw\include;$(ProjectDir)dep\glew\include;$(ProjectDir)dep\glm;$(ProjectDir)dep\imgui;$(ProjectDir)dep\stb;$(ProjectDir)dep\discord-rpc\include;$(ProjectDir)dep\perlin-noise;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)dep\glfw\lib-vc2015;$(ProjectDir)dep\glew\lib\Release\Win32;$(ProjectDir)dep\discord-rpc\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -404,6 +404,7 @@
     <ClInclude Include="dep\imgui\imstb_rectpack.h" />
     <ClInclude Include="dep\imgui\imstb_textedit.h" />
     <ClInclude Include="dep\imgui\imstb_truetype.h" />
+    <ClInclude Include="dep\perlin-noise\PerlinNoise.hpp" />
     <ClInclude Include="dep\stb\stb_image.h" />
     <ClInclude Include="mango\common.h" />
     <ClInclude Include="mango\graphics\3D\camera_3d.h" />

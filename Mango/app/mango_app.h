@@ -33,5 +33,5 @@ private:
 	const float m_interval_per_tick = 1.f / 60.f;
 
 	std::deque<std::string> m_block_names;
-	Chunk m_chunk;
+	World m_world;
 };

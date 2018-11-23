@@ -36,6 +36,7 @@ namespace Mango
 
 		void SetVerticalSync(bool on);
 		void SetMousePosition(glm::vec2 position);
+		void SetWireFrame(bool value) const { glPolygonMode(GL_FRONT_AND_BACK, value ? GL_LINE : GL_FILL); }
 
 		glm::ivec2 GetWindowSize() const { int w, h; glfwGetWindowSize(m_window, &w, &h); return { w, h }; }
 		float GetAspectRatio() const { int w, h; glfwGetWindowSize(m_window, &w, &h); return float(w) / float(h); }

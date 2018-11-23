@@ -117,7 +117,7 @@ void MangoApp::OnInit()
 {
 	Mango::RescourcePool<Mango::Texture>::Get()->AddRes("mango", "res/textures/mango.png", true, true);
 
-	Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader", 
+	auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader", 
 		Mango::Shader::ReadFile("res/shaders/cube_vs.glsl"), 
 		Mango::Shader::ReadFile("res/shaders/cube_fs.glsl"));
 
@@ -152,22 +152,8 @@ void MangoApp::OnInit()
 		m_block_names.push_back(block_name);
 	}
 
-	m_chunk.Setup();
-
-	for (int x = 0; x < 16; x++)
-	{
-		for (int y = 0; y < 256; y++)
-		{
-			for (int z = 0; z < 16; z++)
-			{
-				m_chunk.SetBlock(x, y, z, uint8_t((x + y + z) % m_block_names.size()));
-			}
-		}
-	}
-
-	m_chunk.Update();
-
-	m_camera.SetPosition({ 0.f, 0.f, 2.f });
+	m_camera.SetPosition({ 0.f, 128.f, 0.f });
+	m_world.Setup(m_camera.GetPosition());
 
 	Mango::DiscordRPC::Setup("514257473654489098");
 	Mango::DiscordRPC::Update("you are", "a noob", "mango", "mAnGo", "m_fancy", "MaNgO", Mango::DiscordRPC::GetStartTime(), 0);
@@ -176,7 +162,7 @@ void MangoApp::OnRelease()
 {
 	Mango::DiscordRPC::Release();
 
-	m_chunk.Release();
+	m_world.Release();
 
 	Mango::RescourcePool<Mango::Model>::Get()->Release();
 	Mango::RescourcePool<Mango::Shader>::Get()->Release();
@@ -207,6 +193,8 @@ void MangoApp::OnTick()
 		if (m_input_handler.GetKeyState(GLFW_KEY_LEFT_SHIFT))
 			m_camera.Move(-up_dir * m_interval_per_tick * MOVE_SPEED);
 	}
+
+	m_world.Update(m_camera.GetPosition());
 }
 void MangoApp::OnFrame(float frame_time, float lerptime)
 {
@@ -243,32 +231,28 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 	{
 		renderer_3d.Start();
 
+
 		auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->GetRes("cube_shader");
-		auto cube_model = Mango::RescourcePool<Mango::Model>::Get()->GetRes("cube");
-
-		// model
-		cube_model->GetVAO().Bind();
-
-		m_chunk.GetVBO()->Bind();
-		Mango::VertexArray::EnableAttributeInt(1, 1, GL_UNSIGNED_BYTE, 1, 0, 1);
-		Mango::VertexBuffer::Unbind();
-
-		// shader
 		cube_shader->Bind();
-
 		cube_shader->SetUniformMat4("u_projection_matrix", renderer_3d.GetProjMatrix());
 		cube_shader->SetUniformMat4("u_view_matrix", m_camera.GetViewMatrix());
-		cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }));
 
-		int values[16];
-		for (int i = 0; i < 16; i++)
-			values[i] = i;
-		glUniform1iv(cube_shader->GetUniformLoc("u_textures[]"), 16, values);
+		Mango::RescourcePool<Mango::CubeTexture>::Get()->GetRes("cobblestone")->Bind();
 
-		for (size_t i = 0; i < m_block_names.size() - 1; i++)
-			Mango::RescourcePool<Mango::CubeTexture>::Get()->GetRes(m_block_names[i + 1])->Bind(i);
+		//m_mango_core.SetWireFrame(true);
 
-		glDrawElementsInstanced(cube_model->GetMode(), cube_model->GetIBO().GetCount(), cube_model->GetIBO().GetType(), nullptr, Chunk::WIDTH * Chunk::HEIGHT * Chunk::DEPTH);
+		Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
+		for (auto chunk : m_world.GetRenderChunks())
+		{
+			cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ Chunk::WIDTH * chunk->GetX(), 0, Chunk::DEPTH * chunk->GetZ() }, { 0.f, 0.f, 0.f }));
+
+			auto model = chunk->GetModel();
+			model->GetVAO().Bind();
+
+			glDrawElements(model->GetMode(), model->GetIBO().GetCount(), model->GetIBO().GetType(), nullptr);
+		}
+
+		//m_mango_core.SetWireFrame(false);
 
 		Mango::Shader::Unbind();
 		Mango::CubeTexture::Unbind();
@@ -304,6 +288,14 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		ImGui::Text("FPS: ");
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.0f", 1.f / m_mango_core.GetFrameTime());
+
+		ImGui::Text("Position: ");
+		ImGui::SameLine(0.f, 0.f);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.2f %.2f %.2f", m_camera.GetPosition().x, m_camera.GetPosition().y, m_camera.GetPosition().z);
+
+		ImGui::Text("Chunk: ");
+		ImGui::SameLine(0.f, 0.f);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i %i", Chunk::PositionXToChunk(int(m_camera.GetPosition().x)), Chunk::PositionZToChunk(int(m_camera.GetPosition().z)));
 
 		if (static bool c = true; ImGui::Checkbox("Vertical Sync", &c))
 			m_mango_core.SetVerticalSync(c);
