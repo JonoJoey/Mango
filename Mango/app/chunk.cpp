@@ -22,13 +22,13 @@ void Chunk::Release()
 	delete[] m_blocks;
 	m_blocks = nullptr;
 }
-void Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
+bool Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 {
 	if (!m_needs_update)
-		return;
+		return false;
 
 	m_needs_update = false;
-	DBG_LOG("~chunk: [%i, %i]", m_x, m_z);
+	DBG_LOG("[~] chunk: [%i, %i]", m_x, m_z);
 
 	std::vector<float> vertices;
 	std::vector<unsigned int> indices;
@@ -232,7 +232,7 @@ void Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 
 	// empty
 	if (indices.empty())
-		return;
+		return false;
 
 	auto vertex_buffer = &m_model.GetVBOs().front();
 	auto index_buffer = &m_model.GetIBO();
@@ -250,6 +250,8 @@ void Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
 	Mango::VertexArray::EnableAttribute(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
 	Mango::VertexArray::Unbind();
+
+	return true;
 }
 
 int Chunk::PositionXToChunk(int x)
@@ -313,7 +315,10 @@ void World::Update(glm::fvec3 position)
 		}
 
 		for (auto chunk : m_render_chunks)
-			chunk->Update(m_render_chunks);
+		{
+			if (chunk->Update(m_render_chunks))
+				break;
+		}
 	}
 }
 void World::Release()
@@ -324,7 +329,7 @@ void World::Release()
 
 std::shared_ptr<Chunk> World::GenerateChunk(int x, int z)
 {
-	DBG_LOG("+chunk: [%i %i]", x, z);
+	DBG_LOG("[+] chunk: [%i %i]", x, z);
 	auto chunk = m_chunks.emplace_back(new Chunk(x, z));
 
 	static constexpr int MIN_HEIGHT = 256 / 4;

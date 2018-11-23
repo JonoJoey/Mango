@@ -40,7 +40,7 @@ public:
 
 	void Setup(int x, int z);
 	void Release();
-	void Update(std::deque<std::shared_ptr<Chunk>>& render_chunks);
+	bool Update(std::deque<std::shared_ptr<Chunk>>& render_chunks);
 
 	int GetX() const { return m_x; }
 	int GetZ() const { return m_z; }

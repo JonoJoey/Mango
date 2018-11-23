@@ -297,6 +297,14 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i %i", Chunk::PositionXToChunk(int(m_camera.GetPosition().x)), Chunk::PositionZToChunk(int(m_camera.GetPosition().z)));
 
+		ImGui::Text("Chunks: ");
+		ImGui::SameLine(0.f, 0.f);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_world.GetChunks().size());
+		ImGui::SameLine();
+		ImGui::Text("Render chunks: ");
+		ImGui::SameLine(0.f, 0.f);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_world.GetRenderChunks().size());
+
 		if (static bool c = true; ImGui::Checkbox("Vertical Sync", &c))
 			m_mango_core.SetVerticalSync(c);
 
