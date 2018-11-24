@@ -1,6 +1,5 @@
 #include "mango_app.h"
 
-#include <filesystem>
 
 
 void MangoApp::Run()
@@ -109,6 +108,8 @@ void MangoApp::Run()
 		m_mango_core.EndFrame();
 	}
 
+	OnRelease();
+
 	// release
 	m_mango_core.Release();
 }
@@ -126,18 +127,12 @@ void MangoApp::OnInit()
 	auto cube_model = Mango::RescourcePool<Mango::Model>::Get()->AddRes("cube");
 	Mango::LoadCubeModel(*cube_model);
 
-	const auto GetDirectories = [](const std::string& s) -> std::vector<std::string>
-	{
-		std::vector<std::string> r;
-		for (auto& p : std::filesystem::recursive_directory_iterator(s))
-			if (p.status().type() == std::filesystem::file_type::directory)
-				r.push_back(p.path().filename().string());
-		return r;
-	};
-
 	m_camera.SetPosition({ 0.f, 128.f, 2.f });
-	m_world.Setup(m_camera.GetPosition());
-	m_world.EditBlock(0, 0, 0, Block::Inactive());
+
+	if (!World::DoesWorldExist("res/worlds/test_world"))
+		World::CreateNewWorld("res/worlds/test_world", 69);
+
+	m_world.Setup("res/worlds/test_world");
 
 	Mango::DiscordRPC::Setup("514257473654489098");
 	Mango::DiscordRPC::Update("you are", "a noob", "mango", "mAnGo", "m_fancy", "MaNgO", Mango::DiscordRPC::GetStartTime(), 0);

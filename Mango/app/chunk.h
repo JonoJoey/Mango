@@ -96,7 +96,11 @@ public:
 	static constexpr int CHUNK_RELOAD_RADIUS = 10;
 
 public:
-	void Setup(glm::fvec3 position);
+	static bool DoesWorldExist(std::string world_path);
+	static void CreateNewWorld(std::string world_path, uint32_t seed);
+
+public:
+	void Setup(std::string world_path);
 	void Update(glm::fvec3 position);
 	void Release();
 
@@ -110,10 +114,14 @@ public:
 private:
 	std::shared_ptr<Chunk> GenerateChunk(int x, int z);
 	std::shared_ptr<Chunk> LoadChunk(int x, int z);
-	void SaveChunk(std::shared_ptr<Chunk> chunk);
 	Chunk* GetChunk(int x, int z);
 
 private:
+	static uint64_t PackChunk(int x, int z);
+	static void SaveChunk(int x, int z, std::deque<EditedBlock> edited_blocks, std::string world_path);
+
+private:
+	std::string m_world_path;
 	siv::PerlinNoise m_perlin_noise;
 	std::deque<std::shared_ptr<Chunk>> m_chunks;
 	std::deque<std::shared_ptr<Chunk>> m_render_chunks;

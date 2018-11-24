@@ -1,5 +1,9 @@
 #include "chunk.h"
 
+#include <fstream>
+#include <filesystem>
+#include <thread>
+
 
 void Chunk::Setup(int x, int z)
 {
@@ -422,14 +426,101 @@ Block Chunk::GetBlock(int x, int y, int z)
 }
 
 
-void World::Setup(glm::fvec3 position)
+bool World::DoesWorldExist(std::string world_path)
 {
-	m_perlin_noise.reseed(69);
+	return std::filesystem::exists(world_path) && std::filesystem::exists(world_path + "/metadata.data") && std::filesystem::exists(world_path + "/chunks");
+}
+void World::CreateNewWorld(std::string world_path, uint32_t seed)
+{
+	// empty or create new directory
+	if (std::filesystem::exists(world_path))
+		std::filesystem::remove_all(world_path);
+
+	std::filesystem::create_directory(world_path);
+	std::filesystem::create_directory(world_path + "/chunks");
+
+	// metadata
+	std::fstream file(world_path + "/metadata.data", std::ios::out | std::ios::trunc);
+	ASSERT(file);
+
+	file << "[seed][" << std::to_string(seed) << "]" << std::endl;
+	file << "[time][" << std::to_string(0.f) << "]" << std::endl;
+
+	file.close();
+}
+
+void World::Setup(std::string world_path)
+{
+	ASSERT(std::filesystem::exists(world_path));
+
+	m_world_path = world_path;
+
+	std::deque<std::string> file_data;
+
+	// metadata
+	{
+		std::fstream file(world_path + "/metadata.data", std::ios::in);
+		ASSERT(file);
+
+		std::string line;
+		while (std::getline(file, line))
+		{
+			if (!line.empty())
+				file_data.push_back(line);
+		}
+
+		file.close();
+	}
+
+	const auto ParseString = [](const std::string& string) -> std::deque<std::string>
+	{
+		std::deque<std::string> args;
+
+		bool start = false;
+		std::string cache;
+		for (const char c : string)
+		{
+			if (c == '[')
+				start = true;
+			else if (start && c == ']')
+			{
+				start = false;
+				args.push_back(cache);
+				cache.clear();
+			}
+			else if (start)
+				cache += c;
+		}
+
+		return args;
+	};
+	const auto FindData = [ParseString](const std::deque<std::string>& file_data, const std::string& data) -> std::deque<std::string>
+	{
+		for (auto string : file_data)
+		{
+			auto args = ParseString(string);
+			if (args.empty())
+				continue;
+
+			if (args.front() == data)
+			{
+				args.pop_front();
+				return args;
+			}
+		}
+
+		return std::deque<std::string>();
+	};
+
+	if (const auto seed = FindData(file_data, "seed"); !seed.empty())
+		m_perlin_noise.reseed(stoul(seed.front()));
 }
 void World::Update(glm::fvec3 position)
 {
 	const int x_chunk = Chunk::PositionXToChunk(int(position.x)),
 		z_chunk = Chunk::PositionZToChunk(int(position.z));
+
+	std::deque<std::thread> save_threads;
 
 	// update chunks
 	{
@@ -467,7 +558,15 @@ void World::Update(glm::fvec3 position)
 			const int distance = glm::max<int>(abs(m_chunks[i]->GetX() - x_chunk), abs(m_chunks[i]->GetZ() - z_chunk));
 			if (distance >= CHUNK_RELOAD_RADIUS)
 			{
-				SaveChunk(m_chunks[i]);
+				const uint64_t packed_chunk = PackChunk(m_chunks[i]->GetX(), m_chunks[i]->GetZ());
+				if (const auto& edited_blocks = m_edited_blocks.find(packed_chunk); edited_blocks != m_edited_blocks.end())
+				{
+					auto edited_blocks_copy = edited_blocks->second;
+					m_edited_blocks.erase(packed_chunk);
+
+					save_threads.emplace_back(SaveChunk, m_chunks[i]->GetX(), m_chunks[i]->GetZ(), edited_blocks_copy, m_world_path);
+				}
+
 				m_chunks[i]->Release();
 				m_chunks.erase(m_chunks.begin() + i);
 				continue;
@@ -486,21 +585,40 @@ void World::Update(glm::fvec3 position)
 				break;
 		}
 	}
+
+	for (auto& th : save_threads)
+		th.join();
+	save_threads.clear();
 }
 void World::Release()
 {
+	for (auto chunk : m_chunks)
+	{
+		const uint64_t packed_chunk = PackChunk(chunk->GetX(), chunk->GetZ());
+
+		const auto& edited_blocks = m_edited_blocks.find(packed_chunk);
+		if (edited_blocks != m_edited_blocks.end())
+		{
+			auto edited_blocks_copy = edited_blocks->second;
+			m_edited_blocks.erase(packed_chunk);
+
+			SaveChunk(chunk->GetX(), chunk->GetZ(), edited_blocks_copy, m_world_path);
+		}
+	}
+
+	m_edited_blocks.clear();
 	m_chunks.clear();
 	m_render_chunks.clear();
 }
 
 std::shared_ptr<Chunk> World::GenerateChunk(int x, int z)
 {
-	DBG_LOG("[+] chunk: [%i %i]", x, z);
 	auto chunk = m_chunks.emplace_back(new Chunk(x, z));
 
 	static constexpr int MIN_HEIGHT = 256 / 3;
 	static constexpr int MAX_HEIGHT = 256 - (256 / 3);
 	static constexpr float MULTIPLIER = 30.f;
+
 	for (int x = 0; x < Chunk::WIDTH; x++)
 	{
 		for (int z = 0; z < Chunk::DEPTH; z++)
@@ -518,27 +636,83 @@ std::shared_ptr<Chunk> World::GenerateChunk(int x, int z)
 std::shared_ptr<Chunk> World::LoadChunk(int x, int z)
 {
 	auto chunk = GenerateChunk(x, z);
-	return chunk;
-}
-void World::SaveChunk(std::shared_ptr<Chunk> chunk)
-{
-	uint64_t packed_chunk;
-	*reinterpret_cast<uint32_t*>(uintptr_t(&packed_chunk)) = uint32_t(chunk->GetX());
-	*reinterpret_cast<uint32_t*>(uintptr_t(&packed_chunk) + 4) = uint32_t(chunk->GetZ());
 
-	const auto& edited_blocks = m_edited_blocks.find(packed_chunk);
-	if (edited_blocks == m_edited_blocks.end())
-		return;
-
-	for (auto& block : edited_blocks->second)
+	const auto ParseString = [](const std::string& string) -> std::deque<std::string>
 	{
-		int x, y, z;
-		EditedBlock::UnpackPosition(block.m_position, x, y, z);
+		std::deque<std::string> args;
 
-		DBG_LOG("Saved: %i %i %i", x, y, z);
+		bool start = false;
+		std::string cache;
+		for (const char c : string)
+		{
+			if (c == '[')
+				start = true;
+			else if (start && c == ']')
+			{
+				start = false;
+				args.push_back(cache);
+				cache.clear();
+			}
+			else if (start)
+				cache += c;
+		}
+
+		return args;
+	};
+
+	std::fstream file(m_world_path + "/chunks/chunk_[" + std::to_string(x) + "][" + std::to_string(z) + "]", std::ios::in);
+	if (!file)
+		return chunk;
+
+	const uint64_t packed_chunk = PackChunk(x, z);
+	
+	std::string line;
+	while (std::getline(file, line))
+	{
+		if (line.empty())
+			continue;
+
+		const auto args = ParseString(line);
+		if (args.empty())
+			continue;
+
+		ASSERT(args.size() == 3);
+		uint32_t position = stoul(args[0]);
+		int is_active = stoi(args[1]);
+		int block_id = stoi(args[2]);
+
+		EditedBlock edited_block;
+		edited_block.m_position = position;
+		edited_block.m_block.m_is_active = is_active;
+		edited_block.m_block.m_block_id = block_id;
+		m_edited_blocks[packed_chunk].push_back(edited_block);
+
+		int block_x, block_y, block_z;
+		EditedBlock::UnpackPosition(position, block_x, block_y, block_z);
+		chunk->SetBlock(block_x, block_y, block_z, edited_block.m_block);
 	}
 
-	m_edited_blocks.erase(packed_chunk);
+	file.close();
+	
+	return chunk;
+}
+void World::SaveChunk(int x, int z, std::deque<EditedBlock> edited_blocks, std::string world_path)
+{
+	std::fstream file(world_path + "/chunks/chunk_[" + std::to_string(x) + "][" + std::to_string(z) + "]", std::ios::out | std::ios::trunc);
+	ASSERT(file);
+
+	for (auto& block : edited_blocks)
+		file << "[" << block.m_position << "][" << int(block.m_block.m_is_active) << "][" << int(block.m_block.m_block_id) << "]" << std::endl;
+
+	file.close();
+}
+
+uint64_t World::PackChunk(int x, int z)
+{
+	uint64_t packed_chunk;
+	*reinterpret_cast<int32_t*>(uintptr_t(&packed_chunk)) = int32_t(x);
+	*reinterpret_cast<int32_t*>(uintptr_t(&packed_chunk) + 4) = int32_t(z);
+	return packed_chunk;
 }
 
 void World::EditBlock(int x, int y, int z, const Block& block)
@@ -568,9 +742,7 @@ void World::EditBlock(int x, int y, int z, const Block& block)
 	edited_block.m_block = block;
 	edited_block.m_position = EditedBlock::PackPosition(new_x, y, new_z);
 
-	uint64_t packed_chunk;
-	*reinterpret_cast<uint32_t*>(uintptr_t(&packed_chunk)) = uint32_t(chunk_x);
-	*reinterpret_cast<uint32_t*>(uintptr_t(&packed_chunk) + 4) = uint32_t(chunk_z);
+	const uint64_t packed_chunk = PackChunk(chunk_x, chunk_z);
 
 	m_edited_blocks[packed_chunk].push_back(edited_block);
 	chunk->SetBlock(new_x, y, new_z, block);
