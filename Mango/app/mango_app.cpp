@@ -117,7 +117,7 @@ void MangoApp::OnInit()
 {
 	m_mango_core.SetVerticalSync(false);
 
-	Mango::RescourcePool<Mango::Texture>::Get()->AddRes("mango", "res/textures/mango.png", true, true);
+	Mango::RescourcePool<Mango::Texture>::Get()->AddRes("mango", "res/textures/mango.png", true, false);
 
 	auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader", 
 		Mango::Shader::ReadFile("res/shaders/cube_vs.glsl"), 
@@ -135,27 +135,9 @@ void MangoApp::OnInit()
 		return r;
 	};
 
-	std::deque<std::string> block_names_to_add;
-	for (auto dir : GetDirectories("res/textures/blocks/"))
-		block_names_to_add.push_back(dir);
-
-	m_block_names.push_back("none");
-	for (auto block_name : block_names_to_add)
-	{
-		Mango::RescourcePool<Mango::CubeTexture>::Get()->AddRes(block_name, std::array<std::string, 6>({
-			"res/textures/blocks/" + block_name + "/right.png",
-			"res/textures/blocks/" + block_name + "/left.png",
-			"res/textures/blocks/" + block_name + "/top.png",
-			"res/textures/blocks/" + block_name + "/bottom.png",
-			"res/textures/blocks/" + block_name + "/front.png",
-			"res/textures/blocks/" + block_name + "/back.png",
-			}), false, false, false);
-
-		m_block_names.push_back(block_name);
-	}
-
 	m_camera.SetPosition({ 0.f, 128.f, 2.f });
 	m_world.Setup(m_camera.GetPosition());
+	m_world.EditBlock(0, 0, 0, Block::Inactive());
 
 	Mango::DiscordRPC::Setup("514257473654489098");
 	Mango::DiscordRPC::Update("you are", "a noob", "mango", "mAnGo", "m_fancy", "MaNgO", Mango::DiscordRPC::GetStartTime(), 0);
@@ -176,7 +158,7 @@ void MangoApp::OnTick()
 {
 	// handle movement
 	{
-		static constexpr float MOVE_SPEED = 10.f;
+		static constexpr float MOVE_SPEED = 150.f;
 
 		static const glm::vec3 up_dir = { 0.f, 1.f, 0.f };
 		const auto forward_dir = Mango::Maths::AngleVector({ m_camera.GetViewangle().x, 0.f, 0.f });
@@ -194,6 +176,20 @@ void MangoApp::OnTick()
 			m_camera.Move(up_dir * m_interval_per_tick * MOVE_SPEED);
 		if (m_input_handler.GetKeyState(GLFW_KEY_LEFT_SHIFT))
 			m_camera.Move(-up_dir * m_interval_per_tick * MOVE_SPEED);
+	}
+
+	{
+		const auto direction = Mango::Maths::AngleVector(m_camera.GetViewangle());
+		const auto position = m_camera.GetPosition();
+
+		const int block_x = int(position.x + (direction.x * 5.f)),
+			block_y = int(position.y + (direction.y * 5.f)),
+			block_z = int(position.z + (direction.z * 5.f));
+
+		if (m_input_handler.GetButtonState(0))
+			m_world.EditBlock(block_x, block_y, block_z, Block::Create(1));
+		if (m_input_handler.GetButtonState(1))
+			m_world.EditBlock(block_x, block_y, block_z, Block::Inactive());
 	}
 
 	m_world.Update(m_camera.GetPosition());
@@ -239,12 +235,8 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		cube_shader->SetUniformMat4("u_projection_matrix", renderer_3d.GetProjMatrix());
 		cube_shader->SetUniformMat4("u_view_matrix", m_camera.GetViewMatrix());
 
-		Mango::RescourcePool<Mango::CubeTexture>::Get()->GetRes("cobblestone")->Bind();
-
 		//m_mango_core.SetWireFrame(true);
-
-		//Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
-		Mango::RescourcePool<Mango::Texture>::Get()->GetOrAddRes("cobble", "res/textures/blocks/cobblestone/right.png")->Bind();
+		Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
 		for (auto chunk : m_world.GetRenderChunks())
 		{
 			cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ Chunk::WIDTH * chunk->GetX(), 0, Chunk::DEPTH * chunk->GetZ() }, { 0.f, 0.f, 0.f }));
@@ -254,7 +246,6 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 
 			glDrawElements(model->GetMode(), model->GetIBO().GetCount(), model->GetIBO().GetType(), nullptr);
 		}
-
 		//m_mango_core.SetWireFrame(false);
 
 		Mango::Shader::Unbind();
@@ -304,9 +295,17 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_world.GetChunks().size());
 		ImGui::SameLine();
-		ImGui::Text("Render chunks: ");
+		ImGui::Text("Rendered chunks: ");
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_world.GetRenderChunks().size());
+
+		size_t edited_blocks_size = 0;
+		for (const auto& chunk : m_world.GetEditedBlocks())
+			edited_blocks_size += chunk.second.size();
+
+		ImGui::Text("Edited blocks: ");
+		ImGui::SameLine(0.f, 0.f);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", edited_blocks_size);
 
 		if (static bool c = false; ImGui::Checkbox("Vertical Sync", &c))
 			m_mango_core.SetVerticalSync(c);
