@@ -92,7 +92,7 @@ private:
 class World
 {
 public:
-	static constexpr int RENDER_DISTANCE = 100;
+	static constexpr int RENDER_DISTANCE = 12;
 
 public:
 	static bool DoesWorldExist(std::string world_path);

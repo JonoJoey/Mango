@@ -10,7 +10,7 @@ namespace Mango
 		m_mango = mango;
 
 		const auto window_size = mango->GetWindowSize();
-		SetProjMatrix(Mango::Maths::CreateProjectionMatrix(60.f, float(window_size[0]) / float(window_size[1]), 0.1f, 200.f));
+		SetProjMatrix(Mango::Maths::CreateProjectionMatrix(60.f, float(window_size[0]) / float(window_size[1]), 1.f, -1.f));
 
 		return true;
 	}
@@ -25,7 +25,7 @@ namespace Mango
 
 	void Renderer3D::Resize(int width, int height)
 	{
-		SetProjMatrix(Mango::Maths::CreateProjectionMatrix(60.f, float(width) / float(height), 0.1f, 200.f));
+		SetProjMatrix(Mango::Maths::CreateProjectionMatrix(60.f, float(width) / float(height), 1.f, -1.f));
 	}
 
 	void Renderer3D::Start()

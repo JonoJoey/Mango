@@ -796,7 +796,6 @@ void World::EditBlock(int x, int y, int z, const Block& block)
 	auto chunk = GetChunk(chunk_x, chunk_z);
 	if (!chunk)
 	{
-		return;
 		chunk = &*NewChunk(chunk_x, chunk_z);
 		LoadChunk(chunk_x, chunk_z, chunk);
 	}
