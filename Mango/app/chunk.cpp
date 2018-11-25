@@ -773,6 +773,9 @@ void World::UnpackChunk(uint64_t chunk, int& x, int& z)
 }
 void World::SaveChunk(int x, int z, std::deque<EditedBlock> edited_blocks, std::string world_path)
 {
+	if (edited_blocks.empty())
+		return;
+
 	std::fstream file(world_path + "/chunks/chunk_[" + std::to_string(x) + "][" + std::to_string(z) + "]", std::ios::out | std::ios::trunc);
 	ASSERT(file);
 
@@ -813,7 +816,7 @@ void World::EditBlock(int x, int y, int z, const Block& block)
 	edited_block.m_block = block;
 	edited_block.m_position = EditedBlock::PackPosition(new_x, y, new_z);
 
-	m_update_chunks.push_back(chunk);
+	m_update_chunks.push_front(chunk);
 	m_edited_blocks[PackChunk(chunk_x, chunk_z)].push_back(edited_block);
 
 	chunk->SetBlock(new_x, y, new_z, block);
