@@ -555,11 +555,11 @@ void World::Update(glm::fvec3 position)
 			}
 		};
 
-		// load new chunks
 		m_render_chunks.clear();
 		m_update_chunks.clear();
-
 		m_load_chunks.clear();
+
+		// add chunks to load list
 		std::unordered_map<uint64_t, bool> test;
 		for (int d = 0; d <= RENDER_DISTANCE + 1; d++)
 		{
@@ -570,65 +570,65 @@ void World::Update(glm::fvec3 position)
 					const auto packed_chunk = PackChunk(x, z);
 					if (test.find(packed_chunk) != test.end())
 						continue;
+
+					// chunk already exists
+					if (auto it = m_chunks.find(PackChunk(x_chunk + x, z_chunk + z)); it != m_chunks.end())
+					{
+						if (abs(x) <= RENDER_DISTANCE && abs(z) <= RENDER_DISTANCE)
+						{
+							m_render_chunks.push_back(it->second);
+
+							if (it->second->DoesNeedUpdate())
+								m_update_chunks.push_back(&*it->second);
+						}
+
+						test[packed_chunk] = true;
+						continue;
+					}
 		
 					test[packed_chunk] = true;
 					m_load_chunks.push_back(packed_chunk);
 				}
 			}
 		}
-
-		// load chunks
-		for (auto load_chunk : m_load_chunks)
-		{
-			int x, z;
-			UnpackChunk(load_chunk, x, z);
-
-			// chunk already exists
-			if (auto it = m_chunks.find(PackChunk(x_chunk + x, z_chunk + z)); it != m_chunks.end())
-			{
-				if (abs(x) <= RENDER_DISTANCE && abs(z) <= RENDER_DISTANCE)
-				{
-					m_render_chunks.push_back(it->second);
-			
-					if (it->second->DoesNeedUpdate())
-						m_update_chunks.push_back(&*it->second);
-				}
-			
-				continue;
-			}
-
-			LoadNewChunk(x, z, NewChunk(x_chunk + x, z_chunk + z));
-		}
-
-		//for (int x = -RENDER_DISTANCE - 1; x <= RENDER_DISTANCE + 1; x++)
-		//{
-		//	for (int z = -RENDER_DISTANCE - 1; z <= RENDER_DISTANCE + 1; z++)
-		//	{
-		//		// chunk already exists
-		//		if (auto it = m_chunks.find(PackChunk(x_chunk + x, z_chunk + z)); it != m_chunks.end())
-		//		{
-		//			if (x >= -RENDER_DISTANCE && x <= RENDER_DISTANCE && z >= -RENDER_DISTANCE && z <= RENDER_DISTANCE)
-		//			{
-		//				m_render_chunks.push_back(it->second);
-		//
-		//				if (it->second->DoesNeedUpdate())
-		//					m_update_chunks.push_back(&*it->second);
-		//			}
-		//
-		//			continue;
-		//		}
-		//
-		//		// spawn a new thread to load the chunk
-		//		threads.emplace_back(LoadNewChunk, x, z, NewChunk(x_chunk + x, z_chunk + z));
-		//	}
-		//}
 	}
 
-	// update chunks only when all chunks are loaded
-	if (!m_update_chunks.empty() && m_chunks.size() == int(pow(RENDER_DISTANCE + RENDER_DISTANCE + 3, 2)))
+	static bool bool_switch = false;
+	bool_switch = !bool_switch;
+
+	// load a chunk every tick
+	if (bool_switch)
 	{
-		if (m_update_chunks.front()->Update(m_chunks))
-			m_update_chunks.pop_front();
+		if (!m_load_chunks.empty())
+		{
+			int x, z;
+			UnpackChunk(m_load_chunks.front(), x, z);
+
+			auto chunk = NewChunk(x_chunk + x, z_chunk + z);
+			LoadChunk(x + x_chunk, z + z_chunk, &*chunk);
+			if (x >= -RENDER_DISTANCE && x <= RENDER_DISTANCE && z >= -RENDER_DISTANCE && z <= RENDER_DISTANCE)
+			{
+				m_render_chunks.push_back(chunk);
+				m_update_chunks.push_back(&*chunk);
+			}
+
+			m_load_chunks.pop_front();
+		}
+	}
+	else
+	{
+		// update chunks
+		for (size_t i = 0; i < m_update_chunks.size(); i++)
+		{
+			auto chunk = m_update_chunks[i];
+			if (!DoesChunkExist(chunk->GetX() + 1, chunk->GetZ()) || !DoesChunkExist(chunk->GetX() - 1, chunk->GetZ()) ||
+				!DoesChunkExist(chunk->GetX(), chunk->GetZ() + 1) || !DoesChunkExist(chunk->GetX(), chunk->GetZ() - 1))
+				continue;
+
+			chunk->Update(m_chunks);
+			m_update_chunks.erase(m_update_chunks.begin() + i);
+			break;
+		}
 	}
 }
 void World::Release()
