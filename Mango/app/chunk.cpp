@@ -522,8 +522,6 @@ void World::Update(glm::fvec3 position)
 	{
 		last_chunk = PackChunk(x_chunk, z_chunk);
 
-		std::deque<std::thread> threads;
-
 		// delete chunks that are too far
 		for (auto it = m_chunks.begin(); it != m_chunks.end();)
 		{
@@ -531,18 +529,13 @@ void World::Update(glm::fvec3 position)
 			UnpackChunk(it->first, x, z);
 			if (abs(x - x_chunk) > RENDER_DISTANCE + 1 || abs(z - z_chunk) > RENDER_DISTANCE + 1)
 			{
-				// spawn a new thread to save the chunk
-				threads.emplace_back(SaveChunk, x, z, m_edited_blocks[it->first], m_world_path);
+				SaveChunk(x, z, m_edited_blocks[it->first], m_world_path);
 
 				it = m_chunks.erase(it);
 				continue;
 			}
 			++it;
 		}
-
-		// wait for threads to finish
-		for (auto& t : threads)
-			t.join();
 
 		// load a new chunk
 		const auto LoadNewChunk = [x_chunk, z_chunk, this](int x, int z, std::shared_ptr<Chunk> chunk) -> void
@@ -593,42 +586,34 @@ void World::Update(glm::fvec3 position)
 		}
 	}
 
-	static bool bool_switch = false;
-	bool_switch = !bool_switch;
-
-	// load a chunk every tick
-	if (bool_switch)
+	// load chunks
+	if (!m_load_chunks.empty())
 	{
-		if (!m_load_chunks.empty())
+		int x, z;
+		UnpackChunk(m_load_chunks.front(), x, z);
+
+		auto chunk = NewChunk(x_chunk + x, z_chunk + z);
+		LoadChunk(x + x_chunk, z + z_chunk, &*chunk);
+		if (x >= -RENDER_DISTANCE && x <= RENDER_DISTANCE && z >= -RENDER_DISTANCE && z <= RENDER_DISTANCE)
 		{
-			int x, z;
-			UnpackChunk(m_load_chunks.front(), x, z);
-
-			auto chunk = NewChunk(x_chunk + x, z_chunk + z);
-			LoadChunk(x + x_chunk, z + z_chunk, &*chunk);
-			if (x >= -RENDER_DISTANCE && x <= RENDER_DISTANCE && z >= -RENDER_DISTANCE && z <= RENDER_DISTANCE)
-			{
-				m_render_chunks.push_back(chunk);
-				m_update_chunks.push_back(&*chunk);
-			}
-
-			m_load_chunks.pop_front();
+			m_render_chunks.push_back(chunk);
+			m_update_chunks.push_back(&*chunk);
 		}
+
+		m_load_chunks.pop_front();
 	}
-	else
-	{
-		// update chunks
-		for (size_t i = 0; i < m_update_chunks.size(); i++)
-		{
-			auto chunk = m_update_chunks[i];
-			if (!DoesChunkExist(chunk->GetX() + 1, chunk->GetZ()) || !DoesChunkExist(chunk->GetX() - 1, chunk->GetZ()) ||
-				!DoesChunkExist(chunk->GetX(), chunk->GetZ() + 1) || !DoesChunkExist(chunk->GetX(), chunk->GetZ() - 1))
-				continue;
 
-			chunk->Update(m_chunks);
-			m_update_chunks.erase(m_update_chunks.begin() + i);
-			break;
-		}
+	// update chunks
+	for (size_t i = 0; i < m_update_chunks.size(); i++)
+	{
+		auto chunk = m_update_chunks[i];
+		if (!DoesChunkExist(chunk->GetX() + 1, chunk->GetZ()) || !DoesChunkExist(chunk->GetX() - 1, chunk->GetZ()) ||
+			!DoesChunkExist(chunk->GetX(), chunk->GetZ() + 1) || !DoesChunkExist(chunk->GetX(), chunk->GetZ() - 1))
+			continue;
+
+		chunk->Update(m_chunks);
+		m_update_chunks.erase(m_update_chunks.begin() + i);
+		break;
 	}
 }
 void World::Release()

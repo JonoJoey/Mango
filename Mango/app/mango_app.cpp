@@ -239,7 +239,7 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		cube_shader->SetUniformMat4("u_projection_matrix", renderer_3d.GetProjMatrix());
 		cube_shader->SetUniformMat4("u_view_matrix", m_camera.GetViewMatrix());
 
-		m_mango_core.SetWireFrame(true);
+		//m_mango_core.SetWireFrame(true);
 		Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
 		for (auto chunk : m_world.GetRenderChunks())
 		{
@@ -250,7 +250,7 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 
 			glDrawElements(model->GetMode(), model->GetIBO().GetCount(), model->GetIBO().GetType(), nullptr);
 		}
-		m_mango_core.SetWireFrame(false);
+		//m_mango_core.SetWireFrame(false);
 
 		Mango::Shader::Unbind();
 		Mango::CubeTexture::Unbind();
