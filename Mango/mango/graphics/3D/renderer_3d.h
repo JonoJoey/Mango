@@ -29,6 +29,7 @@ namespace Mango
 		const glm::mat4& GetProjMatrix() const { return m_proj_matrix; }
 
 	private:
+		bool is_init = false;
 		MangoCore* m_mango = nullptr;
 		glm::mat4 m_proj_matrix;
 	};

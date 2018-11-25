@@ -2,6 +2,7 @@
 
 
 
+
 void MangoApp::Run()
 {
 	// mango core
@@ -122,19 +123,66 @@ void MangoApp::OnInit()
 
 	Mango::RescourcePool<Mango::Texture>::Get()->AddRes("mango", "res/textures/mango.png", true, false);
 
+	m_block_map["null"] = 0;
+	m_block_map["cobblestone"] = 1;
+	m_block_map["grass"] = 2;
+
+	const auto LoadBlockMap = [](const std::unordered_map<std::string, BLOCK_ID>& block_map) -> size_t
+	{
+		std::vector<std::pair<std::string, BLOCK_ID>> sorted_block_map;
+		for (const auto& block : block_map)
+			sorted_block_map.push_back(block);
+
+		// sort the blocks
+		std::sort(sorted_block_map.begin(), sorted_block_map.end(), [](const std::pair<std::string, BLOCK_ID>& p1, const std::pair<std::string, BLOCK_ID>& p2) -> bool
+		{
+			return p1.second < p2.second;
+		});
+
+		size_t num_textures = 0;
+		std::vector<std::string> file_paths;
+		for (const auto& block : sorted_block_map)
+		{
+			if (file_paths.size() >= 250)
+			{
+				Mango::RescourcePool<Mango::TextureArray>::Get()->AddRes("blocks_" + std::to_string(num_textures), 
+					file_paths, glm::ivec2({ 16, 16 }), false, false, false);
+
+				num_textures++;
+				file_paths.clear();
+			}
+
+			// front, back, right, left, top, bottom
+			file_paths.push_back("res/textures/blocks/" + block.first + "/front.png");
+			file_paths.push_back("res/textures/blocks/" + block.first + "/back.png");
+			file_paths.push_back("res/textures/blocks/" + block.first + "/right.png");
+			file_paths.push_back("res/textures/blocks/" + block.first + "/left.png");
+			file_paths.push_back("res/textures/blocks/" + block.first + "/top.png");
+			file_paths.push_back("res/textures/blocks/" + block.first + "/bottom.png");
+		}
+
+		if (!file_paths.empty())
+		{
+			Mango::RescourcePool<Mango::TextureArray>::Get()->AddRes("blocks_" + std::to_string(num_textures), 
+				file_paths, glm::ivec2({ 16, 16 }), false, false, false);
+
+			num_textures++;
+		}
+
+		return num_textures;
+	};
+	LoadBlockMap(m_block_map);
+
 	auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader", 
 		Mango::Shader::ReadFile("res/shaders/cube_vs.glsl"), 
 		Mango::Shader::ReadFile("res/shaders/cube_fs.glsl"));
-
-	auto cube_model = Mango::RescourcePool<Mango::Model>::Get()->AddRes("cube");
-	Mango::LoadCubeModel(*cube_model);
 
 	m_camera.SetPosition({ 0.f, 128.f, 2.f });
 
 	if (!World::DoesWorldExist("res/worlds/test_world"))
 		World::CreateNewWorld("res/worlds/test_world", 69);
 
-	m_world.Setup("res/worlds/test_world");
+	m_world.Setup("res/worlds/test_world", m_block_map);
 
 	Mango::DiscordRPC::Setup("514257473654489098");
 	Mango::DiscordRPC::Update("you are", "a noob", "mango", "mAnGo", "m_fancy", "MaNgO", Mango::DiscordRPC::GetStartTime(), 0);
@@ -155,7 +203,7 @@ void MangoApp::OnTick()
 {
 	// handle movement
 	{
-		static constexpr float MOVE_SPEED = 150.f;
+		static constexpr float MOVE_SPEED = 10.f;
 
 		static const glm::vec3 up_dir = { 0.f, 1.f, 0.f };
 		const auto forward_dir = Mango::Maths::AngleVector({ m_camera.GetViewangle().x, 0.f, 0.f });
@@ -184,19 +232,12 @@ void MangoApp::OnTick()
 			block_z = int(position.z + (direction.z * 5.f));
 
 		if (m_input_handler.GetButtonState(0))
-			m_world.EditBlock(block_x, block_y, block_z, Block::Create(1));
+			m_world.EditBlock(block_x, block_y, block_z, Block::Create(m_block_map["null"]));
 		if (m_input_handler.GetButtonState(1))
 			m_world.EditBlock(block_x, block_y, block_z, Block::Inactive());
 	}
 
 	m_world.Update(m_camera.GetPosition());
-	//const float current_time = m_interval_per_tick * m_tick_count;
-	//const float interval = (m_world.GetRenderChunks().size() < 150) ? 0.02f : 0.2f;
-	//if (static float last_update_time = 0.f; last_update_time + interval < current_time)
-	//{
-	//	last_update_time = current_time;
-	//	m_world.Update(m_camera.GetPosition());
-	//}
 }
 void MangoApp::OnFrame(float frame_time, float lerptime)
 {
@@ -240,7 +281,8 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		cube_shader->SetUniformMat4("u_view_matrix", m_camera.GetViewMatrix());
 
 		//m_mango_core.SetWireFrame(true);
-		Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
+		//Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
+		Mango::RescourcePool<Mango::TextureArray>::Get()->GetRes("blocks_0")->Bind();
 		for (auto chunk : m_world.GetRenderChunks())
 		{
 			cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ Chunk::WIDTH * chunk->GetX(), 0, Chunk::DEPTH * chunk->GetZ() }, { 0.f, 0.f, 0.f }));

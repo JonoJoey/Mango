@@ -40,18 +40,17 @@ namespace Mango
 	}
 	void Framebuffer::Release()
 	{
-		if (!IsUtilRegistered())
-			return;
-		UnregisterUtil();
+		if (m_framebuffer != 0xFFFFFFFF)
+		{
+			glDeleteFramebuffers(1, &m_framebuffer);
+			m_framebuffer = 0xFFFFFFFF;
+		}
 
-		if (m_framebuffer == 0xFFFFFFFF)
-			return;
-
-		glDeleteFramebuffers(1, &m_framebuffer);
-		m_framebuffer = 0xFFFFFFFF;
-
-		glDeleteRenderbuffers(1, &m_render_buffer);
-		m_render_buffer = 0xFFFFFFFF;
+		if (m_render_buffer != 0xFFFFFFFF)
+		{
+			glDeleteRenderbuffers(1, &m_render_buffer);
+			m_render_buffer = 0xFFFFFFFF;
+		}
 
 		m_texture.Release();
 	}

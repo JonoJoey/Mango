@@ -8,7 +8,7 @@
 // y = (i / WIDTH) % HEIGHT;
 // z = i / (WIDTH * HEIGHT);
 
-typedef uint16_t BLOCK_ID;
+typedef uint16_t BLOCK_ID; 
 
 
 struct Block
@@ -99,7 +99,7 @@ public:
 	static void CreateNewWorld(std::string world_path, uint32_t seed);
 
 public:
-	void Setup(std::string world_path);
+	bool Setup(std::string world_path, std::unordered_map<std::string, BLOCK_ID> block_map);
 	void Update(glm::fvec3 position);
 	void Release();
 
@@ -126,9 +126,11 @@ private:
 private:
 	std::string m_world_path;
 	siv::PerlinNoise m_perlin_noise;
-	std::unordered_map<uint64_t, std::shared_ptr<Chunk>> m_chunks;
+	std::unordered_map<std::string, BLOCK_ID> m_block_map;
+
+	std::deque<Chunk*> m_update_chunks;
 	std::deque<uint64_t> m_load_chunks;
 	std::deque<std::shared_ptr<Chunk>> m_render_chunks;
-	std::deque<Chunk*> m_update_chunks;
+	std::unordered_map<uint64_t, std::shared_ptr<Chunk>> m_chunks;
 	std::unordered_map<uint64_t, std::deque<EditedBlock>> m_edited_blocks;
 };

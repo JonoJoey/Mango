@@ -17,13 +17,10 @@ namespace Mango
 	}
 	void Model::Release()
 	{
-		if (!IsUtilRegistered())
-			return;
-		UnregisterUtil();
-
 		if (m_mode == 0xFFFFFFFF)
 			return;
 
+		m_mode = 0xFFFFFFFF;
 		m_vao.Release();
 		m_ibo.Release();
 	}

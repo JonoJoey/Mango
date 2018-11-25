@@ -12,15 +12,15 @@ namespace Mango
 		const auto window_size = mango->GetWindowSize();
 		SetProjMatrix(Mango::Maths::CreateProjectionMatrix(60.f, float(window_size[0]) / float(window_size[1]), 1.f, -1.f));
 
+		is_init = true;
 		return true;
 	}
 	void Renderer3D::Release()
 	{
-		if (!IsUtilRegistered())
+		if (!is_init)
 			return;
-		UnregisterUtil();
 
-
+		is_init = false;
 	}
 
 	void Renderer3D::Resize(int width, int height)

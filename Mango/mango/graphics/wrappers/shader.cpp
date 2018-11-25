@@ -57,10 +57,6 @@ namespace Mango
 	}
 	void Shader::Release()
 	{
-		if (!IsUtilRegistered())
-			return;
-		UnregisterUtil();
-
 		if (m_program == 0xFFFFFFFF)
 			return;
 

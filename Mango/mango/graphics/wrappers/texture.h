@@ -46,4 +46,24 @@ namespace Mango
 	private:
 		unsigned int m_texture = 0xFFFFFFFF;
 	};
+
+	class TextureArray : private Utility
+	{
+	public:
+		TextureArray() = default;
+		TextureArray(std::vector<std::string> file_paths, glm::ivec2 size, bool srgb = false, bool alpha_channel = false, bool linear = true)
+		{
+			ASSERT(Setup(file_paths, size, srgb, alpha_channel, linear));
+		}
+		~TextureArray() { Release(); }
+
+		bool Setup(std::vector<std::string> file_paths, glm::ivec2 size, bool srgb = false, bool alpha_channel = false, bool linear = true);
+		void Release() override;
+
+		void Bind(unsigned int slot = 0) const;
+		static void Unbind(unsigned int slot = 0);
+
+	private:
+		unsigned int m_texture = 0xFFFFFFFF;
+	};
 } // namespace Mango

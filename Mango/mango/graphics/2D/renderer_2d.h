@@ -31,6 +31,7 @@ namespace Mango
 		void RenderTexturedQuad(glm::ivec2 pos1, glm::ivec2 pos2);
 
 	private:
+		bool is_init = false;
 		MangoCore* m_mango = nullptr;
 		glm::mat4 m_proj_matrix;
 		Shader m_flat_shader,

@@ -22,10 +22,6 @@ namespace Mango
 		}
 		void Release() override
 		{
-			if (!IsUtilRegistered())
-				return;
-			UnregisterUtil();
-
 			if (m_buffer == 0xFFFFFFFF)
 				return;
 

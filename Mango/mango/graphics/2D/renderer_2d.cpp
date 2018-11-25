@@ -123,14 +123,15 @@ namespace Mango
 			VertexArray::Unbind();
 		}
 
+		is_init = true;
 		return true;
 	}
 	void Renderer2D::Release()
 	{
-		if (!IsUtilRegistered())
+		if (!is_init)
 			return;
-		UnregisterUtil();
 
+		is_init = false;
 		m_quad_model.Release();
 
 		m_flat_shader.Release();

@@ -9,10 +9,6 @@ namespace Mango
 	}
 	void VertexArray::Release()
 	{
-		if (!IsUtilRegistered())
-			return;
-		UnregisterUtil();
-
 		if (m_vertex_array == 0xFFFFFFFF)
 			return;
 

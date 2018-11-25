@@ -5,23 +5,6 @@
 
 namespace Mango
 {
-	// example:
-	// 
-	// class ExampleUtility : private Utility
-	// {
-	// public:
-	//     ~ExampleUtility() { Release(); }
-	// 
-	// 	   void Release() override
-	// 	   {
-	// 	   	   if (!IsUtilRegistered())
-	// 	   	       return;
-	// 	   	   UnregisterUtil();
-	// 	   	   
-	// 	   	   release code here...
-	// 	   }
-	// }
-	// 
 	class Utility
 	{
 	public:
@@ -31,14 +14,12 @@ namespace Mango
 
 		virtual void Release() = 0;
 
-		bool IsUtilRegistered() const;
-		void UnregisterUtil();
-
 	public:
 		static void Cleanup();
 
 	private:
 		void RegisterUtil();
+		void UnregisterUtil();
 
 	private:
 		static std::deque<Utility*> m_utilities;

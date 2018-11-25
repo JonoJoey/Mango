@@ -16,6 +16,7 @@ void Chunk::Setup(int x, int z)
 	m_model.Setup(GL_TRIANGLES, 0, GL_UNSIGNED_INT, nullptr);
 	m_model.AddVBO().Setup(0, nullptr);
 	m_model.AddVBO().Setup(0, nullptr);
+	m_model.AddVBO().Setup(0, nullptr);
 }
 void Chunk::Release()
 {
@@ -35,9 +36,10 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 
 	std::vector<float> vertices;
 	std::vector<float> tex_coords;
+	std::vector<BLOCK_ID> block_ids;
 	std::vector<unsigned int> indices;
 
-	const auto MakeBlock = [&vertices, &tex_coords, &indices, &chunks, this](int x, int y, int z) -> void
+	const auto MakeBlock = [&vertices, &tex_coords, &block_ids, &indices, &chunks, this](int x, int y, int z, int block_id) -> void
 	{
 		if (!GetBlock(x, y, z).m_is_active)
 			return;
@@ -123,24 +125,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 0);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 0);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 0);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 0);
 
 			indices.push_back(start + 0);
 			indices.push_back(start + 1);
@@ -161,24 +167,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 1);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 1);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 1);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 1);
 
 			indices.push_back(start + 1);
 			indices.push_back(start + 0);
@@ -199,24 +209,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 2);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 2);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 2);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 2);
 
 			indices.push_back(start + 0);
 			indices.push_back(start + 1);
@@ -237,24 +251,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 3);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 3);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 3);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 3);
 
 			indices.push_back(start + 0);
 			indices.push_back(start + 1);
@@ -275,24 +293,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 4);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 4);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 4);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 4);
 
 			indices.push_back(start + 0);
 			indices.push_back(start + 1);
@@ -313,24 +335,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 5);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
+			block_ids.push_back((block_id * 6) + 5);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 5);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
+			block_ids.push_back((block_id * 6) + 5);
 
 			indices.push_back(start + 0);
 			indices.push_back(start + 1);
@@ -347,7 +373,9 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 		for (int y = 0; y < HEIGHT; y++)
 		{
 			for (int z = 0; z < DEPTH; z++)
-				MakeBlock(x, y, z);
+			{
+				MakeBlock(x, y, z, GetBlock(x, y, z).m_block_id);
+			}
 		}
 	}
 
@@ -357,6 +385,7 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 
 	auto positions_buffer = &m_model.GetVBOs()[0];
 	auto tex_coords_buffer = &m_model.GetVBOs()[1];
+	auto block_id_buffer = &m_model.GetVBOs()[2];
 	auto index_buffer = &m_model.GetIBO();
 
 	m_model.GetVAO().Bind();
@@ -375,6 +404,11 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 	tex_coords_buffer->Bind();
 	glBufferData(GL_ARRAY_BUFFER, tex_coords.size() * sizeof(float), tex_coords.data(), GL_DYNAMIC_DRAW);
 	Mango::VertexArray::EnableAttribute(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+
+	// block ids
+	block_id_buffer->Bind();
+	glBufferData(GL_ARRAY_BUFFER, block_ids.size() * sizeof(BLOCK_ID), block_ids.data(), GL_DYNAMIC_DRAW);
+	Mango::VertexArray::EnableAttributeInt(2, 1, GL_UNSIGNED_SHORT, sizeof(BLOCK_ID), 0);
 
 	Mango::VertexArray::Unbind();
 
@@ -441,10 +475,16 @@ void World::CreateNewWorld(std::string world_path, uint32_t seed)
 	file.close();
 }
 
-void World::Setup(std::string world_path)
+bool World::Setup(std::string world_path, std::unordered_map<std::string, BLOCK_ID> block_map)
 {
-	ASSERT(std::filesystem::exists(world_path));
+	if (!std::filesystem::exists(world_path))
+		return false;
 
+	// null is the only block actually required
+	if (block_map.find("null") == block_map.end())
+		return false;
+
+	m_block_map = block_map;
 	m_world_path = world_path;
 
 	std::deque<std::string> file_data;
@@ -452,7 +492,8 @@ void World::Setup(std::string world_path)
 	// metadata
 	{
 		std::fstream file(world_path + "/metadata.data", std::ios::in);
-		ASSERT(file);
+		if (!file)
+			return false;
 
 		std::string line;
 		while (std::getline(file, line))
@@ -506,6 +547,8 @@ void World::Setup(std::string world_path)
 
 	if (const auto seed = FindData(file_data, "seed"); !seed.empty())
 		m_perlin_noise.reseed(stoul(seed.front()));
+
+	return true;
 }
 void World::Update(glm::fvec3 position)
 {
@@ -537,17 +580,7 @@ void World::Update(glm::fvec3 position)
 			++it;
 		}
 
-		// load a new chunk
-		const auto LoadNewChunk = [x_chunk, z_chunk, this](int x, int z, std::shared_ptr<Chunk> chunk) -> void
-		{
-			LoadChunk(x + x_chunk, z + z_chunk, &*chunk);
-			if (x >= -RENDER_DISTANCE && x <= RENDER_DISTANCE && z >= -RENDER_DISTANCE && z <= RENDER_DISTANCE)
-			{
-				m_render_chunks.push_back(chunk);
-				m_update_chunks.push_back(&*chunk);
-			}
-		};
-
+		// clear
 		m_render_chunks.clear();
 		m_update_chunks.clear();
 		m_load_chunks.clear();
@@ -641,6 +674,14 @@ void World::GenerateChunk(Chunk* chunk)
 	static constexpr int MAX_HEIGHT = 256 - (256 / 3);
 	static constexpr float MULTIPLIER = 30.f;
 
+	BLOCK_ID cobblestone = m_block_map["null"];
+	if (auto it = m_block_map.find("cobblestone"); it != m_block_map.end())
+		cobblestone = it->second;
+
+	BLOCK_ID grass = m_block_map["null"];
+	if (auto it = m_block_map.find("grass"); it != m_block_map.end())
+		grass = it->second;
+
 	for (int x = 0; x < Chunk::WIDTH; x++)
 	{
 		for (int z = 0; z < Chunk::DEPTH; z++)
@@ -649,14 +690,18 @@ void World::GenerateChunk(Chunk* chunk)
 			const int height = MIN_HEIGHT + int((noise + 1.f) * 0.5f * (MAX_HEIGHT - MIN_HEIGHT));
 	
 			for (int i = 0; i < height; i++)
-				chunk->SetBlock(x, i, z, Block::Create(1));
+			{
+				if (height - i < 4)
+					chunk->SetBlock(x, i, z, Block::Create(grass));
+				else
+					chunk->SetBlock(x, i, z, Block::Create(cobblestone));
+			}
 		}
 	}
 }
 void World::LoadChunk(int x, int z, Chunk* chunk)
 {
 	GenerateChunk(chunk);
-	//m_update_chunks.push_back(chunk);
 
 	const auto ParseString = [](const std::string& string) -> std::deque<std::string>
 	{
@@ -714,34 +759,6 @@ void World::LoadChunk(int x, int z, Chunk* chunk)
 	}
 
 	file.close();
-
-	//auto c = GetChunk(x + 1, z);
-	//if (c)
-	//{
-	//	c->SetNeedsUpdate(true);
-	//	m_update_chunks.emplace_back(c);
-	//}
-	//
-	//c = GetChunk(x - 1, z);
-	//if (c)
-	//{
-	//	c->SetNeedsUpdate(true);
-	//	m_update_chunks.emplace_back(c);
-	//}
-	//
-	//c = GetChunk(x, z + 1);
-	//if (c)
-	//{
-	//	c->SetNeedsUpdate(true);
-	//	m_update_chunks.emplace_back(c);
-	//}
-	//
-	//c = GetChunk(x, z - 1);
-	//if (c)
-	//{
-	//	c->SetNeedsUpdate(true);
-	//	m_update_chunks.emplace_back(c);
-	//}
 }
 
 uint64_t World::PackChunk(int x, int z)
