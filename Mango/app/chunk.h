@@ -57,22 +57,22 @@ public:
 	static constexpr int DEPTH = 16;
 
 public:
-	Chunk() = default;
 	Chunk(int x, int z) { Setup(x, z); }
 	~Chunk() { Release(); }
 
 	void Setup(int x, int z);
 	void Release();
-	bool Update(std::deque<std::shared_ptr<Chunk>>& render_chunks);
+	bool Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks);
 
 	int GetX() const { return m_x; }
 	int GetZ() const { return m_z; }
 	Mango::Model* GetModel() { return &m_model; }
 
-	void SetUpdate();
-
 	void SetBlock(int x, int y, int z, const Block& block);
 	Block GetBlock(int x, int y, int z);
+
+	void SetNeedsUpdate(bool value) { m_needs_update = value; }
+	bool DoesNeedUpdate() const { return m_needs_update; }
 
 public:
 	static int PositionXToChunk(int x);
@@ -82,7 +82,7 @@ public:
 	static void UnpackBlock(uint32_t block, int& x, int& y, int& z);
 
 private:
-	Block* m_blocks = nullptr;
+	Block* m_blocks;
 	Mango::Model m_model;
 	int m_x = 0,
 		m_z = 0;
@@ -92,8 +92,7 @@ private:
 class World
 {
 public:
-	static constexpr int RENDER_CHUNK_RADIUS = 5;
-	static constexpr int CHUNK_RELOAD_RADIUS = 10;
+	static constexpr int RENDER_DISTANCE = 12;
 
 public:
 	static bool DoesWorldExist(std::string world_path);
@@ -107,23 +106,29 @@ public:
 	void EditBlock(int x, int y, int z, const Block& block);
 	bool GetBlock(int x, int y, int z, Block& block);
 
-	const std::deque<std::shared_ptr<Chunk>>& GetChunks() const { return m_chunks; }
 	const std::deque<std::shared_ptr<Chunk>>& GetRenderChunks() const { return m_render_chunks; }
+	const std::unordered_map<uint64_t, std::shared_ptr<Chunk>>& GetChunks() const { return m_chunks; }
 	const std::unordered_map<uint64_t, std::deque<EditedBlock>>& GetEditedBlocks() const { return m_edited_blocks; }
 
 private:
-	std::shared_ptr<Chunk> GenerateChunk(int x, int z);
-	std::shared_ptr<Chunk> LoadChunk(int x, int z);
+	std::shared_ptr<Chunk> NewChunk(int x, int z) { return (m_chunks[PackChunk(x, z)] = std::shared_ptr<Chunk>(new Chunk(x, z))); }
+	void GenerateChunk(Chunk* chunk);
+	void LoadChunk(int x, int z, Chunk* chunk);
 	Chunk* GetChunk(int x, int z);
 
-private:
+public:
 	static uint64_t PackChunk(int x, int z);
+	static void UnpackChunk(uint64_t chunk, int& x, int& z);
+
+private:
 	static void SaveChunk(int x, int z, std::deque<EditedBlock> edited_blocks, std::string world_path);
 
 private:
 	std::string m_world_path;
 	siv::PerlinNoise m_perlin_noise;
-	std::deque<std::shared_ptr<Chunk>> m_chunks;
+	std::unordered_map<uint64_t, std::shared_ptr<Chunk>> m_chunks;
+	std::deque<uint64_t> m_load_chunks;
 	std::deque<std::shared_ptr<Chunk>> m_render_chunks;
+	std::deque<Chunk*> m_update_chunks;
 	std::unordered_map<uint64_t, std::deque<EditedBlock>> m_edited_blocks;
 };

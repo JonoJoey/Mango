@@ -88,6 +88,7 @@ void MangoApp::Run()
 	m_framebuffer.Setup(m_mango_core.GetWindowSize());
 
 	float accumulated_time = 0.f;
+	m_tick_count = 0;
 
 	OnInit();
 
@@ -101,6 +102,7 @@ void MangoApp::Run()
 		{
 			accumulated_time -= m_interval_per_tick;
 			OnTick();
+			m_tick_count++;
 		}
 
 		OnFrame(frame_time, accumulated_time / m_interval_per_tick);
@@ -188,6 +190,13 @@ void MangoApp::OnTick()
 	}
 
 	m_world.Update(m_camera.GetPosition());
+	//const float current_time = m_interval_per_tick * m_tick_count;
+	//const float interval = (m_world.GetRenderChunks().size() < 150) ? 0.02f : 0.2f;
+	//if (static float last_update_time = 0.f; last_update_time + interval < current_time)
+	//{
+	//	last_update_time = current_time;
+	//	m_world.Update(m_camera.GetPosition());
+	//}
 }
 void MangoApp::OnFrame(float frame_time, float lerptime)
 {
@@ -230,7 +239,7 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		cube_shader->SetUniformMat4("u_projection_matrix", renderer_3d.GetProjMatrix());
 		cube_shader->SetUniformMat4("u_view_matrix", m_camera.GetViewMatrix());
 
-		//m_mango_core.SetWireFrame(true);
+		m_mango_core.SetWireFrame(true);
 		Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
 		for (auto chunk : m_world.GetRenderChunks())
 		{
@@ -241,7 +250,7 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 
 			glDrawElements(model->GetMode(), model->GetIBO().GetCount(), model->GetIBO().GetType(), nullptr);
 		}
-		//m_mango_core.SetWireFrame(false);
+		m_mango_core.SetWireFrame(false);
 
 		Mango::Shader::Unbind();
 		Mango::CubeTexture::Unbind();

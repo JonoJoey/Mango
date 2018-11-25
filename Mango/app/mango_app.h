@@ -31,6 +31,7 @@ private:
 	EventHandler m_event_handler;
 
 	const float m_interval_per_tick = 1.f / 60.f;
+	unsigned int m_tick_count = 0;
 
 	World m_world;
 };

@@ -27,29 +27,25 @@ void Chunk::Release()
 	delete[] m_blocks;
 	m_blocks = nullptr;
 }
-bool Chunk::Update(std::deque<std::shared_ptr<Chunk>>& render_chunks)
+bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 {
 	if (!m_needs_update)
 		return false;
-
 	m_needs_update = false;
 
 	std::vector<float> vertices;
 	std::vector<float> tex_coords;
 	std::vector<unsigned int> indices;
 
-	const auto MakeBlock = [&vertices, &tex_coords, &indices, &render_chunks, this](int x, int y, int z) -> void
+	const auto MakeBlock = [&vertices, &tex_coords, &indices, &chunks, this](int x, int y, int z) -> void
 	{
 		if (!GetBlock(x, y, z).m_is_active)
 			return;
 
-		const auto FindChunk = [&render_chunks](int chunk_x, int chunk_z) -> Chunk*
+		const auto FindChunk = [&chunks](int chunk_x, int chunk_z) -> Chunk*
 		{
-			for (auto chunk : render_chunks)
-			{
-				if (chunk->GetX() == chunk_x && chunk->GetZ() == chunk_z)
-					return &*chunk;
-			}
+			if (auto it = chunks.find(World::PackChunk(chunk_x, chunk_z)); it != chunks.end())
+				return &*it->second;
 
 			return nullptr;
 		};
@@ -411,13 +407,9 @@ void Chunk::UnpackBlock(uint32_t block, int& x, int& y, int& z)
 	y = int(*reinterpret_cast<uint16_t*>(uintptr_t(&block) + 2));
 }
 
-void Chunk::SetUpdate() 
-{ 
-	m_needs_update = true; 
-}
 void Chunk::SetBlock(int x, int y, int z, const Block& block)
 { 
-	m_needs_update = true; 
+	m_needs_update = true;
 	m_blocks[x + (y * WIDTH) + (z * WIDTH * HEIGHT)] = block; 
 }
 Block Chunk::GetBlock(int x, int y, int z) 
@@ -520,89 +512,136 @@ void World::Update(glm::fvec3 position)
 	const int x_chunk = Chunk::PositionXToChunk(int(position.x)),
 		z_chunk = Chunk::PositionZToChunk(int(position.z));
 
-	std::deque<std::thread> save_threads;
-
-	// update chunks
+	const auto DoesChunkExist = [this](int x, int z) -> bool
 	{
-		const auto DoesChunkExist = [this](int x, int z) -> bool
+		return m_chunks.find(PackChunk(x, z)) != m_chunks.end();
+	};
+
+	// when entering a new chunk
+	if (static uint64_t last_chunk = 0xFFFFFFFFFFFFFFFF; last_chunk != PackChunk(x_chunk, z_chunk))
+	{
+		last_chunk = PackChunk(x_chunk, z_chunk);
+
+		std::deque<std::thread> threads;
+
+		// delete chunks that are too far
+		for (auto it = m_chunks.begin(); it != m_chunks.end();)
 		{
-			for (auto chunk : m_chunks)
+			int x, z;
+			UnpackChunk(it->first, x, z);
+			if (abs(x - x_chunk) > RENDER_DISTANCE + 1 || abs(z - z_chunk) > RENDER_DISTANCE + 1)
 			{
-				if (chunk->GetX() == x && chunk->GetZ() == z)
-					return true;
+				// spawn a new thread to save the chunk
+				threads.emplace_back(SaveChunk, x, z, m_edited_blocks[it->first], m_world_path);
+
+				it = m_chunks.erase(it);
+				continue;
 			}
-
-			return false;
-		};
-
-		if (!DoesChunkExist(x_chunk, z_chunk))
-		{
-			LoadChunk(x_chunk, z_chunk);
-
-			auto chunk = GetChunk(x_chunk + 1, z_chunk);
-			if (chunk) chunk->SetUpdate();
-
-			chunk = GetChunk(x_chunk - 1, z_chunk);
-			if (chunk) chunk->SetUpdate();
-
-			chunk = GetChunk(x_chunk, z_chunk + 1);
-			if (chunk) chunk->SetUpdate();
-
-			chunk = GetChunk(x_chunk, z_chunk - 1);
-			if (chunk) chunk->SetUpdate();
+			++it;
 		}
 
-		m_render_chunks.clear();
-		for (int i = m_chunks.size() - 1; i >= 0; i--)
+		// wait for threads to finish
+		for (auto& t : threads)
+			t.join();
+
+		// load a new chunk
+		const auto LoadNewChunk = [x_chunk, z_chunk, this](int x, int z, std::shared_ptr<Chunk> chunk) -> void
 		{
-			const int distance = glm::max<int>(abs(m_chunks[i]->GetX() - x_chunk), abs(m_chunks[i]->GetZ() - z_chunk));
-			if (distance >= CHUNK_RELOAD_RADIUS)
+			LoadChunk(x + x_chunk, z + z_chunk, &*chunk);
+			if (x >= -RENDER_DISTANCE && x <= RENDER_DISTANCE && z >= -RENDER_DISTANCE && z <= RENDER_DISTANCE)
 			{
-				const uint64_t packed_chunk = PackChunk(m_chunks[i]->GetX(), m_chunks[i]->GetZ());
-				if (const auto& edited_blocks = m_edited_blocks.find(packed_chunk); edited_blocks != m_edited_blocks.end())
+				m_render_chunks.push_back(chunk);
+				m_update_chunks.push_back(&*chunk);
+			}
+		};
+
+		// load new chunks
+		m_render_chunks.clear();
+		m_update_chunks.clear();
+
+		m_load_chunks.clear();
+		std::unordered_map<uint64_t, bool> test;
+		for (int d = 0; d <= RENDER_DISTANCE + 1; d++)
+		{
+			for (int x = -d; x <= d; x++)
+			{
+				for (int z = -d; z <= d; z++)
 				{
-					auto edited_blocks_copy = edited_blocks->second;
-					m_edited_blocks.erase(packed_chunk);
-
-					save_threads.emplace_back(SaveChunk, m_chunks[i]->GetX(), m_chunks[i]->GetZ(), edited_blocks_copy, m_world_path);
+					const auto packed_chunk = PackChunk(x, z);
+					if (test.find(packed_chunk) != test.end())
+						continue;
+		
+					test[packed_chunk] = true;
+					m_load_chunks.push_back(packed_chunk);
 				}
+			}
+		}
 
-				m_chunks[i]->Release();
-				m_chunks.erase(m_chunks.begin() + i);
+		// load chunks
+		for (auto load_chunk : m_load_chunks)
+		{
+			int x, z;
+			UnpackChunk(load_chunk, x, z);
+
+			// chunk already exists
+			if (auto it = m_chunks.find(PackChunk(x_chunk + x, z_chunk + z)); it != m_chunks.end())
+			{
+				if (abs(x) <= RENDER_DISTANCE && abs(z) <= RENDER_DISTANCE)
+				{
+					m_render_chunks.push_back(it->second);
+			
+					if (it->second->DoesNeedUpdate())
+						m_update_chunks.push_back(&*it->second);
+				}
+			
 				continue;
 			}
 
-			if (distance < RENDER_CHUNK_RADIUS)
-				m_render_chunks.push_back(m_chunks[i]);
+			LoadNewChunk(x, z, NewChunk(x_chunk + x, z_chunk + z));
 		}
+
+		//for (int x = -RENDER_DISTANCE - 1; x <= RENDER_DISTANCE + 1; x++)
+		//{
+		//	for (int z = -RENDER_DISTANCE - 1; z <= RENDER_DISTANCE + 1; z++)
+		//	{
+		//		// chunk already exists
+		//		if (auto it = m_chunks.find(PackChunk(x_chunk + x, z_chunk + z)); it != m_chunks.end())
+		//		{
+		//			if (x >= -RENDER_DISTANCE && x <= RENDER_DISTANCE && z >= -RENDER_DISTANCE && z <= RENDER_DISTANCE)
+		//			{
+		//				m_render_chunks.push_back(it->second);
+		//
+		//				if (it->second->DoesNeedUpdate())
+		//					m_update_chunks.push_back(&*it->second);
+		//			}
+		//
+		//			continue;
+		//		}
+		//
+		//		// spawn a new thread to load the chunk
+		//		threads.emplace_back(LoadNewChunk, x, z, NewChunk(x_chunk + x, z_chunk + z));
+		//	}
+		//}
 	}
 
-	// update render chunks
+	// update chunks only when all chunks are loaded
+	if (!m_update_chunks.empty() && m_chunks.size() == int(pow(RENDER_DISTANCE + RENDER_DISTANCE + 3, 2)))
 	{
-		for (auto chunk : m_render_chunks)
-		{
-			if (chunk->Update(m_render_chunks))
-				break;
-		}
+		if (m_update_chunks.front()->Update(m_chunks))
+			m_update_chunks.pop_front();
 	}
-
-	for (auto& th : save_threads)
-		th.join();
-	save_threads.clear();
 }
 void World::Release()
 {
 	for (auto chunk : m_chunks)
 	{
-		const uint64_t packed_chunk = PackChunk(chunk->GetX(), chunk->GetZ());
-
-		const auto& edited_blocks = m_edited_blocks.find(packed_chunk);
+		const auto& edited_blocks = m_edited_blocks.find(chunk.first);
 		if (edited_blocks != m_edited_blocks.end())
 		{
 			auto edited_blocks_copy = edited_blocks->second;
-			m_edited_blocks.erase(packed_chunk);
+			m_edited_blocks.erase(chunk.first);
 
-			SaveChunk(chunk->GetX(), chunk->GetZ(), edited_blocks_copy, m_world_path);
+			SaveChunk(chunk.second->GetX(), chunk.second->GetZ(), edited_blocks_copy, m_world_path);
 		}
 	}
 
@@ -611,10 +650,8 @@ void World::Release()
 	m_render_chunks.clear();
 }
 
-std::shared_ptr<Chunk> World::GenerateChunk(int x, int z)
+void World::GenerateChunk(Chunk* chunk)
 {
-	auto chunk = m_chunks.emplace_back(new Chunk(x, z));
-
 	static constexpr int MIN_HEIGHT = 256 / 3;
 	static constexpr int MAX_HEIGHT = 256 - (256 / 3);
 	static constexpr float MULTIPLIER = 30.f;
@@ -630,12 +667,11 @@ std::shared_ptr<Chunk> World::GenerateChunk(int x, int z)
 				chunk->SetBlock(x, i, z, Block::Create(1));
 		}
 	}
-
-	return chunk;
 }
-std::shared_ptr<Chunk> World::LoadChunk(int x, int z)
+void World::LoadChunk(int x, int z, Chunk* chunk)
 {
-	auto chunk = GenerateChunk(x, z);
+	GenerateChunk(chunk);
+	//m_update_chunks.push_back(chunk);
 
 	const auto ParseString = [](const std::string& string) -> std::deque<std::string>
 	{
@@ -662,7 +698,7 @@ std::shared_ptr<Chunk> World::LoadChunk(int x, int z)
 
 	std::fstream file(m_world_path + "/chunks/chunk_[" + std::to_string(x) + "][" + std::to_string(z) + "]", std::ios::in);
 	if (!file)
-		return chunk;
+		return;
 
 	const uint64_t packed_chunk = PackChunk(x, z);
 	
@@ -693,8 +729,47 @@ std::shared_ptr<Chunk> World::LoadChunk(int x, int z)
 	}
 
 	file.close();
-	
-	return chunk;
+
+	//auto c = GetChunk(x + 1, z);
+	//if (c)
+	//{
+	//	c->SetNeedsUpdate(true);
+	//	m_update_chunks.emplace_back(c);
+	//}
+	//
+	//c = GetChunk(x - 1, z);
+	//if (c)
+	//{
+	//	c->SetNeedsUpdate(true);
+	//	m_update_chunks.emplace_back(c);
+	//}
+	//
+	//c = GetChunk(x, z + 1);
+	//if (c)
+	//{
+	//	c->SetNeedsUpdate(true);
+	//	m_update_chunks.emplace_back(c);
+	//}
+	//
+	//c = GetChunk(x, z - 1);
+	//if (c)
+	//{
+	//	c->SetNeedsUpdate(true);
+	//	m_update_chunks.emplace_back(c);
+	//}
+}
+
+uint64_t World::PackChunk(int x, int z)
+{
+	uint64_t packed_chunk;
+	*reinterpret_cast<int32_t*>(uintptr_t(&packed_chunk)) = int32_t(x);
+	*reinterpret_cast<int32_t*>(uintptr_t(&packed_chunk) + 4) = int32_t(z);
+	return packed_chunk;
+}
+void World::UnpackChunk(uint64_t chunk, int& x, int& z)
+{
+	x = *reinterpret_cast<int32_t*>(uintptr_t(&chunk));
+	z = *reinterpret_cast<int32_t*>(uintptr_t(&chunk) + 4);
 }
 void World::SaveChunk(int x, int z, std::deque<EditedBlock> edited_blocks, std::string world_path)
 {
@@ -707,14 +782,6 @@ void World::SaveChunk(int x, int z, std::deque<EditedBlock> edited_blocks, std::
 	file.close();
 }
 
-uint64_t World::PackChunk(int x, int z)
-{
-	uint64_t packed_chunk;
-	*reinterpret_cast<int32_t*>(uintptr_t(&packed_chunk)) = int32_t(x);
-	*reinterpret_cast<int32_t*>(uintptr_t(&packed_chunk) + 4) = int32_t(z);
-	return packed_chunk;
-}
-
 void World::EditBlock(int x, int y, int z, const Block& block)
 {
 	if (y < 0 || y >= Chunk::HEIGHT - 1)
@@ -725,7 +792,11 @@ void World::EditBlock(int x, int y, int z, const Block& block)
 
 	auto chunk = GetChunk(chunk_x, chunk_z);
 	if (!chunk)
-		chunk = &*LoadChunk(chunk_x, chunk_z);
+	{
+		return;
+		chunk = &*NewChunk(chunk_x, chunk_z);
+		LoadChunk(chunk_x, chunk_z, chunk);
+	}
 
 	int new_x = x % Chunk::WIDTH;
 	int new_z = z % Chunk::DEPTH;
@@ -742,9 +813,9 @@ void World::EditBlock(int x, int y, int z, const Block& block)
 	edited_block.m_block = block;
 	edited_block.m_position = EditedBlock::PackPosition(new_x, y, new_z);
 
-	const uint64_t packed_chunk = PackChunk(chunk_x, chunk_z);
+	m_update_chunks.push_back(chunk);
+	m_edited_blocks[PackChunk(chunk_x, chunk_z)].push_back(edited_block);
 
-	m_edited_blocks[packed_chunk].push_back(edited_block);
 	chunk->SetBlock(new_x, y, new_z, block);
 }
 bool World::GetBlock(int x, int y, int z, Block& block)
@@ -757,7 +828,10 @@ bool World::GetBlock(int x, int y, int z, Block& block)
 
 	auto chunk = GetChunk(chunk_x, chunk_z);
 	if (!chunk)
-		chunk = &*LoadChunk(chunk_x, chunk_z);
+	{
+		chunk = &*NewChunk(chunk_x, chunk_z);
+		LoadChunk(chunk_x, chunk_z, chunk);
+	}
 
 	int new_x = x % Chunk::WIDTH;
 	int new_z = z % Chunk::DEPTH;
@@ -773,11 +847,8 @@ bool World::GetBlock(int x, int y, int z, Block& block)
 
 Chunk* World::GetChunk(int x, int z)
 {
-	for (auto chunk : m_chunks)
-	{
-		if (chunk->GetX() == x && chunk->GetZ() == z)
-			return &*chunk;
-	}
+	if (auto chunk = m_chunks.find(PackChunk(x, z)); chunk != m_chunks.end())
+		return &*chunk->second;
 
 	return nullptr;
 }
