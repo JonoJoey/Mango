@@ -126,6 +126,11 @@ void MangoApp::OnInit()
 	m_block_map["null"] = 0;
 	m_block_map["cobblestone"] = 1;
 	m_block_map["grass"] = 2;
+	m_block_map["diamond_ore"] = 3;
+	m_block_map["iron_ore"] = 4;
+	m_block_map["oak_log"] = 5;
+	m_block_map["oak_plank"] = 6;
+	m_block_map["mossy_cobblestone"] = 7;
 
 	const auto LoadBlockMap = [](const std::unordered_map<std::string, BLOCK_ID>& block_map) -> size_t
 	{
@@ -224,17 +229,57 @@ void MangoApp::OnTick()
 	}
 
 	{
-		const auto direction = Mango::Maths::AngleVector(m_camera.GetViewangle());
-		const auto position = m_camera.GetPosition();
+		auto direction = Mango::Maths::AngleVector(m_camera.GetViewangle());
 
-		const int block_x = int(position.x + (direction.x * 5.f)),
-			block_y = int(position.y + (direction.y * 5.f)),
-			block_z = int(position.z + (direction.z * 5.f));
+		Ray ray;
+		ray.start = m_camera.GetPosition();
+		ray.direction = direction;
+		ray.length = 10.f;
+		ray.step = 0.01f;
 
-		if (m_input_handler.GetButtonState(0))
-			m_world.EditBlock(block_x, block_y, block_z, Block::Create(m_block_map["null"]));
-		if (m_input_handler.GetButtonState(1))
-			m_world.EditBlock(block_x, block_y, block_z, Block::Inactive());
+		if (TraceInfo trace_info; m_world.GetRayTracer()->Trace(ray, trace_info))
+		{
+			// place block
+			if (m_input_handler.GetButtonState(1) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
+			{
+				int block_x = int(floorf(trace_info.trace_end.x)),
+					block_y = int(floorf(trace_info.trace_end.y)),
+					block_z = int(floorf(trace_info.trace_end.z));
+
+				switch (trace_info.block_face)
+				{
+				case BLOCK_FACE_FRONT:
+					block_z += 1;
+					break;
+				case BLOCK_FACE_BACK:
+					block_z -= 1;
+					break;
+				case BLOCK_FACE_RIGHT:
+					block_x += 1;
+					break;
+				case BLOCK_FACE_LEFT:
+					block_x -= 1;
+					break;
+				case BLOCK_FACE_TOP:
+					block_y += 1;
+					break;
+				case BLOCK_FACE_BOTTOM:
+					block_y -= 1;
+					break;
+				}
+
+				m_world.EditBlock(block_x, block_y, block_z, Block::Create(m_block_map[m_selected_block]));
+			}
+
+			// break block
+			if (m_input_handler.GetButtonState(0) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
+			{
+				int block_x = int(floorf(trace_info.trace_end.x)),
+					block_y = int(floorf(trace_info.trace_end.y)),
+					block_z = int(floorf(trace_info.trace_end.z));
+				m_world.EditBlock(block_x, block_y, block_z, Block::Inactive());
+			}
+		}
 	}
 
 	m_world.Update(m_camera.GetPosition());
@@ -280,8 +325,6 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		cube_shader->SetUniformMat4("u_projection_matrix", renderer_3d.GetProjMatrix());
 		cube_shader->SetUniformMat4("u_view_matrix", m_camera.GetViewMatrix());
 
-		//m_mango_core.SetWireFrame(true);
-		//Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
 		Mango::RescourcePool<Mango::TextureArray>::Get()->GetRes("blocks_0")->Bind();
 		for (auto chunk : m_world.GetRenderChunks())
 		{
@@ -292,11 +335,11 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 
 			glDrawElements(model->GetMode(), model->GetIBO().GetCount(), model->GetIBO().GetType(), nullptr);
 		}
-		//m_mango_core.SetWireFrame(false);
 
 		Mango::Shader::Unbind();
 		Mango::CubeTexture::Unbind();
 		Mango::VertexArray::Unbind();
+
 		renderer_3d.End();
 	}
 
@@ -355,6 +398,18 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 
 		if (static bool c = false; ImGui::Checkbox("Vertical Sync", &c))
 			m_mango_core.SetVerticalSync(c);
+
+		if (ImGui::BeginCombo("Block##combo", m_selected_block.c_str())) 
+		{
+			for (const auto& block : m_block_map)
+			{
+				bool is_selected = m_selected_block == block.first;
+				if (ImGui::Selectable(block.first.c_str(), is_selected))
+					m_selected_block = block.first;
+			}
+
+			ImGui::EndCombo();
+		}
 
 		ImGui::End();
 	}

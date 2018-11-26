@@ -4,7 +4,7 @@
 
 #include "event_handler.h"
 
-#include "chunk.h"
+#include "world.h"
 
 
 class MangoApp
@@ -32,6 +32,7 @@ private:
 
 	const float m_interval_per_tick = 1.f / 60.f;
 	unsigned int m_tick_count = 0;
+	std::string m_selected_block = "null";
 	std::unordered_map<std::string, BLOCK_ID> m_block_map;
 
 	World m_world;

@@ -96,6 +96,15 @@
     <ClCompile Include="app\chunk.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="app\world.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="app\ray_tracer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="app\player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mango\common.h">
@@ -915,6 +924,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dep\perlin-noise\PerlinNoise.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app\world.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app\block.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app\entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app\ray_tracer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="app\player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

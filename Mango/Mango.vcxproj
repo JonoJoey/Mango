@@ -129,6 +129,9 @@
     <ClCompile Include="app\chunk.cpp" />
     <ClCompile Include="app\event_handler.cpp" />
     <ClCompile Include="app\mango_app.cpp" />
+    <ClCompile Include="app\player.cpp" />
+    <ClCompile Include="app\ray_tracer.cpp" />
+    <ClCompile Include="app\world.cpp" />
     <ClCompile Include="dep\imgui\imgui.cpp" />
     <ClCompile Include="dep\imgui\imgui_demo.cpp" />
     <ClCompile Include="dep\imgui\imgui_draw.cpp" />
@@ -155,9 +158,14 @@
     <ClCompile Include="mango\misc\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="app\block.h" />
     <ClInclude Include="app\chunk.h" />
+    <ClInclude Include="app\entity.h" />
     <ClInclude Include="app\event_handler.h" />
     <ClInclude Include="app\mango_app.h" />
+    <ClInclude Include="app\player.h" />
+    <ClInclude Include="app\ray_tracer.h" />
+    <ClInclude Include="app\world.h" />
     <ClInclude Include="dep\glm\common.hpp" />
     <ClInclude Include="dep\glm\detail\compute_common.hpp" />
     <ClInclude Include="dep\glm\detail\compute_vector_relational.hpp" />
