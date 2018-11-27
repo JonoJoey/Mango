@@ -18,7 +18,7 @@ struct Block
 	}
 	static Block Inactive()
 	{
-		return Block({ false });
+		return Block({ false, 0 });
 	}
 
 	bool operator==(const Block& block) const { return m_is_active == block.m_is_active && m_block_id == block.m_block_id; }

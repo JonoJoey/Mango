@@ -9,7 +9,7 @@ namespace Mango
 	}
 	void Camera3D::ComputeMatrix()
 	{
-		m_view_matrix = glm::lookAt(m_position, m_position + Maths::AngleVector(m_viewangle), { 0.f, 1.f, 0.f });
+		m_view_matrix = Maths::CreateViewMatrix(m_position, m_viewangle);
 	}
 
 	void Camera3D::Move(const glm::vec3& offset) 
@@ -28,7 +28,10 @@ namespace Mango
 
 	void Camera3D::SetViewangle(const glm::vec3& viewangle) 
 	{ 
-		m_viewangle = Maths::NormalizeRadianAngle(viewangle);
+		m_viewangle.x = Maths::NormalizeFloat(viewangle.x, -180.f, 180.f);
+		m_viewangle.y = Maths::ClampFloat(viewangle.y, -89.f, 89.f);
+		m_viewangle.z = Maths::NormalizeFloat(viewangle.z, -180.f, 180.f);
+		
 		ComputeMatrix();
 	}
 	glm::vec3 Camera3D::GetViewangle() 

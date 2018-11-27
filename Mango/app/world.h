@@ -8,9 +8,6 @@
 class World
 {
 public:
-	static constexpr int RENDER_DISTANCE = 12;
-
-public:
 	static bool DoesWorldExist(std::string world_path);
 	static void CreateNewWorld(std::string world_path, uint32_t seed);
 
@@ -23,6 +20,9 @@ public:
 
 	void EditBlock(int x, int y, int z, const Block& block);
 	bool GetBlock(int x, int y, int z, Block& block);
+
+	void SetRenderDistance(int render_distance) { m_render_distance = render_distance; m_should_reload_world = true; }
+	int GetRenderDistance() const { return m_render_distance; }
 
 	RayTracer* GetRayTracer() { return &m_ray_tracer; }
 
@@ -52,4 +52,7 @@ private:
 	std::deque<std::shared_ptr<Chunk>> m_render_chunks;
 	std::unordered_map<uint64_t, std::shared_ptr<Chunk>> m_chunks;
 	std::unordered_map<uint64_t, std::deque<EditedBlock>> m_edited_blocks;
+
+	int m_render_distance = 12;
+	bool m_should_reload_world = false;
 };

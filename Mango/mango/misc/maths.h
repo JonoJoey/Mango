@@ -6,15 +6,17 @@
 #include <glm.hpp>
 
 #define M_PI_F float(M_PI)
+#define M_PI_2F float(M_PI_2)
 
 #define RAD2DEG(x) float(x * (180.f / M_PI_F))
-#define DEG2RAD(x) float(x * M_PI_F / 180.0);
+#define DEG2RAD(x) float(x * M_PI_F / 180.f)
 
 
 namespace Mango::Maths
 {
-	glm::vec3 AngleVector(const glm::vec3& angle);
+	glm::vec3 AngleVector(glm::vec3 angle);
 
+	glm::mat4 CreateViewMatrix(const glm::vec3& position, const glm::vec3& angle);
 	glm::mat4 CreateModelMatrix(const glm::vec3& position, const glm::vec3& rotation, float scale = 1.f);
 	glm::mat4 CreateProjectionMatrix(float fov /* degrees */, float aspect_ratio, float znear, float zfar);
 	glm::mat3 CreateNormalMatrix(const glm::mat4& model_matrix);
@@ -30,12 +32,12 @@ namespace Mango::Maths
 			num -= diff;
 		return num;
 	}
-	
-	inline glm::vec3 NormalizeRadianAngle(glm::vec3 angle)
+	inline float ClampFloat(float num, float min, float max)
 	{
-		angle.x = NormalizeFloat(angle.x, -M_PI_F, M_PI_F);
-		angle.y = NormalizeFloat(angle.y, -M_PI_F, M_PI_F);
-		angle.z = NormalizeFloat(angle.z, -M_PI_F, M_PI_F);
-		return angle;
+		if (num < min)
+			return min;
+		if (num > max)
+			return max;
+		return num;
 	}
 } // namespace Mango::Maths

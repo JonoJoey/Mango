@@ -72,9 +72,6 @@
     <ClCompile Include="mango\graphics\3D\light_3d.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mango\graphics\3D\entity_3d.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mango\graphics\wrappers\framebuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

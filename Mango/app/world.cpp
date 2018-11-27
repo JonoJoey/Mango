@@ -36,6 +36,53 @@ bool World::Setup(std::string world_path, std::unordered_map<std::string, BLOCK_
 	if (block_map.find("null") == block_map.end())
 		return false;
 
+	const auto LoadBlockMap = [](const std::unordered_map<std::string, BLOCK_ID>& block_map) -> size_t
+	{
+		std::vector<std::pair<std::string, BLOCK_ID>> sorted_block_map;
+		for (const auto& block : block_map)
+			sorted_block_map.push_back(block);
+
+		// sort the blocks
+		std::sort(sorted_block_map.begin(), sorted_block_map.end(), [](const std::pair<std::string, BLOCK_ID>& p1, const std::pair<std::string, BLOCK_ID>& p2) -> bool
+		{
+			return p1.second < p2.second;
+		});
+
+		size_t num_textures = 0;
+		std::vector<std::string> file_paths;
+		for (const auto& block : sorted_block_map)
+		{
+			if (file_paths.size() >= 250)
+			{
+				Mango::RescourcePool<Mango::TextureArray>::Get()->AddRes("blocks_" + std::to_string(num_textures),
+					file_paths, glm::ivec2({ 16, 16 }), false, false, false, -2.f);
+
+				num_textures++;
+				file_paths.clear();
+			}
+
+			// front, back, right, left, top, bottom
+			file_paths.push_back("res/textures/blocks/" + block.first + "/front.png");
+			file_paths.push_back("res/textures/blocks/" + block.first + "/back.png");
+			file_paths.push_back("res/textures/blocks/" + block.first + "/right.png");
+			file_paths.push_back("res/textures/blocks/" + block.first + "/left.png");
+			file_paths.push_back("res/textures/blocks/" + block.first + "/top.png");
+			file_paths.push_back("res/textures/blocks/" + block.first + "/bottom.png");
+		}
+
+		if (!file_paths.empty())
+		{
+			Mango::RescourcePool<Mango::TextureArray>::Get()->AddRes("blocks_" + std::to_string(num_textures),
+				file_paths, glm::ivec2({ 16, 16 }), false, false, false);
+
+			num_textures++;
+		}
+
+		return num_textures;
+	};
+	if (LoadBlockMap(block_map) <= 0)
+		return false;
+
 	m_ray_tracer.SetWorld(this);
 	m_block_map = block_map;
 	m_world_path = world_path;
@@ -137,18 +184,20 @@ void World::Update(glm::fvec3 position)
 	};
 
 	// when entering a new chunk
-	if (static uint64_t last_chunk = 0xFFFFFFFFFFFFFFFF; last_chunk != PackChunk(x_chunk, z_chunk))
+	if (static uint64_t last_chunk = 0xFFFFFFFFFFFFFFFF; last_chunk != PackChunk(x_chunk, z_chunk) || m_should_reload_world)
 	{
 		last_chunk = PackChunk(x_chunk, z_chunk);
+		m_should_reload_world = false;
 
 		// delete chunks that are too far
 		for (auto it = m_chunks.begin(); it != m_chunks.end();)
 		{
 			int x, z;
 			UnpackChunk(it->first, x, z);
-			if (abs(x - x_chunk) > RENDER_DISTANCE + 1 || abs(z - z_chunk) > RENDER_DISTANCE + 1)
+			if (abs(x - x_chunk) > m_render_distance + 1 || abs(z - z_chunk) > m_render_distance + 1)
 			{
 				SaveChunk(x, z, m_edited_blocks[it->first], m_world_path);
+				m_edited_blocks.erase(it->first);
 
 				it = m_chunks.erase(it);
 				continue;
@@ -163,7 +212,7 @@ void World::Update(glm::fvec3 position)
 
 		// add chunks to load list
 		std::unordered_map<uint64_t, bool> test;
-		for (int d = 0; d <= RENDER_DISTANCE + 1; d++)
+		for (int d = 0; d <= m_render_distance + 1; d++)
 		{
 			for (int x = -d; x <= d; x++)
 			{
@@ -176,7 +225,7 @@ void World::Update(glm::fvec3 position)
 					// chunk already exists
 					if (auto it = m_chunks.find(PackChunk(x_chunk + x, z_chunk + z)); it != m_chunks.end())
 					{
-						if (abs(x) <= RENDER_DISTANCE && abs(z) <= RENDER_DISTANCE)
+						if (abs(x) <= m_render_distance && abs(z) <= m_render_distance)
 						{
 							m_render_chunks.push_back(it->second);
 
@@ -203,7 +252,7 @@ void World::Update(glm::fvec3 position)
 
 		auto chunk = NewChunk(x_chunk + x, z_chunk + z);
 		LoadChunk(x + x_chunk, z + z_chunk, &*chunk);
-		if (x >= -RENDER_DISTANCE && x <= RENDER_DISTANCE && z >= -RENDER_DISTANCE && z <= RENDER_DISTANCE)
+		if (x >= -m_render_distance && x <= m_render_distance && z >= -m_render_distance && z <= m_render_distance)
 		{
 			m_render_chunks.push_back(chunk);
 			m_update_chunks.push_back(&*chunk);
@@ -228,6 +277,7 @@ void World::Update(glm::fvec3 position)
 	// update entities
 	UpdateEntities();
 }
+
 void World::UpdateEntities()
 {
 
@@ -292,7 +342,7 @@ void World::LoadChunk(int x, int z, Chunk* chunk)
 		return args;
 	};
 
-	std::fstream file(m_world_path + "/chunks/chunk_[" + std::to_string(x) + "][" + std::to_string(z) + "]", std::ios::in);
+	std::fstream file(m_world_path + "/chunks/chunk_[" + std::to_string(PackChunk(x, z)) + "]", std::ios::in);
 	if (!file)
 		return;
 
@@ -332,7 +382,7 @@ void World::SaveChunk(int x, int z, std::deque<EditedBlock> edited_blocks, std::
 	if (edited_blocks.empty())
 		return;
 
-	std::fstream file(world_path + "/chunks/chunk_[" + std::to_string(x) + "][" + std::to_string(z) + "]", std::ios::out | std::ios::trunc);
+	std::fstream file(world_path + "/chunks/chunk_[" + std::to_string(PackChunk(x, z)) + "]", std::ios::out | std::ios::trunc);
 	ASSERT(file);
 
 	for (auto& block : edited_blocks)

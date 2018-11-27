@@ -141,7 +141,6 @@
     <ClCompile Include="dep\stb\stb_image.cpp" />
     <ClCompile Include="app\main.cpp" />
     <ClCompile Include="mango\graphics\3D\camera_3d.cpp" />
-    <ClCompile Include="mango\graphics\3D\entity_3d.cpp" />
     <ClCompile Include="mango\graphics\3D\light_3d.cpp" />
     <ClCompile Include="mango\graphics\model.cpp" />
     <ClCompile Include="mango\graphics\2D\renderer_2d.cpp" />

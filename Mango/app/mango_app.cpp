@@ -132,52 +132,6 @@ void MangoApp::OnInit()
 	m_block_map["oak_plank"] = 6;
 	m_block_map["mossy_cobblestone"] = 7;
 
-	const auto LoadBlockMap = [](const std::unordered_map<std::string, BLOCK_ID>& block_map) -> size_t
-	{
-		std::vector<std::pair<std::string, BLOCK_ID>> sorted_block_map;
-		for (const auto& block : block_map)
-			sorted_block_map.push_back(block);
-
-		// sort the blocks
-		std::sort(sorted_block_map.begin(), sorted_block_map.end(), [](const std::pair<std::string, BLOCK_ID>& p1, const std::pair<std::string, BLOCK_ID>& p2) -> bool
-		{
-			return p1.second < p2.second;
-		});
-
-		size_t num_textures = 0;
-		std::vector<std::string> file_paths;
-		for (const auto& block : sorted_block_map)
-		{
-			if (file_paths.size() >= 250)
-			{
-				Mango::RescourcePool<Mango::TextureArray>::Get()->AddRes("blocks_" + std::to_string(num_textures), 
-					file_paths, glm::ivec2({ 16, 16 }), false, false, false);
-
-				num_textures++;
-				file_paths.clear();
-			}
-
-			// front, back, right, left, top, bottom
-			file_paths.push_back("res/textures/blocks/" + block.first + "/front.png");
-			file_paths.push_back("res/textures/blocks/" + block.first + "/back.png");
-			file_paths.push_back("res/textures/blocks/" + block.first + "/right.png");
-			file_paths.push_back("res/textures/blocks/" + block.first + "/left.png");
-			file_paths.push_back("res/textures/blocks/" + block.first + "/top.png");
-			file_paths.push_back("res/textures/blocks/" + block.first + "/bottom.png");
-		}
-
-		if (!file_paths.empty())
-		{
-			Mango::RescourcePool<Mango::TextureArray>::Get()->AddRes("blocks_" + std::to_string(num_textures), 
-				file_paths, glm::ivec2({ 16, 16 }), false, false, false);
-
-			num_textures++;
-		}
-
-		return num_textures;
-	};
-	LoadBlockMap(m_block_map);
-
 	auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader", 
 		Mango::Shader::ReadFile("res/shaders/cube_vs.glsl"), 
 		Mango::Shader::ReadFile("res/shaders/cube_fs.glsl"));
@@ -229,7 +183,7 @@ void MangoApp::OnTick()
 	}
 
 	{
-		auto direction = Mango::Maths::AngleVector(m_camera.GetViewangle());
+		const auto direction = Mango::Maths::AngleVector(m_camera.GetViewangle());
 
 		Ray ray;
 		ray.start = m_camera.GetPosition();
@@ -288,14 +242,13 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 {
 	// mouse input
 	{
-		static constexpr float CAMERA_SPEED = 0.005f;
 		const auto screen_center = m_mango_core.GetWindowSize() / 2;
 
 		static bool toggle = false;
 		if (toggle)
 		{
 			const auto offset = glm::vec2(m_mango_core.GetMousePosition().x - screen_center.x, m_mango_core.GetMousePosition().y - screen_center.y);
-			const auto new_viewangle = m_camera.GetViewangle() + glm::vec3(offset[0], -offset[1], 0.f) * CAMERA_SPEED;
+			const auto new_viewangle = m_camera.GetViewangle() + glm::vec3(offset[0], -offset[1], 0.f) * m_mouse_sensitivity;
 			m_camera.SetViewangle(new_viewangle);
 			m_mango_core.SetMousePosition(screen_center);
 		}
@@ -370,7 +323,11 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 
 		ImGui::Text("FPS: ");
 		ImGui::SameLine(0.f, 0.f);
-		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.0f", 1.f / m_mango_core.GetFrameTime());
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%4.0f", 1.f / m_mango_core.GetFrameTime());
+		ImGui::SameLine();
+		ImGui::Text("TickCount: ");
+		ImGui::SameLine(0.f, 0.f);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_tick_count);
 
 		ImGui::Text("Position: ");
 		ImGui::SameLine(0.f, 0.f);
@@ -379,7 +336,7 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		ImGui::Text("Chunk: ");
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i %i", Chunk::PositionXToChunk(int(m_camera.GetPosition().x)), Chunk::PositionZToChunk(int(m_camera.GetPosition().z)));
-
+		ImGui::SameLine();
 		ImGui::Text("Chunks: ");
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_world.GetChunks().size());
@@ -398,6 +355,10 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 
 		if (static bool c = false; ImGui::Checkbox("Vertical Sync", &c))
 			m_mango_core.SetVerticalSync(c);
+
+		ImGui::SliderFloat("Mouse sensitivity", &m_mouse_sensitivity, 0.01f, 2.f);
+		if (static int render_distance = m_world.GetRenderDistance(); ImGui::SliderInt("Render distance", &render_distance, 1, 64))
+			m_world.SetRenderDistance(render_distance);
 
 		if (ImGui::BeginCombo("Block##combo", m_selected_block.c_str())) 
 		{

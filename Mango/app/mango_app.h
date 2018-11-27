@@ -32,8 +32,9 @@ private:
 
 	const float m_interval_per_tick = 1.f / 60.f;
 	unsigned int m_tick_count = 0;
+	float m_mouse_sensitivity = 0.5f;
+
 	std::string m_selected_block = "null";
 	std::unordered_map<std::string, BLOCK_ID> m_block_map;
-
 	World m_world;
 };

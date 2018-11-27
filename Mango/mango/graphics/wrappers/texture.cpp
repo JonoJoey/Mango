@@ -112,18 +112,13 @@ namespace Mango
 	}
 
 
-	bool TextureArray::Setup(std::vector<std::string> file_paths, glm::ivec2 size, bool srgb, bool alpha_channel, bool linear)
+	bool TextureArray::Setup(std::vector<std::string> file_paths, glm::ivec2 size, bool srgb, bool alpha_channel, bool linear, float mip_map_lod)
 	{
 		glGenTextures(1, &m_texture);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, m_texture);
 
 		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, alpha_channel ? (srgb ? GL_SRGB8_ALPHA8 : GL_RGBA8) : (srgb ? GL_SRGB8 : GL_RGB8),
 			size.x, size.y, file_paths.size(), 0, alpha_channel ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, 0);
-
-		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, linear ? GL_LINEAR : GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, linear ? GL_LINEAR : GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 		for (size_t i = 0; i < file_paths.size(); i++)
 		{
@@ -142,6 +137,14 @@ namespace Mango
 
 			stbi_image_free(buffer);
 		}
+
+		glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, linear ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, mip_map_lod);
+
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, linear ? GL_LINEAR : GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 		return true;

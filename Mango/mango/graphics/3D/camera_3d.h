@@ -17,7 +17,7 @@ namespace Mango
 		void SetPosition(const glm::vec3& position);
 		glm::vec3 GetPosition();
 
-		void SetViewangle(const glm::vec3& viewangle /* radians */);
+		void SetViewangle(const glm::vec3& viewangle);
 		glm::vec3 GetViewangle();
 
 	private:
