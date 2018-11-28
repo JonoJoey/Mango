@@ -151,11 +151,6 @@ void MangoApp::OnRelease()
 	Mango::DiscordRPC::Release();
 
 	m_world.Release();
-
-	Mango::RescourcePool<Mango::Model>::Get()->Release();
-	Mango::RescourcePool<Mango::Shader>::Get()->Release();
-	Mango::RescourcePool<Mango::Texture>::Get()->Release();
-	Mango::RescourcePool<Mango::CubeTexture>::Get()->Release();
 }
 
 void MangoApp::OnTick()
@@ -182,6 +177,7 @@ void MangoApp::OnTick()
 			m_camera.Move(-up_dir * m_interval_per_tick * MOVE_SPEED);
 	}
 
+	// placing/breaking blocks
 	{
 		const auto direction = Mango::Maths::AngleVector(m_camera.GetViewangle());
 

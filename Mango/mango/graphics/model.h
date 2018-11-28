@@ -18,7 +18,7 @@ namespace Mango
 		{
 			Setup(mode, index_count, index_type, indices);
 		}
-		~Model() { Release(); }
+		~Model() { Release(); UnregisterUtil(); }
 
 		void Setup(unsigned int mode /* ex. GL_TRIANGLES    */, size_t index_count, 
 			unsigned int index_type  /* ex. GL_UNSIGNED_INT */, const void* indices);

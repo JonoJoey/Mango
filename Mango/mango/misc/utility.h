@@ -14,12 +14,13 @@ namespace Mango
 
 		virtual void Release() = 0;
 
+		void UnregisterUtil();
+
 	public:
 		static void Cleanup();
 
 	private:
 		void RegisterUtil();
-		void UnregisterUtil();
 
 	private:
 		static std::deque<Utility*> m_utilities;

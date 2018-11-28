@@ -18,7 +18,7 @@ namespace Mango
 	{
 	public:
 		Renderer2D() = default;
-		~Renderer2D() { Release(); }
+		~Renderer2D() { Release(); UnregisterUtil(); }
 
 		bool Setup(MangoCore* mango);
 		void Release() override;

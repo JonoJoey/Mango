@@ -12,7 +12,7 @@ namespace Mango
 	public:
 		Shader() = default;
 		Shader(const std::string& vertex_src, const std::string& fragment_src) { ASSERT(Setup(vertex_src, fragment_src)); }
-		~Shader() { Release(); }
+		~Shader() { Release(); UnregisterUtil(); }
 
 		bool Setup(const std::string& vertex_src, const std::string& fragment_src);
 		void Release() override;

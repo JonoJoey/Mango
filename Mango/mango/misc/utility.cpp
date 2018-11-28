@@ -9,9 +9,11 @@ namespace Mango
 
 	void Utility::Cleanup()
 	{
-		for (auto util : m_utilities)
-			util->Release();
-		m_utilities.clear();
+		while (!m_utilities.empty())
+		{
+			m_utilities.front()->Release();
+			m_utilities.pop_front();
+		}
 	}
 
 	void Utility::RegisterUtil()
@@ -23,10 +25,7 @@ namespace Mango
 		for (size_t i = 0; i < m_utilities.size(); i++)
 		{
 			if (m_utilities[i] == this)
-			{
 				m_utilities.erase(m_utilities.begin() + i);
-				return;
-			}
 		}
 	}
 } // namespace Mango

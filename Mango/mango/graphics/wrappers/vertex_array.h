@@ -9,7 +9,7 @@ namespace Mango
 	{
 	public:
 		VertexArray() = default;
-		~VertexArray() { Release(); }
+		~VertexArray() { Release(); UnregisterUtil(); }
 
 		void Setup();
 		void Release() override;

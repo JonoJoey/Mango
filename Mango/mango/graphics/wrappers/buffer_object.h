@@ -11,7 +11,7 @@ namespace Mango
 	public:
 		BufferObject() = default;
 		BufferObject(size_t size, const void* data, unsigned int usage = GL_DYNAMIC_DRAW) { Setup(size, data, usage); }
-		~BufferObject() { Release(); }
+		~BufferObject() { Release(); UnregisterUtil(); }
 
 		void Setup(size_t size, const void* data, unsigned int usage = GL_DYNAMIC_DRAW)
 		{

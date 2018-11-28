@@ -24,11 +24,10 @@ public:
 	void SetRenderDistance(int render_distance) { m_render_distance = render_distance; m_should_reload_world = true; }
 	int GetRenderDistance() const { return m_render_distance; }
 
-	RayTracer* GetRayTracer() { return &m_ray_tracer; }
-
 	const std::deque<std::shared_ptr<Chunk>>& GetRenderChunks() const { return m_render_chunks; }
 	const std::unordered_map<uint64_t, std::shared_ptr<Chunk>>& GetChunks() const { return m_chunks; }
 	const std::unordered_map<uint64_t, std::deque<EditedBlock>>& GetEditedBlocks() const { return m_edited_blocks; }
+	RayTracer* GetRayTracer() { return &m_ray_tracer; }
 
 private:
 	std::shared_ptr<Chunk> NewChunk(int x, int z) { return (m_chunks[PackChunk(x, z)] = std::shared_ptr<Chunk>(new Chunk(x, z))); }

@@ -12,7 +12,7 @@ namespace Mango
 	public:
 		Framebuffer() = default;
 		Framebuffer(const glm::ivec2& size) { ASSERT(Setup(size)); }
-		~Framebuffer() { Release(); }
+		~Framebuffer() { Release(); UnregisterUtil(); }
 
 		bool Setup(const glm::ivec2& size);
 		void Release() override;

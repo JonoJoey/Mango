@@ -16,7 +16,7 @@ namespace Mango
 	{
 	public:
 		Renderer3D() = default;
-		~Renderer3D() { Release(); }
+		~Renderer3D() { Release(); UnregisterUtil(); }
 
 		bool Setup(MangoCore* mango);
 		void Release() override;

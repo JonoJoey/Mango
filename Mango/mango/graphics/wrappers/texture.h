@@ -11,7 +11,7 @@ namespace Mango
 		Texture() = default;
 		Texture(const std::string& file_path, bool srgb = false, bool alpha_channel = false, bool linear = false, float mip_map_lod = 0.f) { ASSERT(Setup(file_path, srgb, alpha_channel, linear, mip_map_lod)); }
 		Texture(unsigned int texture) { Setup(texture); }
-		~Texture() { Release(); }
+		~Texture() { Release(); UnregisterUtil(); }
 
 		bool Setup(const std::string& file_path, bool srgb = false, bool alpha_channel = false, bool linear = false, float mip_map_lod = 0.f);
 		void Setup(unsigned int texture);
@@ -34,7 +34,7 @@ namespace Mango
 		{
 			ASSERT(Setup(file_paths, srgb, alpha_channel, linear));
 		}
-		~CubeTexture() { Release(); }
+		~CubeTexture() { Release(); UnregisterUtil(); }
 
 		// right, left, top, bottom, back, front
 		bool Setup(const std::array<std::string, 6> file_paths, bool srgb = false, bool alpha_channel = false, bool linear = true);
@@ -55,7 +55,7 @@ namespace Mango
 		{
 			ASSERT(Setup(file_paths, size, srgb, alpha_channel, linear, mip_map_lod));
 		}
-		~TextureArray() { Release(); }
+		~TextureArray() { Release(); UnregisterUtil(); }
 
 		bool Setup(std::vector<std::string> file_paths, glm::ivec2 size, bool srgb = false, bool alpha_channel = false, bool linear = true, float mip_map_lod = 0.f);
 		void Release() override;

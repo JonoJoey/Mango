@@ -244,7 +244,7 @@ void World::Update(glm::fvec3 position)
 		}
 	}
 
-	// load chunks
+	// load a single chunk
 	if (!m_load_chunks.empty())
 	{
 		int x, z;
@@ -261,7 +261,7 @@ void World::Update(glm::fvec3 position)
 		m_load_chunks.pop_front();
 	}
 
-	// update chunks
+	// update a single chunk
 	for (size_t i = 0; i < m_update_chunks.size(); i++)
 	{
 		auto chunk = m_update_chunks[i];

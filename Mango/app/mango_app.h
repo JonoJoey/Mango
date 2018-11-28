@@ -30,7 +30,7 @@ private:
 	Mango::Camera3D m_camera;
 	EventHandler m_event_handler;
 
-	const float m_interval_per_tick = 1.f / 60.f;
+	const float m_interval_per_tick = 1.f / 32.f;
 	unsigned int m_tick_count = 0;
 	float m_mouse_sensitivity = 0.5f;
 
