@@ -28,9 +28,12 @@ namespace Mango
 		void SetProjMatrix(const glm::mat4& mat) { m_proj_matrix = mat; }
 		const glm::mat4& GetProjMatrix() const { return m_proj_matrix; }
 
+		Camera3D& GetCamera() { return m_camera; }
+
 	private:
 		bool is_init = false;
 		MangoCore* m_mango = nullptr;
+		Camera3D m_camera;
 		glm::mat4 m_proj_matrix;
 	};
 } // namespace Mango

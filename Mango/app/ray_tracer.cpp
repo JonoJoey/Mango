@@ -20,7 +20,7 @@ bool RayTracer::Trace(Ray ray, TraceInfo& trace_info)
 		const glm::vec3& plane_center, const glm::vec3& plane_normal, glm::vec3* intersect_point = nullptr) -> bool
 	{
 		const float denom = glm::dot(plane_normal, ray_direction);
-		if (fabs(denom) > 0.0001f)
+		if (fabs(denom) > 0.f)
 		{
 			const float distance = glm::dot(plane_center - ray_origin, plane_normal) / denom;
 			if (distance >= 0.f)
@@ -35,11 +35,11 @@ bool RayTracer::Trace(Ray ray, TraceInfo& trace_info)
 		return false;
 	};
 
-	glm::vec3 position = ray.start;
-	glm::vec3 direction = glm::normalize(ray.direction);
+	glm::vec3 position = ray.m_start;
+	glm::vec3 direction = glm::normalize(ray.m_direction);
 
 	float distance = 0.f;
-	while (distance <= ray.length)
+	while (distance <= ray.m_length)
 	{
 		Block block;
 		if (m_world->GetBlock(int(floorf(position.x)), int(floorf(position.y)), int(floorf(position.z)), block) && block.m_is_active)
@@ -47,20 +47,22 @@ bool RayTracer::Trace(Ray ray, TraceInfo& trace_info)
 			glm::vec3 face_points[NUM_BLOCK_FACES];
 			const auto block_center = glm::vec3(floorf(position.x) + 0.5f, floorf(position.y) + 0.5f, floorf(position.z) + 0.5f);
 
+			// calculate intersection points for each face
 			for (int i = 0; i < NUM_BLOCK_FACES; i++)
 			{
-				if (glm::vec3 int_point; IntersectPlane(ray.start, direction, block_center + (normals[i] * 0.5f), normals[i], &int_point) &&
+				if (glm::vec3 int_point; IntersectPlane(ray.m_start, direction, block_center + (normals[i] * 0.5f), normals[i], &int_point) &&
 					fabs(int_point.x - block_center.x) <= 0.5f && fabs(int_point.y - block_center.y) <= 0.5f && fabs(int_point.z - block_center.z) <= 0.5f)
 					face_points[i] = int_point;
 				else
 					face_points[i] = { FLT_MAX, FLT_MAX, FLT_MAX };
 			}
 
+			// calculate the closest face
 			BLOCK_FACE closest_face = NUM_BLOCK_FACES;
 			float closest_face_dist = FLT_MAX;
 			for (int i = 0; i < NUM_BLOCK_FACES; i++)
 			{
-				const float dist = glm::length(face_points[i] - ray.start);
+				const float dist = glm::length(face_points[i] - ray.m_start);
 				if (dist < closest_face_dist)
 				{
 					closest_face_dist = dist;
@@ -69,17 +71,20 @@ bool RayTracer::Trace(Ray ray, TraceInfo& trace_info)
 			}
 
 			if (closest_face_dist <= distance)
-			{
-				trace_info.block_face = closest_face;
-				trace_info.did_hit_block = true;
+				trace_info.trace_end = face_points[closest_face];
+			else
 				trace_info.trace_end = position;
-				return true;
-			}
+
+			trace_info.fraction = glm::length(trace_info.trace_end - ray.m_start) / ray.m_length;
+			trace_info.block_face = closest_face;
+			trace_info.did_hit_block = true;
+			return true;
 		}
 
-		position += direction * ray.step;
-		distance += ray.step;
+		position += direction * ray.m_step;
+		distance += ray.m_step;
 	}
 
+	trace_info.fraction = 1.f;
 	return false;
 }

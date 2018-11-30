@@ -27,7 +27,7 @@ void World::CreateNewWorld(std::string world_path, uint32_t seed)
 	file.close();
 }
 
-bool World::Setup(std::string world_path, std::unordered_map<std::string, BLOCK_ID> block_map)
+bool World::Setup(Mango::MangoCore* mango_core, std::string world_path, std::unordered_map<std::string, BLOCK_ID> block_map)
 {
 	if (!std::filesystem::exists(world_path))
 		return false;
@@ -55,7 +55,7 @@ bool World::Setup(std::string world_path, std::unordered_map<std::string, BLOCK_
 			if (file_paths.size() >= 250)
 			{
 				Mango::RescourcePool<Mango::TextureArray>::Get()->AddRes("blocks_" + std::to_string(num_textures),
-					file_paths, glm::ivec2({ 16, 16 }), false, false, false, -2.f);
+					file_paths, glm::ivec2({ 16, 16 }), true, false, false, -2.f);
 
 				num_textures++;
 				file_paths.clear();
@@ -73,7 +73,7 @@ bool World::Setup(std::string world_path, std::unordered_map<std::string, BLOCK_
 		if (!file_paths.empty())
 		{
 			Mango::RescourcePool<Mango::TextureArray>::Get()->AddRes("blocks_" + std::to_string(num_textures),
-				file_paths, glm::ivec2({ 16, 16 }), false, false, false);
+				file_paths, glm::ivec2({ 16, 16 }), true, false, false);
 
 			num_textures++;
 		}
@@ -83,9 +83,14 @@ bool World::Setup(std::string world_path, std::unordered_map<std::string, BLOCK_
 	if (LoadBlockMap(block_map) <= 0)
 		return false;
 
+	Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader",
+		Mango::Shader::ReadFile("res/shaders/cube_vs.glsl"),
+		Mango::Shader::ReadFile("res/shaders/cube_fs.glsl"));
+
 	m_ray_tracer.SetWorld(this);
 	m_block_map = block_map;
 	m_world_path = world_path;
+	mango_core->GetRenderer3D().GetCamera().SetPosition({ 0.f, 128.f, 0.f });
 
 	std::deque<std::string> file_data;
 
@@ -167,11 +172,52 @@ void World::Release()
 	m_load_chunks.clear();
 	m_chunks.clear();
 	m_render_chunks.clear();
+
+	for (size_t i = 0; i < m_entities.size(); i++)
+	{
+		m_entities[i]->OnRelease();
+	}
 }
 
-void World::Render()
+void World::Render(Mango::MangoCore* mango_core, float lerp)
 {
+	auto& renderer_3d = mango_core->GetRenderer3D();
 
+	renderer_3d.Start();
+
+	for (size_t i = 0; i < m_entities.size(); i++)
+	{
+		m_entities[i]->OnFrameUpdate(mango_core, lerp);
+	}
+
+	auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->GetRes("cube_shader");
+	cube_shader->Bind();
+	cube_shader->SetUniformMat4("u_projection_matrix", renderer_3d.GetProjMatrix());
+	cube_shader->SetUniformMat4("u_view_matrix", renderer_3d.GetCamera().GetViewMatrix());
+
+	const auto pos = renderer_3d.GetCamera().GetPosition();
+
+	Mango::RescourcePool<Mango::TextureArray>::Get()->GetRes("blocks_0")->Bind();
+	for (auto chunk : m_render_chunks)
+	{
+		cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ Chunk::WIDTH * chunk->GetX(), 0, Chunk::DEPTH * chunk->GetZ() }, { 0.f, 0.f, 0.f }));
+
+		auto model = chunk->GetModel();
+		model->GetVAO().Bind();
+
+		glDrawElements(model->GetMode(), model->GetIBO().GetCount(), model->GetIBO().GetType(), nullptr);
+	}
+
+	Mango::Shader::Unbind();
+	Mango::CubeTexture::Unbind();
+	Mango::VertexArray::Unbind();
+
+	for (size_t i = 0; i < m_entities.size(); i++)
+	{
+		m_entities[i]->OnRender(mango_core, lerp);
+	}
+
+	renderer_3d.End();
 }
 void World::Update(glm::fvec3 position)
 {
@@ -277,10 +323,12 @@ void World::Update(glm::fvec3 position)
 	// update entities
 	UpdateEntities();
 }
-
 void World::UpdateEntities()
 {
-
+	for (size_t i = 0; i < m_entities.size(); i++)
+	{
+		m_entities[i]->OnUpdate();
+	}
 }
 
 void World::GenerateChunk(Chunk* chunk)

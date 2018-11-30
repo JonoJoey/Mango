@@ -1,6 +1,6 @@
 #include "mango_app.h"
 
-
+#include "player.h"
 
 
 void MangoApp::Run()
@@ -121,7 +121,7 @@ void MangoApp::OnInit()
 {
 	m_mango_core.SetVerticalSync(false);
 
-	Mango::RescourcePool<Mango::Texture>::Get()->AddRes("mango", "res/textures/mango.png", true, false);
+	Mango::RescourcePool<Mango::Texture>::Get()->AddRes("mango", "res/textures/mango.png", true, true);
 
 	m_block_map["null"] = 0;
 	m_block_map["cobblestone"] = 1;
@@ -132,16 +132,13 @@ void MangoApp::OnInit()
 	m_block_map["oak_plank"] = 6;
 	m_block_map["mossy_cobblestone"] = 7;
 
-	auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader", 
-		Mango::Shader::ReadFile("res/shaders/cube_vs.glsl"), 
-		Mango::Shader::ReadFile("res/shaders/cube_fs.glsl"));
-
-	m_camera.SetPosition({ 0.f, 128.f, 2.f });
-
 	if (!World::DoesWorldExist("res/worlds/test_world"))
 		World::CreateNewWorld("res/worlds/test_world", 69);
 
-	m_world.Setup("res/worlds/test_world", m_block_map);
+	m_world.Setup(&m_mango_core, "res/worlds/test_world", m_block_map);
+
+	m_local_player = m_world.AddEntity<LocalPlayer>(this);
+	m_local_player->SetPosition({ 0.f, 250.f, 0.f });
 
 	Mango::DiscordRPC::Setup("514257473654489098");
 	Mango::DiscordRPC::Update("you are", "a noob", "mango", "mAnGo", "m_fancy", "MaNgO", Mango::DiscordRPC::GetStartTime(), 0);
@@ -155,142 +152,18 @@ void MangoApp::OnRelease()
 
 void MangoApp::OnTick()
 {
-	// handle movement
-	{
-		static constexpr float MOVE_SPEED = 10.f;
-
-		static const glm::vec3 up_dir = { 0.f, 1.f, 0.f };
-		const auto forward_dir = Mango::Maths::AngleVector({ m_camera.GetViewangle().x, 0.f, 0.f });
-		const auto right_dir = glm::normalize(glm::cross(forward_dir, up_dir));
-
-		if (m_input_handler.GetKeyState('W'))
-			m_camera.Move(forward_dir * m_interval_per_tick * MOVE_SPEED);
-		if (m_input_handler.GetKeyState('S'))
-			m_camera.Move(-forward_dir * m_interval_per_tick * MOVE_SPEED);
-		if (m_input_handler.GetKeyState('D'))
-			m_camera.Move(right_dir * m_interval_per_tick * MOVE_SPEED);
-		if (m_input_handler.GetKeyState('A'))
-			m_camera.Move(-right_dir * m_interval_per_tick * MOVE_SPEED);
-		if (m_input_handler.GetKeyState(GLFW_KEY_SPACE))
-			m_camera.Move(up_dir * m_interval_per_tick * MOVE_SPEED);
-		if (m_input_handler.GetKeyState(GLFW_KEY_LEFT_SHIFT))
-			m_camera.Move(-up_dir * m_interval_per_tick * MOVE_SPEED);
-	}
-
-	// placing/breaking blocks
-	{
-		const auto direction = Mango::Maths::AngleVector(m_camera.GetViewangle());
-
-		Ray ray;
-		ray.start = m_camera.GetPosition();
-		ray.direction = direction;
-		ray.length = 10.f;
-		ray.step = 0.01f;
-
-		if (TraceInfo trace_info; m_world.GetRayTracer()->Trace(ray, trace_info))
-		{
-			// place block
-			if (m_input_handler.GetButtonState(1) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
-			{
-				int block_x = int(floorf(trace_info.trace_end.x)),
-					block_y = int(floorf(trace_info.trace_end.y)),
-					block_z = int(floorf(trace_info.trace_end.z));
-
-				switch (trace_info.block_face)
-				{
-				case BLOCK_FACE_FRONT:
-					block_z += 1;
-					break;
-				case BLOCK_FACE_BACK:
-					block_z -= 1;
-					break;
-				case BLOCK_FACE_RIGHT:
-					block_x += 1;
-					break;
-				case BLOCK_FACE_LEFT:
-					block_x -= 1;
-					break;
-				case BLOCK_FACE_TOP:
-					block_y += 1;
-					break;
-				case BLOCK_FACE_BOTTOM:
-					block_y -= 1;
-					break;
-				}
-
-				m_world.EditBlock(block_x, block_y, block_z, Block::Create(m_block_map[m_selected_block]));
-			}
-
-			// break block
-			if (m_input_handler.GetButtonState(0) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
-			{
-				int block_x = int(floorf(trace_info.trace_end.x)),
-					block_y = int(floorf(trace_info.trace_end.y)),
-					block_z = int(floorf(trace_info.trace_end.z));
-				m_world.EditBlock(block_x, block_y, block_z, Block::Inactive());
-			}
-		}
-	}
-
-	m_world.Update(m_camera.GetPosition());
+	m_world.Update(m_mango_core.GetRenderer3D().GetCamera().GetPosition());
 }
-void MangoApp::OnFrame(float frame_time, float lerptime)
+void MangoApp::OnFrame(float frame_time, float lerp)
 {
-	// mouse input
-	{
-		const auto screen_center = m_mango_core.GetWindowSize() / 2;
-
-		static bool toggle = false;
-		if (toggle)
-		{
-			const auto offset = glm::vec2(m_mango_core.GetMousePosition().x - screen_center.x, m_mango_core.GetMousePosition().y - screen_center.y);
-			const auto new_viewangle = m_camera.GetViewangle() + glm::vec3(offset[0], -offset[1], 0.f) * m_mouse_sensitivity;
-			m_camera.SetViewangle(new_viewangle);
-			m_mango_core.SetMousePosition(screen_center);
-		}
-
-		// toggle
-		if (m_input_handler.GetButtonState(2) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
-		{
-			toggle = !toggle;
-			if (toggle)
-				m_mango_core.SetMousePosition(screen_center);
-		}
-	}
-
 	auto& renderer_2d = m_mango_core.GetRenderer2D();
 	auto& renderer_3d = m_mango_core.GetRenderer3D();
 
 	m_framebuffer.Bind();
 	m_mango_core.Clear({ 0.f, 0.f, 0.f });
 
-	// 3d rendering
-	{
-		renderer_3d.Start();
-
-
-		auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->GetRes("cube_shader");
-		cube_shader->Bind();
-		cube_shader->SetUniformMat4("u_projection_matrix", renderer_3d.GetProjMatrix());
-		cube_shader->SetUniformMat4("u_view_matrix", m_camera.GetViewMatrix());
-
-		Mango::RescourcePool<Mango::TextureArray>::Get()->GetRes("blocks_0")->Bind();
-		for (auto chunk : m_world.GetRenderChunks())
-		{
-			cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ Chunk::WIDTH * chunk->GetX(), 0, Chunk::DEPTH * chunk->GetZ() }, { 0.f, 0.f, 0.f }));
-
-			auto model = chunk->GetModel();
-			model->GetVAO().Bind();
-
-			glDrawElements(model->GetMode(), model->GetIBO().GetCount(), model->GetIBO().GetType(), nullptr);
-		}
-
-		Mango::Shader::Unbind();
-		Mango::CubeTexture::Unbind();
-		Mango::VertexArray::Unbind();
-
-		renderer_3d.End();
-	}
+	// render entire world and stuffs
+	m_world.Render(&m_mango_core, lerp);
 
 	// 2d rendering
 	{
@@ -302,14 +175,73 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		renderer_2d.End();
 	}
 
-	// render final mango
+	// render final mango (post-process)
 	{
 		Mango::Framebuffer::Unbind();
 		m_mango_core.Clear({ 0.f, 0.f, 0.f });
 
+		static const unsigned int indices[] =
+		{
+			0, 1, 2,
+			2, 3, 0
+		};
+		static const float positions[] =
+		{
+			-1.f, 1.f,  // top left
+			-1.f, -1.f, // bottom left
+			1.f, -1.f,  // bottom right
+			1.f, 1.f    // top right
+		};
+		static const float tex_coords[] =
+		{
+			0.f, 1.f,
+			0.f, 0.f,
+			1.f, 0.f,
+			1.f, 1.f
+		};
+
+		// initialize
+		if (static bool is_init = false; !is_init)
+		{
+			is_init = true;
+
+			Mango::RescourcePool<Mango::Shader>::Get()->GetOrAddRes("post_process_shader",
+				Mango::Shader::ReadFile("res/shaders/post_process_vs.glsl"),
+				Mango::Shader::ReadFile("res/shaders/post_process_fs.glsl"));
+
+			auto quad_model = Mango::RescourcePool<Mango::Model>::Get()->AddRes("post_process_shader",
+				GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
+
+			quad_model->GetVAO().Bind();
+
+			// positions
+			auto* vbo = &quad_model->AddVBO();
+			vbo->Setup(2 * 4 * sizeof(float), positions, GL_STATIC_DRAW);
+			vbo->Bind();
+			Mango::VertexArray::EnableAttribute(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+
+			// tex_coords
+			vbo = &quad_model->AddVBO();
+			vbo->Setup(2 * 4 * sizeof(float), tex_coords, GL_STATIC_DRAW);
+			vbo->Bind();
+			Mango::VertexArray::EnableAttribute(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+		}
+
+		auto post_process_shader = Mango::RescourcePool<Mango::Shader>::Get()->GetRes("post_process_shader");
+		auto quad_model = Mango::RescourcePool<Mango::Model>::Get()->GetRes("post_process_shader");
+
 		renderer_2d.Start();
+
+		// texture shader
+		post_process_shader->Bind();
+		quad_model->GetVAO().Bind();
+
 		m_framebuffer.GetTexture().Bind();
-		renderer_2d.RenderTexturedQuad({ 0, 0 }, m_mango_core.GetWindowSize());
+		glDrawElements(quad_model->GetMode(), quad_model->GetIBO().GetCount(), quad_model->GetIBO().GetType(), nullptr);
+
+		Mango::Shader::Unbind();
+		Mango::VertexArray::Unbind();
+
 		renderer_2d.End();
 	}
 
@@ -321,25 +253,29 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%4.0f", 1.f / m_mango_core.GetFrameTime());
 		ImGui::SameLine();
-		ImGui::Text("TickCount: ");
+		ImGui::Text("Tickrate: ");
 		ImGui::SameLine(0.f, 0.f);
-		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_tick_count);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.0f", 1.f / m_interval_per_tick);
 
 		ImGui::Text("Position: ");
 		ImGui::SameLine(0.f, 0.f);
-		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.2f %.2f %.2f", m_camera.GetPosition().x, m_camera.GetPosition().y, m_camera.GetPosition().z);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.2f %.2f %.2f", renderer_3d.GetCamera().GetPosition().x, renderer_3d.GetCamera().GetPosition().y, renderer_3d.GetCamera().GetPosition().z);
 
 		ImGui::Text("Chunk: ");
 		ImGui::SameLine(0.f, 0.f);
-		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i %i", Chunk::PositionXToChunk(int(m_camera.GetPosition().x)), Chunk::PositionZToChunk(int(m_camera.GetPosition().z)));
-		ImGui::SameLine();
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i %i", Chunk::PositionXToChunk(int(renderer_3d.GetCamera().GetPosition().x)), Chunk::PositionZToChunk(int(renderer_3d.GetCamera().GetPosition().z)));
+
 		ImGui::Text("Chunks: ");
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_world.GetChunks().size());
-		ImGui::SameLine();
+
 		ImGui::Text("Rendered chunks: ");
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_world.GetRenderChunks().size());
+
+		ImGui::Text("Used memory: ");
+		ImGui::SameLine(0.f, 0.f);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.1f MB", (m_world.GetRenderChunks().size() * sizeof(Block) * Chunk::WIDTH * Chunk::HEIGHT * Chunk::DEPTH) / 1000000.f);
 
 		size_t edited_blocks_size = 0;
 		for (const auto& chunk : m_world.GetEditedBlocks())
@@ -352,17 +288,25 @@ void MangoApp::OnFrame(float frame_time, float lerptime)
 		if (static bool c = false; ImGui::Checkbox("Vertical Sync", &c))
 			m_mango_core.SetVerticalSync(c);
 
+		ImGui::SameLine();
+		if (static bool c = m_local_player->IsThirdPerson(); ImGui::Checkbox("Thirdperson", &c))
+			m_local_player->SetThirdPerson(c);
+
+		if (static float tmp = m_local_player->GetThirdPersonDistance(); ImGui::SliderFloat("Thirdperson distance", &tmp, 0.f, 100.f))
+			m_local_player->SetThirdPersonDistance(tmp);
+
 		ImGui::SliderFloat("Mouse sensitivity", &m_mouse_sensitivity, 0.01f, 2.f);
 		if (static int render_distance = m_world.GetRenderDistance(); ImGui::SliderInt("Render distance", &render_distance, 1, 64))
 			m_world.SetRenderDistance(render_distance);
 
-		if (ImGui::BeginCombo("Block##combo", m_selected_block.c_str())) 
+		std::string selected_block = m_local_player->GetSelectedBlock();
+		if (ImGui::BeginCombo("Block##combo", selected_block.c_str()))
 		{
 			for (const auto& block : m_block_map)
 			{
-				bool is_selected = m_selected_block == block.first;
+				bool is_selected = selected_block == block.first;
 				if (ImGui::Selectable(block.first.c_str(), is_selected))
-					m_selected_block = block.first;
+					m_local_player->SetSelectedBlock(block.first);
 			}
 
 			ImGui::EndCombo();

@@ -1,19 +1,27 @@
 #pragma once
 
-#include "../mango/graphics/3D/entity_3d.h"
+#include "../mango/mango.h"
 
 
-class World;
+
+
+class MangoApp;
 
 class Entity : public Mango::Entity3D
 {
 public:
-	virtual void Render() {}
-	virtual void OnUpdate() {}
+	Entity() = default;
+	virtual ~Entity() {}
+
 	virtual void OnInit() {}
 	virtual void OnRelease() {}
+	virtual void OnRender(Mango::MangoCore* mango_core, float lerp) {}
+	virtual void OnFrameUpdate(Mango::MangoCore* mango_core, float lerp) {} // this is before OnRender()
+	virtual void OnUpdate() {}
 
-	void SetWorld(World* world) { m_world = world; }
+	void SetMangoApp(MangoApp* app) { m_app = app; }
+	MangoApp* GetMangoApp() { return m_app; }
+
 private:
-	World* m_world = nullptr;
+	MangoApp* m_app = reinterpret_cast<MangoApp*>(0xDEADBEEF);
 };

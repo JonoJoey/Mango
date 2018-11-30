@@ -20,10 +20,16 @@ enum BLOCK_FACE
 
 struct Ray
 {
-	glm::vec3 start;
-	glm::vec3 direction;
-	float length;
-	float step;
+	Ray() = default;
+	Ray(glm::vec3 start, glm::vec3 direction, float length, float step)
+		: m_start(start), m_direction(direction), m_length(length), m_step(step) {}
+	Ray(glm::vec3 start, glm::vec3 end, float step)
+		: m_start(start), m_direction(end - start), m_length(glm::length(end - start)), m_step(step) {}
+
+	glm::vec3 m_start;
+	glm::vec3 m_direction;
+	float m_length;
+	float m_step;
 };
 
 struct TraceInfo
@@ -34,6 +40,7 @@ struct TraceInfo
 	bool did_hit_block = false;
 
 	glm::vec3 trace_end;
+	float fraction = 0.f;
 
 };
 

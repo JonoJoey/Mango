@@ -336,8 +336,8 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			indices.push_back(start + 3);
 		}
 
-		// bottom
-		if (y <= 0 || !GetBlock(x, y - 1, z).m_is_active)
+		// bottom (dont draw the bottom face of the bottom blocks in the world)
+		if (y > 0 && !GetBlock(x, y - 1, z).m_is_active)
 		{
 			const unsigned int start = vertices.size() / 3;
 

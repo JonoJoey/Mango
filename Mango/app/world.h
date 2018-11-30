@@ -12,10 +12,10 @@ public:
 	static void CreateNewWorld(std::string world_path, uint32_t seed);
 
 public:
-	bool Setup(std::string world_path, std::unordered_map<std::string, BLOCK_ID> block_map);
+	bool Setup(Mango::MangoCore* mango_core, std::string world_path, std::unordered_map<std::string, BLOCK_ID> block_map);
 	void Release();
 
-	void Render();
+	void Render(Mango::MangoCore* mango_core, float lerp);
 	void Update(glm::fvec3 position);
 
 	void EditBlock(int x, int y, int z, const Block& block);
@@ -23,6 +23,16 @@ public:
 
 	void SetRenderDistance(int render_distance) { m_render_distance = render_distance; m_should_reload_world = true; }
 	int GetRenderDistance() const { return m_render_distance; }
+
+	template <typename T, typename... pack>
+	T* AddEntity(MangoApp* mango_app, pack... args)
+	{
+		auto entity = new T(args...);
+		entity->SetMangoApp(mango_app);
+		entity->OnInit();
+		m_entities.push_back(entity);
+		return entity;
+	}
 
 	const std::deque<std::shared_ptr<Chunk>>& GetRenderChunks() const { return m_render_chunks; }
 	const std::unordered_map<uint64_t, std::shared_ptr<Chunk>>& GetChunks() const { return m_chunks; }
@@ -45,6 +55,7 @@ private:
 	std::string m_world_path;
 	siv::PerlinNoise m_perlin_noise;
 	std::unordered_map<std::string, BLOCK_ID> m_block_map;
+	std::deque<Entity*> m_entities;
 
 	std::deque<Chunk*> m_update_chunks;
 	std::deque<uint64_t> m_load_chunks;

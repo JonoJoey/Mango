@@ -17,7 +17,7 @@ namespace Mango::Maths
 	glm::vec3 AngleVector(glm::vec3 angle);
 
 	glm::mat4 CreateViewMatrix(const glm::vec3& position, const glm::vec3& angle);
-	glm::mat4 CreateModelMatrix(const glm::vec3& position, const glm::vec3& rotation, float scale = 1.f);
+	glm::mat4 CreateModelMatrix(const glm::vec3& position, const glm::vec3& rotation = { 0.f, 0.f, 0.f }, float scale = 1.f);
 	glm::mat4 CreateProjectionMatrix(float fov /* degrees */, float aspect_ratio, float znear, float zfar);
 	glm::mat3 CreateNormalMatrix(const glm::mat4& model_matrix);
 
@@ -40,4 +40,13 @@ namespace Mango::Maths
 			return max;
 		return num;
 	}
+	inline float ApproachZero(float x, float speed)
+	{
+		if (x > 0.f)
+			x = glm::max<float>(0.f, x - speed);
+		else if (x < 0.f)
+			x = glm::min<float>(0.f, x + speed);
+
+		return x;
+	};
 } // namespace Mango::Maths
