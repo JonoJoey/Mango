@@ -20,6 +20,7 @@ public:
 
 	void EditBlock(int x, int y, int z, const Block& block);
 	bool GetBlock(int x, int y, int z, Block& block);
+	bool GetBlock(float x, float y, float z, Block& block) { return GetBlock(int(x), int(y), int(z), block); }
 
 	void SetRenderDistance(int render_distance) { m_render_distance = render_distance; m_should_reload_world = true; }
 	int GetRenderDistance() const { return m_render_distance; }

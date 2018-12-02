@@ -57,15 +57,12 @@ void Player::Update()
 void Player::SimulateMovement(glm::vec3& position, glm::vec3& velocity, glm::vec3 acceleration, bool& on_ground)
 {
 	const float tick_interval = GetMangoApp()->GetTickInterval();
+	const auto ray_tracer = GetMangoApp()->GetWorld()->GetRayTracer();
 
 	// gravity
-	if (on_ground)
-	{
-		acceleration.y = 0.f;
-		velocity.y = glm::max<float>(velocity.y, 0.f);
-	}
-	else
-		acceleration.y = -m_gravity;
+	//acceleration.y = -m_gravity;
+
+	velocity.y = Mango::Maths::ApproachZero(velocity.y, 0.5f);
 
 	velocity += acceleration * tick_interval;
 
@@ -79,56 +76,108 @@ void Player::SimulateMovement(glm::vec3& position, glm::vec3& velocity, glm::vec
 			velocity.z = (velocity.z / speed) * glm::max<float>(0.f, speed - (m_friction * tick_interval));
 	}
 
-	// clamp speed
-	if (m_speed > m_max_speed)
-		m_speed = m_max_speed;
-
 	// clamp velocity
-	if (const float vel_length = sqrtf((m_velocity.x * m_velocity.x) + (m_velocity.z * m_velocity.z)); vel_length > m_speed)
+	if (const float vel_length = sqrtf((m_velocity.x * m_velocity.x) + (m_velocity.z * m_velocity.z)); vel_length > m_max_speed)
 	{
-		velocity.x = (velocity.x / vel_length) * m_speed;
-		velocity.z = (velocity.z / vel_length) * m_speed;
+		velocity.x = (velocity.x / vel_length) * m_max_speed;
+		velocity.z = (velocity.z / vel_length) * m_max_speed;
 	}
 
-	auto new_position = position + (velocity * tick_interval);
-	auto ray_tracer = GetMangoApp()->GetWorld()->GetRayTracer();
+	//static const glm::vec3 vertex_offsets[14] =
+	//{
+	//	{ 0.f, 0.f, 0.f },
+	//	{ 1.f, 0.f, 0.f },
+	//	{ 0.f, 1.f, 0.f },
+	//	{ 0.f, 0.f, 1.f },
+	//	{ 1.f, 0.f, 1.f },
+	//	{ 1.f, 1.f, 0.f },
+	//	{ 0.f, 1.f, 1.f },
+	//	{ 1.f, 1.f, 1.f },
+	//
+	//	// front and back
+	//	{ 0.5f, 0.5f, 1.f },
+	//	{ 0.5f, 0.5f, 0.f },
+	//
+	//	// right and left
+	//	{ 0.f, 0.5f, 0.5f },
+	//	{ 1.f, 0.5f, 0.5f },
+	//
+	//	// top and bottom
+	//	{ 0.5f, 0.f, 0.5f },
+	//	{ 0.5f, 1.f, 0.5f }
+	//};
+	//
+	//// check if on ground
+	//if (on_ground = false; true)
+	//{
+	//	float frac = 1.f;
+	//	for (int i = 0; i < 14; i++)
+	//	{
+	//		TraceInfo trace_info;
+	//		Ray ray(position + vertex_offsets[i], { 0.f, velocity.y, 0.f }, fabs(velocity.y) * tick_interval + 0.01f, 0.01f);
+	//		if (!ray_tracer->Trace(ray, trace_info))
+	//			continue;
+	//
+	//		if (trace_info.block_face != BLOCK_FACE_TOP || trace_info.fraction >= frac)
+	//			continue;
+	//
+	//		frac = trace_info.fraction;
+	//		on_ground = true;
+	//	}
+	//
+	//	velocity.y *= frac;
+	//}
+	//if (const float length = glm::length(velocity); length > 0.f)
+	//{
+	//	float frac = FLT_MAX;
+	//	TraceInfo closest_trace;
+	//	for (int i = 0; i < 14; i++)
+	//	{
+	//		TraceInfo trace_info;
+	//		Ray ray(position + vertex_offsets[i], velocity, length * tick_interval, 0.01f);
+	//		if (!ray_tracer->Trace(ray, trace_info) || trace_info.start_solid)
+	//			continue;
+	//	
+	//		if (trace_info.fraction >= frac)
+	//			continue;
+	//
+	//		frac = trace_info.fraction;
+	//		closest_trace = trace_info;
+	//	}
+	//
+	//	if (frac != FLT_MAX)
+	//	{
+	//		const auto start = closest_trace.trace_start;
+	//
+	//		if (frac <= 0.f)
+	//		{
+	//			const float new_length = length * (1.f - frac);
+	//			glm::vec3 new_vel = { velocity.x - (velocity.x * fabs(closest_trace.normal.x)),
+	//				velocity.y - (velocity.y * fabs(closest_trace.normal.y)),
+	//				velocity.z - (velocity.z * fabs(closest_trace.normal.z)) };
+	//
+	//			if (glm::length(new_vel) > 0.f)
+	//			{
+	//				new_vel = glm::normalize(new_vel);
+	//
+	//				TraceInfo trace_info;
+	//				Ray ray(closest_trace.trace_end, new_vel, new_length * tick_interval, 0.01f);
+	//				if (!ray_tracer->Trace(ray, trace_info)/* || trace_info.start_solid*/)
+	//					velocity = new_vel * new_length;
+	//				else
+	//					velocity = new_vel * new_length * trace_info.fraction;
+	//			}
+	//			else
+	//				velocity = { 0.f, 0.f, 0.f };
+	//		}
+	//		else
+	//			velocity = (closest_trace.trace_end - start) / tick_interval;
+	//	}
+	//}
 
-	static const glm::vec3 vertex_offsets[8] =
-	{
-		{ 0.f, 0.f, 0.f },
-		{ 1.f, 0.f, 0.f },
-		{ 0.f, 1.f, 0.f },
-		{ 0.f, 0.f, 1.f },
-		{ 1.f, 0.f, 1.f },
-		{ 1.f, 1.f, 0.f },
-		{ 0.f, 1.f, 1.f },
-		{ 1.f, 1.f, 1.f }
-	};
-
-	// check if on ground
-	if (on_ground = false; velocity.y < 0.f)
-	{
-		float frac = 1.f;
-		for (int i = 0; i < 8; i++)
-		{
-			TraceInfo trace_info;
-			Ray ray(position + vertex_offsets[i], { 0.f, -1.f, 0.f }, -velocity.y * tick_interval, 0.01f);
-			if (!ray_tracer->Trace(ray, trace_info))
-				continue;
-
-			if (trace_info.fraction >= frac)
-				continue;
-
-			frac = trace_info.fraction;
-			on_ground = true;
-		}
-
-		if (on_ground)
-			new_position.y = position.y + velocity.y * frac * tick_interval;
-	}
-
-	position = new_position;
+	position += velocity * tick_interval;
 }
+
 
 
 void LocalPlayer::OnFrameUpdate(Mango::MangoCore* mango_core, float lerp)
@@ -146,7 +195,7 @@ void LocalPlayer::OnFrameUpdate(Mango::MangoCore* mango_core, float lerp)
 		if (toggle)
 		{
 			const auto offset = glm::vec2(mango_core->GetMousePosition().x - screen_center.x, mango_core->GetMousePosition().y - screen_center.y);
-			const auto new_viewangle = GetViewangle() + glm::vec3(offset[0], -offset[1], 0.f) * 0.5f;
+			const auto new_viewangle = Mango::Maths::NormalizeAngle(GetViewangle() + glm::vec3(offset[0], -offset[1], 0.f) * 0.5f);
 			SetViewangle(new_viewangle);
 			mango_core->SetMousePosition(screen_center);
 		}
@@ -210,19 +259,19 @@ void LocalPlayer::OnUpdate()
 			acceleration += right_dir;
 		if (input_handler->GetKeyState('A'))
 			acceleration += -right_dir;
-		if (input_handler->GetKeyState(GLFW_KEY_SPACE) && IsOnGround())
-			SetVelocity(glm::vec3(GetVelocity().x, 6.f, GetVelocity().z));
+		if (input_handler->GetKeyState(GLFW_KEY_SPACE))
+			SetVelocity(glm::vec3(GetVelocity().x, 10.f, GetVelocity().z));
 		if (input_handler->GetKeyState(GLFW_KEY_LEFT_SHIFT))
-			acceleration += -up_dir;
+			SetVelocity(glm::vec3(GetVelocity().x, -10.f, GetVelocity().z));
 		if (input_handler->GetKeyState(GLFW_KEY_F5) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
 			SetThirdPerson(!IsThirdPerson());
 		if (input_handler->GetKeyState(GLFW_KEY_LEFT_CONTROL))
-			SetSpeed(6.5f);
+			SetMaxSpeed(6.5f);
 		else
-			SetSpeed(4.3f);
+			SetMaxSpeed(4.3f);
 
 		if (const float length = glm::length(acceleration); length > 0.f)
-			acceleration = glm::normalize(acceleration) * GetAccelSpeed();
+			acceleration = (acceleration / length) * GetAccelSpeed();
 
 		SetAcceleration(acceleration);
 	}
@@ -230,48 +279,27 @@ void LocalPlayer::OnUpdate()
 	// placing/breaking blocks
 	{
 		const auto direction = Mango::Maths::AngleVector(GetViewangle());
-
-		Ray ray(position, direction, 10.f, 0.01f);
-		if (TraceInfo trace_info; world->GetRayTracer()->Trace(ray, trace_info) && trace_info.block_face != NUM_BLOCK_FACES)
+		
+		Ray ray(position, direction, 10.f);
+		if (TraceInfo trace_info; world->GetRayTracer()->Trace(ray, trace_info))
 		{
-			int block_x = int(floorf(trace_info.trace_end.x + direction.x * 0.01f)),
-				block_y = int(floorf(trace_info.trace_end.y + direction.y * 0.01f)),
-				block_z = int(floorf(trace_info.trace_end.z + direction.z * 0.01f));
-
+			int block_x = int(std::floor(trace_info.m_trace_end.x + direction.x * 0.001f)),
+				block_y = int(std::floor(trace_info.m_trace_end.y + direction.y * 0.001f)),
+				block_z = int(std::floor(trace_info.m_trace_end.z + direction.z * 0.001f));
+		
 			// place block
 			if (input_handler->GetButtonState(1) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
 			{
-				switch (trace_info.block_face)
-				{
-				case BLOCK_FACE_FRONT:
-					block_z += 1;
-					break;
-				case BLOCK_FACE_BACK:
-					block_z -= 1;
-					break;
-				case BLOCK_FACE_RIGHT:
-					block_x += 1;
-					break;
-				case BLOCK_FACE_LEFT:
-					block_x -= 1;
-					break;
-				case BLOCK_FACE_TOP:
-					block_y += 1;
-					break;
-				case BLOCK_FACE_BOTTOM:
-					block_y -= 1;
-					break;
-				}
-
+				block_x += int(trace_info.m_normal.x);
+				block_y += int(trace_info.m_normal.y);
+				block_z += int(trace_info.m_normal.z);
+		
 				world->EditBlock(block_x, block_y, block_z, Block::Create(mango_app->GetBlockMap().at(m_selected_block)));
 			}
-
+		
 			// break block
 			if (input_handler->GetButtonState(0) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
-			{
-				DBG_LOG("%i %i %i", block_x, block_y, block_z);
 				world->EditBlock(block_x, block_y, block_z, Block::Inactive());
-			}
 		}
 	}
 

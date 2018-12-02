@@ -138,7 +138,7 @@ void MangoApp::OnInit()
 	m_world.Setup(&m_mango_core, "res/worlds/test_world", m_block_map);
 
 	m_local_player = m_world.AddEntity<LocalPlayer>(this);
-	m_local_player->SetPosition({ 0.f, 250.f, 0.f });
+	m_local_player->SetPosition({ 0.f, 200.f, 0.f });
 
 	Mango::DiscordRPC::Setup("514257473654489098");
 	Mango::DiscordRPC::Update("you are", "a noob", "mango", "mAnGo", "m_fancy", "MaNgO", Mango::DiscordRPC::GetStartTime(), 0);
@@ -259,7 +259,7 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 
 		ImGui::Text("Position: ");
 		ImGui::SameLine(0.f, 0.f);
-		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.2f %.2f %.2f", renderer_3d.GetCamera().GetPosition().x, renderer_3d.GetCamera().GetPosition().y, renderer_3d.GetCamera().GetPosition().z);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.2f %.2f %.2f", m_local_player->GetPosition().x, m_local_player->GetPosition().y, m_local_player->GetPosition().z);
 
 		ImGui::Text("Chunk: ");
 		ImGui::SameLine(0.f, 0.f);
@@ -268,7 +268,7 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 		ImGui::Text("Chunks: ");
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_world.GetChunks().size());
-
+		ImGui::SameLine();
 		ImGui::Text("Rendered chunks: ");
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_world.GetRenderChunks().size());

@@ -46,6 +46,18 @@
 
 
 
+namespace glm
+{
+	template<length_t L, typename T, qualifier Q>
+	GLM_FUNC_QUALIFIER vec<L, T, Q> safe_normalize(vec<L, T, Q> const& x)
+	{
+		GLM_STATIC_ASSERT(std::numeric_limits<T>::is_iec559, "'normalize' accepts only floating-point inputs");
+
+		return length(x) > T(0) ? detail::compute_normalize<L, T, Q, detail::is_aligned<Q>::value>::call(x) : vec<L, T, Q>(T(0));
+	}
+}
+
+
 
 inline size_t GetElementSize(unsigned int element)
 {

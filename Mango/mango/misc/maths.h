@@ -49,4 +49,11 @@ namespace Mango::Maths
 
 		return x;
 	};
+	inline glm::vec3 NormalizeAngle(glm::vec3 angle)
+	{
+		angle.x = Maths::NormalizeFloat(angle.x, -180.f, 180.f);
+		angle.y = Maths::ClampFloat(angle.y, -89.f, 89.f);
+		angle.z = Maths::NormalizeFloat(angle.z, -180.f, 180.f);
+		return angle;
+	}
 } // namespace Mango::Maths

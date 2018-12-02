@@ -3,53 +3,58 @@
 #include "block.h"
 
 
-class World;
-class Entity;
-
-enum BLOCK_FACE
-{
-	BLOCK_FACE_FRONT,
-	BLOCK_FACE_BACK,
-	BLOCK_FACE_RIGHT,
-	BLOCK_FACE_LEFT,
-	BLOCK_FACE_TOP,
-	BLOCK_FACE_BOTTOM,
-
-	NUM_BLOCK_FACES
-};
 
 struct Ray
 {
 	Ray() = default;
-	Ray(glm::vec3 start, glm::vec3 direction, float length, float step)
-		: m_start(start), m_direction(direction), m_length(length), m_step(step) {}
-	Ray(glm::vec3 start, glm::vec3 end, float step)
-		: m_start(start), m_direction(end - start), m_length(glm::length(end - start)), m_step(step) {}
+	Ray(const glm::vec3& start, const glm::vec3& direction, float length)
+		: m_start(start), m_direction(glm::safe_normalize(direction)), m_length(length) {}
 
-	glm::vec3 m_start;
-	glm::vec3 m_direction;
-	float m_length;
-	float m_step;
+	glm::vec3 m_start = { 0.f, 0.f, 0.f },
+		m_direction = { 0.f, 0.f, 0.f };
+	float m_length = 0.f;
+};
+struct Plane
+{
+	Plane() = default;
+	Plane(const glm::vec3& point, const glm::vec3& normal)
+		: m_point(point), m_normal(glm::safe_normalize(normal)) {}
+
+	glm::vec3 m_point = { 0.f, 0.f, 0.f },
+		m_normal = { 0.f, 0.f, 0.f };
+};
+struct AABB
+{
+	AABB() = default;
+	AABB(const glm::vec3& min, const glm::vec3& max)
+		: m_min(min), m_max(max) {}
+
+	glm::vec3 m_min = { 0.f, 0.f, 0.f },
+		m_max = { 0.f, 0.f, 0.f };
 };
 
 struct TraceInfo
 {
-	Entity* hit_entity = nullptr;
+	bool m_hit;
+	float m_fraction;
 
-	BLOCK_FACE block_face;
-	bool did_hit_block = false;
-
-	glm::vec3 trace_end;
-	float fraction = 0.f;
-
+	glm::vec3 m_normal,
+		m_trace_start,
+		m_trace_end;
 };
 
+class World;
 class RayTracer
 {
 public:
-	bool Trace(Ray ray, TraceInfo& trace_info);
+	bool Trace(const Ray& ray, TraceInfo& trace_info);
 
 	void SetWorld(World* world) { m_world = world; }
+
+private:
+	static bool RayPlaneIntersection(const Ray& ray, const Plane& plane, float* intersection_distance = nullptr);
+	static bool RayAABBIntersection(const Ray& ray, const AABB& aabb, float* intersection_distance = nullptr, glm::vec3* intersection_normal = nullptr);
+
 private:
 	World* m_world = nullptr;
 };

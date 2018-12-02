@@ -71,6 +71,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)Output\Debug\</OutDir>
+    <LibraryPath>$(ProjectDir)dep\glfw\lib-vc2015;$(ProjectDir)dep\glew\lib\Release\Win32;$(ProjectDir)dep\discord-rpc\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)dep\glfw\include;$(ProjectDir)dep\glew\include;$(ProjectDir)dep\glm;$(ProjectDir)dep\imgui;$(ProjectDir)dep\stb;$(ProjectDir)dep\discord-rpc\include;$(ProjectDir)dep\perlin-noise;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Output\</OutDir>
@@ -104,11 +106,13 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

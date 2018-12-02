@@ -469,8 +469,43 @@ void World::EditBlock(int x, int y, int z, const Block& block)
 	edited_block.m_block = block;
 	edited_block.m_position = EditedBlock::PackPosition(new_x, y, new_z);
 
-	m_update_chunks.push_front(chunk);
 	m_edited_blocks[PackChunk(chunk_x, chunk_z)].push_back(edited_block);
+
+	// if you edit a block on the edge of two chunks, you need to update both chunks
+	if (const int c_x = Chunk::PositionXToChunk(x + 1); c_x != chunk_x)
+	{
+		if (auto next_chunk = GetChunk(c_x, chunk_z); next_chunk)
+		{
+			next_chunk->SetNeedsUpdate(true);
+			m_update_chunks.push_front(next_chunk);
+		}
+	}
+	else if (const int c_x = Chunk::PositionXToChunk(x - 1); c_x != chunk_x)
+	{
+		if (auto next_chunk = GetChunk(c_x, chunk_z); next_chunk)
+		{
+			next_chunk->SetNeedsUpdate(true);
+			m_update_chunks.push_front(next_chunk);
+		}
+	}
+	if (const int c_z = Chunk::PositionZToChunk(z + 1); c_z != chunk_z)
+	{
+		if (auto next_chunk = GetChunk(chunk_x, c_z); next_chunk)
+		{
+			next_chunk->SetNeedsUpdate(true);
+			m_update_chunks.push_front(next_chunk);
+		}
+	}
+	else if (const int c_z = Chunk::PositionZToChunk(z - 1); c_z != chunk_z)
+	{
+		if (auto next_chunk = GetChunk(chunk_x, c_z); next_chunk)
+		{
+			next_chunk->SetNeedsUpdate(true);
+			m_update_chunks.push_front(next_chunk);
+		}
+	}
+
+	m_update_chunks.push_front(chunk);
 
 	chunk->SetBlock(new_x, y, new_z, block);
 }

@@ -38,8 +38,6 @@ public:
 	void SetFriction(float friction) { m_friction = friction; }
 	float GetAccelSpeed() const { return m_accel_speed; }
 	void SetAccelSpeed(float accel_speed) { m_accel_speed = accel_speed; }
-	float GetSpeed() const { return m_speed; }
-	void SetSpeed(float speed) { m_speed = speed; }
 
 	bool IsOnGround() const { return m_on_ground; }
 
@@ -66,8 +64,7 @@ private:
 		m_prev_acceleration = { 0.f, 0.f, 0.f };
 
 	// units per second
-	float m_max_speed = 6.5f;
-	float m_speed = 4.3f;
+	float m_max_speed = 4.3f;
 	float m_friction = 16.f;
 	float m_accel_speed = 24.f;
 	float m_gravity = 16.f;

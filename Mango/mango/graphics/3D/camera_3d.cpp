@@ -23,9 +23,7 @@ namespace Mango
 
 	void Camera3D::SetViewangle(const glm::vec3& viewangle) 
 	{ 
-		m_viewangle.x = Maths::NormalizeFloat(viewangle.x, -180.f, 180.f);
-		m_viewangle.y = Maths::ClampFloat(viewangle.y, -89.f, 89.f);
-		m_viewangle.z = Maths::NormalizeFloat(viewangle.z, -180.f, 180.f);
+		m_viewangle = Maths::NormalizeAngle(viewangle);
 	}
 	glm::vec3 Camera3D::GetViewangle() 
 	{ 
