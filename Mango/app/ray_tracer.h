@@ -7,38 +7,38 @@
 struct Ray
 {
 	Ray() = default;
-	Ray(const glm::vec3& start, const glm::vec3& direction, float length)
+	Ray(const glm::dvec3& start, const glm::dvec3& direction, double length)
 		: m_start(start), m_direction(glm::safe_normalize(direction)), m_length(length) {}
 
-	glm::vec3 m_start = { 0.f, 0.f, 0.f },
-		m_direction = { 0.f, 0.f, 0.f };
-	float m_length = 0.f;
+	glm::dvec3 m_start = { 0.0, 0.0, 0.0 },
+		m_direction = { 0.0, 0.0, 0.0 };
+	double m_length = 0.0;
 };
 struct Plane
 {
 	Plane() = default;
-	Plane(const glm::vec3& point, const glm::vec3& normal)
+	Plane(const glm::dvec3& point, const glm::dvec3& normal)
 		: m_point(point), m_normal(glm::safe_normalize(normal)) {}
 
-	glm::vec3 m_point = { 0.f, 0.f, 0.f },
-		m_normal = { 0.f, 0.f, 0.f };
+	glm::dvec3 m_point = { 0.0, 0.0, 0.0 },
+		m_normal = { 0.0, 0.0, 0.0 };
 };
 struct AABB
 {
 	AABB() = default;
-	AABB(const glm::vec3& min, const glm::vec3& max)
+	AABB(const glm::dvec3& min, const glm::dvec3& max)
 		: m_min(min), m_max(max) {}
 
-	glm::vec3 m_min = { 0.f, 0.f, 0.f },
-		m_max = { 0.f, 0.f, 0.f };
+	glm::dvec3 m_min = { 0.0, 0.0, 0.0 },
+		m_max = { 0.0, 0.0, 0.0 };
 };
 
 struct TraceInfo
 {
 	bool m_hit;
-	float m_fraction;
+	double m_fraction;
 
-	glm::vec3 m_normal,
+	glm::dvec3 m_normal,
 		m_trace_start,
 		m_trace_end;
 };
@@ -52,8 +52,8 @@ public:
 	void SetWorld(World* world) { m_world = world; }
 
 private:
-	static bool RayPlaneIntersection(const Ray& ray, const Plane& plane, float* intersection_distance = nullptr);
-	static bool RayAABBIntersection(const Ray& ray, const AABB& aabb, float* intersection_distance = nullptr, glm::vec3* intersection_normal = nullptr);
+	static bool RayPlaneIntersection(const Ray& ray, const Plane& plane, double* intersection_distance = nullptr);
+	static bool RayAABBIntersection(const Ray& ray, const AABB& aabb, double* intersection_distance = nullptr, glm::dvec3* intersection_normal = nullptr);
 
 private:
 	World* m_world = nullptr;

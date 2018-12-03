@@ -1,15 +1,11 @@
 #pragma once
 
 #define _USE_MATH_DEFINES
-#include <math.h>
+#include <cmath>
 
 #include <glm.hpp>
 
-#define M_PI_F float(M_PI)
-#define M_PI_2F float(M_PI_2)
-
-#define RAD2DEG(x) float(x * (180.f / M_PI_F))
-#define DEG2RAD(x) float(x * M_PI_F / 180.f)
+#include <algorithm>
 
 
 namespace Mango::Maths
@@ -23,37 +19,31 @@ namespace Mango::Maths
 
 	// TODO: fastER!
 	// normalize from [min, max]
-	inline float NormalizeFloat(float num, float min, float max)
+	template <typename T>
+	inline T NormalizeNum(T num, T min, T max)
 	{
-		const float diff = max - min;
+		const T diff = max - min;
 		while (num < min)
 			num += diff;
 		while (num > max)
 			num -= diff;
 		return num;
 	}
-	inline float ClampFloat(float num, float min, float max)
+	template <typename T>
+	inline T ApproachZero(T x, T speed)
 	{
-		if (num < min)
-			return min;
-		if (num > max)
-			return max;
-		return num;
-	}
-	inline float ApproachZero(float x, float speed)
-	{
-		if (x > 0.f)
-			x = glm::max<float>(0.f, x - speed);
-		else if (x < 0.f)
-			x = glm::min<float>(0.f, x + speed);
+		if (x > T(0))
+			x = glm::max<T>(T(0), x - speed);
+		else if (x < T(0))
+			x = glm::min<T>(T(0), x + speed);
 
 		return x;
 	};
 	inline glm::vec3 NormalizeAngle(glm::vec3 angle)
 	{
-		angle.x = Maths::NormalizeFloat(angle.x, -180.f, 180.f);
-		angle.y = Maths::ClampFloat(angle.y, -89.f, 89.f);
-		angle.z = Maths::NormalizeFloat(angle.z, -180.f, 180.f);
+		angle.x = NormalizeNum(angle.x, -180.f, 180.f);
+		angle.y = std::clamp(angle.y, -89.f, 89.f);
+		angle.z = NormalizeNum(angle.z, -180.f, 180.f);
 		return angle;
 	}
 } // namespace Mango::Maths

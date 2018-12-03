@@ -7,9 +7,9 @@ namespace Mango::Maths
 {
 	glm::vec3 AngleVector(glm::vec3 angle)
 	{
-		angle.x = DEG2RAD(angle.x);
-		angle.y = DEG2RAD(angle.y);
-		angle.z = DEG2RAD(angle.z);
+		angle.x = glm::radians(angle.x);
+		angle.y = glm::radians(angle.y);
+		angle.z = glm::radians(angle.z);
 
 		return glm::normalize(glm::vec3(
 			cos(angle[1]) * sin(angle[0]),
@@ -25,9 +25,9 @@ namespace Mango::Maths
 	glm::mat4 CreateModelMatrix(const glm::vec3& position, const glm::vec3& rotation, float scale)
 	{
 		glm::mat4 mat = glm::translate(glm::mat4(1.f), position);
-		mat = glm::rotate(mat, DEG2RAD(rotation.x), glm::vec3(1.f, 0.f, 0.f));
-		mat = glm::rotate(mat, DEG2RAD(rotation.y), glm::vec3(0.f, 1.f, 0.f));
-		mat = glm::rotate(mat, DEG2RAD(rotation.z), glm::vec3(0.f, 0.f, 1.f));
+		mat = glm::rotate(mat, glm::radians(rotation.x), glm::vec3(1.f, 0.f, 0.f));
+		mat = glm::rotate(mat, glm::radians(rotation.y), glm::vec3(0.f, 1.f, 0.f));
+		mat = glm::rotate(mat, glm::radians(rotation.z), glm::vec3(0.f, 0.f, 1.f));
 		mat = glm::scale(mat, glm::vec3(scale, scale, scale));
 		return mat;
 	}

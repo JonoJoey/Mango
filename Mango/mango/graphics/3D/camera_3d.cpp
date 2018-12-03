@@ -3,20 +3,15 @@
 
 namespace Mango
 {
-	glm::mat4 Camera3D::GetViewMatrix() const
-	{
-		return Maths::CreateViewMatrix(m_position, m_viewangle);
-	}
-
-	void Camera3D::Move(const glm::vec3& offset) 
+	void Camera3D::Move(const glm::dvec3& offset) 
 	{ 
 		SetPosition(m_position + offset);
 	}
-	void Camera3D::SetPosition(const glm::vec3& position)
+	void Camera3D::SetPosition(const glm::dvec3& position)
 	{ 
 		m_position = position;
 	}
-	glm::vec3 Camera3D::GetPosition() 
+	glm::dvec3 Camera3D::GetPosition() 
 	{ 
 		return m_position; 
 	}

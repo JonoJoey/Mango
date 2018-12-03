@@ -2,6 +2,8 @@
 
 #include "player.h"
 
+#include <filesystem>
+
 
 void MangoApp::Run()
 {
@@ -121,8 +123,6 @@ void MangoApp::OnInit()
 {
 	m_mango_core.SetVerticalSync(false);
 
-	Mango::RescourcePool<Mango::Texture>::Get()->AddRes("mango", "res/textures/mango.png", true, true);
-
 	m_block_map["null"] = 0;
 	m_block_map["cobblestone"] = 1;
 	m_block_map["grass"] = 2;
@@ -132,13 +132,67 @@ void MangoApp::OnInit()
 	m_block_map["oak_plank"] = 6;
 	m_block_map["mossy_cobblestone"] = 7;
 
-	if (!World::DoesWorldExist("res/worlds/test_world"))
-		World::CreateNewWorld("res/worlds/test_world", 69);
+	{
+		const auto app_data = Mango::GetAppDataPath();
 
-	m_world.Setup(&m_mango_core, "res/worlds/test_world", m_block_map);
+		std::filesystem::create_directory(app_data + "/.mango");
+		std::filesystem::create_directory(app_data + "/.mango/worlds");
+		std::filesystem::create_directory(app_data + "/.mango/resource_packs");
+		std::filesystem::create_directory(app_data + "/.mango/resource_packs/default");
+
+		{
+			Mango::RescourcePool<Mango::Shader>::Get()->GetOrAddRes("post_process_shader",
+				Mango::Shader::ReadFile(app_data + "/.mango/resource_packs/default/shaders/post_process_vs.glsl"),
+				Mango::Shader::ReadFile(app_data + "/.mango/resource_packs/default/shaders/post_process_fs.glsl"));
+
+			static const unsigned int indices[] =
+			{
+				0, 1, 2,
+				2, 3, 0
+			};
+			static const float positions[] =
+			{
+				-1.f, 1.f,  // top left
+				-1.f, -1.f, // bottom left
+				1.f, -1.f,  // bottom right
+				1.f, 1.f    // top right
+			};
+			static const float tex_coords[] =
+			{
+				0.f, 1.f,
+				0.f, 0.f,
+				1.f, 0.f,
+				1.f, 1.f
+			};
+
+			auto post_process_model = Mango::RescourcePool<Mango::Model>::Get()->AddRes("post_process_model",
+				GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
+
+			post_process_model->GetVAO().Bind();
+
+			// positions
+			auto* vbo = &post_process_model->AddVBO();
+			vbo->Setup(2 * 4 * sizeof(float), positions, GL_STATIC_DRAW);
+			vbo->Bind();
+			Mango::VertexArray::EnableAttribute(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+
+			// tex_coords
+			vbo = &post_process_model->AddVBO();
+			vbo->Setup(2 * 4 * sizeof(float), tex_coords, GL_STATIC_DRAW);
+			vbo->Bind();
+			Mango::VertexArray::EnableAttribute(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+		}
+	}
+
+	if (!World::DoesWorldExist("test_world"))
+		World::CreateNewWorld("test_world", 69);
+
+	if (!m_world.Setup(&m_mango_core, "test_world", m_block_map))
+		DBG_LOG("FAILED TO SETUP WORLD");
 
 	m_local_player = m_world.AddEntity<LocalPlayer>(this);
-	m_local_player->SetPosition({ 0.f, 200.f, 0.f });
+
+	m_local_player->SetPosition({ 0.0, 200.0, 0.0 });
 
 	Mango::DiscordRPC::Setup("514257473654489098");
 	Mango::DiscordRPC::Update("you are", "a noob", "mango", "mAnGo", "m_fancy", "MaNgO", Mango::DiscordRPC::GetStartTime(), 0);
@@ -152,7 +206,7 @@ void MangoApp::OnRelease()
 
 void MangoApp::OnTick()
 {
-	m_world.Update(m_mango_core.GetRenderer3D().GetCamera().GetPosition());
+	m_world.Update(m_local_player->GetPosition());
 }
 void MangoApp::OnFrame(float frame_time, float lerp)
 {
@@ -169,8 +223,6 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 	{
 		renderer_2d.Start();
 
-		Mango::RescourcePool<Mango::Texture>::Get()->GetRes("mango")->Bind();
-		renderer_2d.RenderTexturedQuad(m_mango_core.GetMousePosition() - 10.f, m_mango_core.GetMousePosition() + 10.f);
 
 		renderer_2d.End();
 	}
@@ -180,64 +232,17 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 		Mango::Framebuffer::Unbind();
 		m_mango_core.Clear({ 0.f, 0.f, 0.f });
 
-		static const unsigned int indices[] =
-		{
-			0, 1, 2,
-			2, 3, 0
-		};
-		static const float positions[] =
-		{
-			-1.f, 1.f,  // top left
-			-1.f, -1.f, // bottom left
-			1.f, -1.f,  // bottom right
-			1.f, 1.f    // top right
-		};
-		static const float tex_coords[] =
-		{
-			0.f, 1.f,
-			0.f, 0.f,
-			1.f, 0.f,
-			1.f, 1.f
-		};
-
-		// initialize
-		if (static bool is_init = false; !is_init)
-		{
-			is_init = true;
-
-			Mango::RescourcePool<Mango::Shader>::Get()->GetOrAddRes("post_process_shader",
-				Mango::Shader::ReadFile("res/shaders/post_process_vs.glsl"),
-				Mango::Shader::ReadFile("res/shaders/post_process_fs.glsl"));
-
-			auto quad_model = Mango::RescourcePool<Mango::Model>::Get()->AddRes("post_process_shader",
-				GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
-
-			quad_model->GetVAO().Bind();
-
-			// positions
-			auto* vbo = &quad_model->AddVBO();
-			vbo->Setup(2 * 4 * sizeof(float), positions, GL_STATIC_DRAW);
-			vbo->Bind();
-			Mango::VertexArray::EnableAttribute(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
-
-			// tex_coords
-			vbo = &quad_model->AddVBO();
-			vbo->Setup(2 * 4 * sizeof(float), tex_coords, GL_STATIC_DRAW);
-			vbo->Bind();
-			Mango::VertexArray::EnableAttribute(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
-		}
-
 		auto post_process_shader = Mango::RescourcePool<Mango::Shader>::Get()->GetRes("post_process_shader");
-		auto quad_model = Mango::RescourcePool<Mango::Model>::Get()->GetRes("post_process_shader");
+		auto post_process_model = Mango::RescourcePool<Mango::Model>::Get()->GetRes("post_process_model");
 
 		renderer_2d.Start();
 
 		// texture shader
 		post_process_shader->Bind();
-		quad_model->GetVAO().Bind();
+		post_process_model->GetVAO().Bind();
 
 		m_framebuffer.GetTexture().Bind();
-		glDrawElements(quad_model->GetMode(), quad_model->GetIBO().GetCount(), quad_model->GetIBO().GetType(), nullptr);
+		glDrawElements(post_process_model->GetMode(), post_process_model->GetIBO().GetCount(), post_process_model->GetIBO().GetType(), nullptr);
 
 		Mango::Shader::Unbind();
 		Mango::VertexArray::Unbind();
@@ -263,7 +268,7 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 
 		ImGui::Text("Chunk: ");
 		ImGui::SameLine(0.f, 0.f);
-		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i %i", Chunk::PositionXToChunk(int(renderer_3d.GetCamera().GetPosition().x)), Chunk::PositionZToChunk(int(renderer_3d.GetCamera().GetPosition().z)));
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i %i", Chunk::PositionXToChunk(int(m_local_player->GetPosition().x)), Chunk::PositionZToChunk(int(m_local_player->GetPosition().z)));
 
 		ImGui::Text("Chunks: ");
 		ImGui::SameLine(0.f, 0.f);

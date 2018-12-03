@@ -1,15 +1,21 @@
 #include "world.h"
 
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 
 
-bool World::DoesWorldExist(std::string world_path)
+bool World::DoesWorldExist(std::string world_name)
 {
-	return std::filesystem::exists(world_path) && std::filesystem::exists(world_path + "/metadata.data") && std::filesystem::exists(world_path + "/chunks");
+	const auto world_path = Mango::GetAppDataPath() + "/.mango/worlds/" + world_name;
+	return std::filesystem::exists(world_path) &&
+		std::filesystem::exists(world_path + "/metadata.data") &&
+		std::filesystem::exists(world_path + "/chunks");
 }
-void World::CreateNewWorld(std::string world_path, uint32_t seed)
+void World::CreateNewWorld(std::string world_name, uint32_t seed)
 {
+	const auto app_data = Mango::GetAppDataPath();
+	const auto world_path = app_data + "/.mango/worlds/" + world_name;
+
 	// empty or create new directory
 	if (std::filesystem::exists(world_path))
 		std::filesystem::remove_all(world_path);
@@ -26,17 +32,24 @@ void World::CreateNewWorld(std::string world_path, uint32_t seed)
 
 	file.close();
 }
-
-bool World::Setup(Mango::MangoCore* mango_core, std::string world_path, std::unordered_map<std::string, BLOCK_ID> block_map)
+void World::DeleteWorld(std::string world_name)
 {
-	if (!std::filesystem::exists(world_path))
+
+}
+
+bool World::Setup(Mango::MangoCore* mango_core, std::string world_name, std::unordered_map<std::string, BLOCK_ID> block_map)
+{
+	if (!DoesWorldExist(world_name))
 		return false;
+
+	const auto app_data = Mango::GetAppDataPath();
+	const auto world_path = app_data + "/.mango/worlds/" + world_name;
 
 	// null is the only block actually required
 	if (block_map.find("null") == block_map.end())
 		return false;
 
-	const auto LoadBlockMap = [](const std::unordered_map<std::string, BLOCK_ID>& block_map) -> size_t
+	const auto LoadBlockMap = [app_data](const std::unordered_map<std::string, BLOCK_ID>& block_map) -> size_t
 	{
 		std::vector<std::pair<std::string, BLOCK_ID>> sorted_block_map;
 		for (const auto& block : block_map)
@@ -62,12 +75,12 @@ bool World::Setup(Mango::MangoCore* mango_core, std::string world_path, std::uno
 			}
 
 			// front, back, right, left, top, bottom
-			file_paths.push_back("res/textures/blocks/" + block.first + "/front.png");
-			file_paths.push_back("res/textures/blocks/" + block.first + "/back.png");
-			file_paths.push_back("res/textures/blocks/" + block.first + "/right.png");
-			file_paths.push_back("res/textures/blocks/" + block.first + "/left.png");
-			file_paths.push_back("res/textures/blocks/" + block.first + "/top.png");
-			file_paths.push_back("res/textures/blocks/" + block.first + "/bottom.png");
+			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/front.png");
+			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/back.png");
+			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/right.png");
+			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/left.png");
+			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/top.png");
+			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/bottom.png");
 		}
 
 		if (!file_paths.empty())
@@ -84,8 +97,8 @@ bool World::Setup(Mango::MangoCore* mango_core, std::string world_path, std::uno
 		return false;
 
 	Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader",
-		Mango::Shader::ReadFile("res/shaders/cube_vs.glsl"),
-		Mango::Shader::ReadFile("res/shaders/cube_fs.glsl"));
+		Mango::Shader::ReadFile(app_data + "/.mango/resource_packs/default/shaders/cube_vs.glsl"),
+		Mango::Shader::ReadFile(app_data + "/.mango/resource_packs/default/shaders/cube_fs.glsl"));
 
 	m_ray_tracer.SetWorld(this);
 	m_block_map = block_map;
@@ -193,14 +206,16 @@ void World::Render(Mango::MangoCore* mango_core, float lerp)
 	auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->GetRes("cube_shader");
 	cube_shader->Bind();
 	cube_shader->SetUniformMat4("u_projection_matrix", renderer_3d.GetProjMatrix());
-	cube_shader->SetUniformMat4("u_view_matrix", renderer_3d.GetCamera().GetViewMatrix());
+	cube_shader->SetUniformMat4("u_view_matrix", Mango::Maths::CreateViewMatrix({ 0.f, 0.f, 0.f }, renderer_3d.GetCamera().GetViewangle()));
 
 	const auto pos = renderer_3d.GetCamera().GetPosition();
 
 	Mango::RescourcePool<Mango::TextureArray>::Get()->GetRes("blocks_0")->Bind();
 	for (auto chunk : m_render_chunks)
 	{
-		cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix({ Chunk::WIDTH * chunk->GetX(), 0, Chunk::DEPTH * chunk->GetZ() }, { 0.f, 0.f, 0.f }));
+		cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix(glm::dvec3(
+			double(Chunk::WIDTH * chunk->GetX()), 0.0, double(Chunk::DEPTH * chunk->GetZ())) -
+			renderer_3d.GetCamera().GetPosition(), { 0.f, 0.f, 0.f }));
 
 		auto model = chunk->GetModel();
 		model->GetVAO().Bind();
@@ -336,7 +351,7 @@ void World::GenerateChunk(Chunk* chunk)
 	static constexpr int VARIANCE = 30;
 	static constexpr int MAX_HEIGHT = (Chunk::HEIGHT / 2) + (VARIANCE / 2);
 	static constexpr int MIN_HEIGHT = (Chunk::HEIGHT / 2) - (VARIANCE / 2);
-	static constexpr float MULTIPLIER = 30.f;
+	static constexpr double MULTIPLIER = 30.0;
 
 	BLOCK_ID cobblestone = m_block_map["null"];
 	if (auto it = m_block_map.find("cobblestone"); it != m_block_map.end())
@@ -350,8 +365,8 @@ void World::GenerateChunk(Chunk* chunk)
 	{
 		for (int z = 0; z < Chunk::DEPTH; z++)
 		{
-			const auto noise = m_perlin_noise.noise(float(x + (chunk->GetX() * Chunk::WIDTH)) / MULTIPLIER, float(z + (chunk->GetZ() * Chunk::DEPTH)) / MULTIPLIER);
-			const int height = MIN_HEIGHT + int((noise + 1.f) * 0.5f * (MAX_HEIGHT - MIN_HEIGHT));
+			const auto noise = m_perlin_noise.noise(double(x + (chunk->GetX() * Chunk::WIDTH)) / MULTIPLIER, double(z + (chunk->GetZ() * Chunk::DEPTH)) / MULTIPLIER);
+			const int height = MIN_HEIGHT + int((noise + 1.) * 0.5 * (MAX_HEIGHT - MIN_HEIGHT));
 
 			for (int i = 0; i < height; i++)
 			{

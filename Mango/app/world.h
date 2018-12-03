@@ -8,11 +8,12 @@
 class World
 {
 public:
-	static bool DoesWorldExist(std::string world_path);
-	static void CreateNewWorld(std::string world_path, uint32_t seed);
+	static bool DoesWorldExist(std::string world_name);
+	static void CreateNewWorld(std::string world_name, uint32_t seed);
+	static void DeleteWorld(std::string world_name);
 
 public:
-	bool Setup(Mango::MangoCore* mango_core, std::string world_path, std::unordered_map<std::string, BLOCK_ID> block_map);
+	bool Setup(Mango::MangoCore* mango_core, std::string world_name, std::unordered_map<std::string, BLOCK_ID> block_map);
 	void Release();
 
 	void Render(Mango::MangoCore* mango_core, float lerp);
@@ -20,7 +21,7 @@ public:
 
 	void EditBlock(int x, int y, int z, const Block& block);
 	bool GetBlock(int x, int y, int z, Block& block);
-	bool GetBlock(float x, float y, float z, Block& block) { return GetBlock(int(x), int(y), int(z), block); }
+	bool GetBlock(double x, double y, double z, Block& block) { return GetBlock(int(x), int(y), int(z), block); }
 
 	void SetRenderDistance(int render_distance) { m_render_distance = render_distance; m_should_reload_world = true; }
 	int GetRenderDistance() const { return m_render_distance; }
