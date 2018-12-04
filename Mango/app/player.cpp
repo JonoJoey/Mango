@@ -85,99 +85,55 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 		velocity.z = (velocity.z / vel_length) * m_max_speed;
 	}
 
-	//static const glm::vec3 vertex_offsets[14] =
-	//{
-	//	{ 0.f, 0.f, 0.f },
-	//	{ 1.f, 0.f, 0.f },
-	//	{ 0.f, 1.f, 0.f },
-	//	{ 0.f, 0.f, 1.f },
-	//	{ 1.f, 0.f, 1.f },
-	//	{ 1.f, 1.f, 0.f },
-	//	{ 0.f, 1.f, 1.f },
-	//	{ 1.f, 1.f, 1.f },
-	//
-	//	// front and back
-	//	{ 0.5f, 0.5f, 1.f },
-	//	{ 0.5f, 0.5f, 0.f },
-	//
-	//	// right and left
-	//	{ 0.f, 0.5f, 0.5f },
-	//	{ 1.f, 0.5f, 0.5f },
-	//
-	//	// top and bottom
-	//	{ 0.5f, 0.f, 0.5f },
-	//	{ 0.5f, 1.f, 0.5f }
-	//};
-	//
-	//// check if on ground
-	//if (on_ground = false; true)
-	//{
-	//	float frac = 1.f;
-	//	for (int i = 0; i < 14; i++)
-	//	{
-	//		TraceInfo trace_info;
-	//		Ray ray(position + vertex_offsets[i], { 0.f, velocity.y, 0.f }, fabs(velocity.y) * tick_interval + 0.01f, 0.01f);
-	//		if (!ray_tracer->Trace(ray, trace_info))
-	//			continue;
-	//
-	//		if (trace_info.block_face != BLOCK_FACE_TOP || trace_info.fraction >= frac)
-	//			continue;
-	//
-	//		frac = trace_info.fraction;
-	//		on_ground = true;
-	//	}
-	//
-	//	velocity.y *= frac;
-	//}
-	//if (const float length = glm::length(velocity); length > 0.f)
-	//{
-	//	float frac = FLT_MAX;
-	//	TraceInfo closest_trace;
-	//	for (int i = 0; i < 14; i++)
-	//	{
-	//		TraceInfo trace_info;
-	//		Ray ray(position + vertex_offsets[i], velocity, length * tick_interval, 0.01f);
-	//		if (!ray_tracer->Trace(ray, trace_info) || trace_info.start_solid)
-	//			continue;
-	//	
-	//		if (trace_info.fraction >= frac)
-	//			continue;
-	//
-	//		frac = trace_info.fraction;
-	//		closest_trace = trace_info;
-	//	}
-	//
-	//	if (frac != FLT_MAX)
-	//	{
-	//		const auto start = closest_trace.trace_start;
-	//
-	//		if (frac <= 0.f)
-	//		{
-	//			const float new_length = length * (1.f - frac);
-	//			glm::vec3 new_vel = { velocity.x - (velocity.x * fabs(closest_trace.normal.x)),
-	//				velocity.y - (velocity.y * fabs(closest_trace.normal.y)),
-	//				velocity.z - (velocity.z * fabs(closest_trace.normal.z)) };
-	//
-	//			if (glm::length(new_vel) > 0.f)
-	//			{
-	//				new_vel = glm::normalize(new_vel);
-	//
-	//				TraceInfo trace_info;
-	//				Ray ray(closest_trace.trace_end, new_vel, new_length * tick_interval, 0.01f);
-	//				if (!ray_tracer->Trace(ray, trace_info)/* || trace_info.start_solid*/)
-	//					velocity = new_vel * new_length;
-	//				else
-	//					velocity = new_vel * new_length * trace_info.fraction;
-	//			}
-	//			else
-	//				velocity = { 0.f, 0.f, 0.f };
-	//		}
-	//		else
-	//			velocity = (closest_trace.trace_end - start) / tick_interval;
-	//	}
-	//}
+	auto new_position = position;
 
-	position += velocity * tick_interval;
+	// collision stuffs
+	{
+		double remaining_length = glm::length(velocity);
+
+		for (int i = 0; i < 3; i++)
+		{
+			if (remaining_length <= 0.0)
+				break;
+
+			Ray ray(new_position + 0.5, velocity, glm::dvec3(0.5), remaining_length * tick_interval);
+			TraceInfo trace_info; ray_tracer->Trace(ray, trace_info);
+
+			new_position += velocity * trace_info.m_fraction * tick_interval;
+			remaining_length -= remaining_length * trace_info.m_fraction;
+
+			if (trace_info.m_hit)
+			{
+				velocity[0] -= velocity[0] * std::abs(trace_info.m_normal[0]);
+				velocity[1] -= velocity[1] * std::abs(trace_info.m_normal[1]);
+				velocity[2] -= velocity[2] * std::abs(trace_info.m_normal[2]);
+
+				velocity = glm::safe_normalize(velocity) * remaining_length;
+			}
+		}
+
+		new_position += glm::safe_normalize(velocity) * remaining_length * tick_interval;
+
+		//{
+		//	Ray ray(new_position + 0.5, velocity, glm::dvec3(0.5), remaining_length * tick_interval);
+		//	TraceInfo trace_info; ray_tracer->Trace(ray, trace_info);
+		//
+		//	new_position += glm::safe_normalize(velocity) * tick_interval * remaining_length * trace_info.m_fraction;
+		//
+		//	if (trace_info.m_hit)
+		//	{
+		//		velocity[0] -= velocity[0] * std::abs(trace_info.m_normal[0]);
+		//		velocity[1] -= velocity[1] * std::abs(trace_info.m_normal[1]);
+		//		velocity[2] -= velocity[2] * std::abs(trace_info.m_normal[2]);
+		//	}
+		//
+		//	remaining_length -= remaining_length * trace_info.m_fraction;
+		//}
+
+		//new_position += glm::safe_normalize(velocity) * tick_interval * remaining_length;
+	}
+
+	position = new_position;
 }
 
 
@@ -219,7 +175,7 @@ void LocalPlayer::OnFrameUpdate(Mango::MangoCore* mango_core, float lerp)
 		SimulateMovement(position, velocity, GetAcceleration(), on_ground);
 
 		position = GetPosition() + ((position - GetPosition()) * double(lerp));
-		position += glm::vec3(0.5, m_view_offset, 0.5);
+		position += glm::dvec3(0.5, m_view_offset, 0.5);
 
 		if (m_third_person)
 		{
@@ -282,12 +238,13 @@ void LocalPlayer::OnUpdate()
 	{
 		const auto direction = glm::dvec3(Mango::Maths::AngleVector(GetViewangle()));
 		
-		Ray ray(position, direction, 10.f);
+		Ray ray(position, direction, 10.0);
 		if (TraceInfo trace_info; world->GetRayTracer()->Trace(ray, trace_info))
 		{
-			int block_x = int(std::floor(trace_info.m_trace_end.x + direction.x * 0.001)),
-				block_y = int(std::floor(trace_info.m_trace_end.y + direction.y * 0.001)),
-				block_z = int(std::floor(trace_info.m_trace_end.z + direction.z * 0.001));
+			const auto trace_end = ray.m_start + ray.m_direction * (ray.m_length * trace_info.m_fraction);
+			int block_x = int(std::floor(trace_end.x + direction.x * 0.001)),
+				block_y = int(std::floor(trace_end.y + direction.y * 0.001)),
+				block_z = int(std::floor(trace_end.z + direction.z * 0.001));
 		
 			// place block
 			if (input_handler->GetButtonState(1) == Mango::INPUT_STATE::INPUT_STATE_PRESS)

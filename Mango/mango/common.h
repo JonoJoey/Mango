@@ -53,7 +53,7 @@ namespace glm
 	{
 		GLM_STATIC_ASSERT(std::numeric_limits<T>::is_iec559, "'normalize' accepts only floating-point inputs");
 
-		return length(x) > T(0) ? detail::compute_normalize<L, T, Q, detail::is_aligned<Q>::value>::call(x) : vec<L, T, Q>(T(0));
+		return length(x) > T(0) ? detail::compute_normalize<L, T, Q, detail::is_aligned<Q>::value>::call(x) : x;
 	}
 }
 

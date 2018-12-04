@@ -8,11 +8,15 @@ struct Ray
 {
 	Ray() = default;
 	Ray(const glm::dvec3& start, const glm::dvec3& direction, double length)
-		: m_start(start), m_direction(glm::safe_normalize(direction)), m_length(length) {}
+		: m_start(start), m_direction(glm::safe_normalize(direction)), m_length(length), m_extents(0.0), m_is_ray(true) {}
+	Ray(const glm::dvec3& start, const glm::dvec3& direction, const glm::dvec3& extents, double length)
+		: m_start(start), m_direction(glm::safe_normalize(direction)), m_length(length), m_extents(extents), m_is_ray(false) {}
 
 	glm::dvec3 m_start = { 0.0, 0.0, 0.0 },
-		m_direction = { 0.0, 0.0, 0.0 };
+		m_direction = { 0.0, 0.0, 0.0 },
+		m_extents = { 0.0, 0.0, 0.0 };
 	double m_length = 0.0;
+	bool m_is_ray = true;
 };
 struct Plane
 {
@@ -39,8 +43,7 @@ struct TraceInfo
 	double m_fraction;
 
 	glm::dvec3 m_normal,
-		m_trace_start,
-		m_trace_end;
+		m_trace_start;
 };
 
 class World;
