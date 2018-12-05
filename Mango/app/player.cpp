@@ -62,9 +62,9 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 	const auto ray_tracer = GetMangoApp()->GetWorld()->GetRayTracer();
 
 	// gravity
-	//acceleration.y = -m_gravity;
+	acceleration.y = -m_gravity;
 
-	velocity.y = Mango::Maths::ApproachZero(velocity.y, 0.5);
+	//velocity.y = Mango::Maths::ApproachZero(velocity.y, 0.5);
 
 	velocity += acceleration * tick_interval;
 
@@ -89,31 +89,81 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 
 	// collision stuffs
 	{
-		double remaining_length = glm::length(velocity);
+		//const double length = glm::length(velocity);
+		//glm::dvec3 new_velocity(0.0);
+		//
+		//for (int i = 0; i < 1; i++)
+		//{
+		//	Ray ray(position + glm::dvec3(0.5), velocity, glm::dvec3(0.5), glm::length(velocity) * tick_interval);
+		//	TraceInfo trace_info; ray_tracer->Trace(ray, trace_info);
+		//
+		//	double remaining_fraction = 1.0 - trace_info.m_fraction;
+		//	new_velocity += velocity * trace_info.m_fraction;
+		//
+		//	if (remaining_fraction > 0.0)
+		//	{
+		//		const glm::dvec3 inv_norm(1.0 - std::abs(trace_info.m_normal[0]), 1.0 - std::abs(trace_info.m_normal[1]), 1.0 - std::abs(trace_info.m_normal[2]));
+		//		new_velocity += velocity * inv_norm * remaining_fraction;
+		//	}
+		//}
+		//
+		//velocity = new_velocity;
+		//new_position = position + velocity * tick_interval;
+
+		auto velocity_copy = velocity;
 
 		for (int i = 0; i < 3; i++)
 		{
-			//if (remaining_length <= 0.0)
-			//	break;
+			if (glm::length(velocity_copy) <= 0.0)
+				break;
 
-			Ray ray(new_position + 0.5, velocity, glm::dvec3(0.5), remaining_length * tick_interval);
+			Ray ray(new_position + glm::dvec3(0.5), velocity_copy, glm::dvec3(0.5), glm::length(velocity_copy) * tick_interval);
 			TraceInfo trace_info; ray_tracer->Trace(ray, trace_info);
-
-			new_position += velocity * trace_info.m_fraction * tick_interval;
-			remaining_length -= remaining_length * trace_info.m_fraction;
-
-			if (trace_info.m_hit)
+			if (trace_info.m_fraction < 1.0)
 			{
-				velocity[0] -= velocity[0] * std::abs(trace_info.m_normal[0]);
-				velocity[1] -= velocity[1] * std::abs(trace_info.m_normal[1]);
-				velocity[2] -= velocity[2] * std::abs(trace_info.m_normal[2]);
+				new_position += velocity_copy * trace_info.m_fraction * tick_interval;
+				velocity_copy -= velocity_copy * trace_info.m_fraction;
 
-				velocity = glm::safe_normalize(velocity) * remaining_length;
+				const glm::dvec3 inv_norm(std::abs(trace_info.m_normal[0]), std::abs(trace_info.m_normal[1]), std::abs(trace_info.m_normal[2]));
+				velocity_copy -= velocity_copy * inv_norm * (1.0 - trace_info.m_fraction);
+			}
+			else
+			{
+				new_position += velocity_copy * tick_interval;
+				break;
 			}
 		}
-
-		//DBG_LOG("%f", remaining_length);
+	
+		
+		//double remaining_length = glm::length(velocity);
+		//for (int i = 0; i < 3; i++)
+		//{
+		//	//if (remaining_length <= 0.0)
+		//	//	break;
+		//
+		//	Ray ray(new_position + 0.5, velocity, glm::dvec3(0.5), remaining_length * tick_interval);
+		//	TraceInfo trace_info; ray_tracer->Trace(ray, trace_info);
+		//
+		//	new_position += velocity * trace_info.m_fraction * tick_interval;
+		//	remaining_length -= remaining_length * trace_info.m_fraction;
+		//
+		//	if (trace_info.m_hit)
+		//	{
+		//		velocity[0] -= velocity[0] * std::abs(trace_info.m_normal[0]);
+		//		velocity[1] -= velocity[1] * std::abs(trace_info.m_normal[1]);
+		//		velocity[2] -= velocity[2] * std::abs(trace_info.m_normal[2]);
+		//
+		//		velocity = glm::safe_normalize(velocity) * remaining_length;
+		//	}
+		//}
+		//
 		//new_position += glm::safe_normalize(velocity) * remaining_length * tick_interval;
+
+		//Ray ray(position + 0.5, velocity, glm::dvec3(0.5), 1.f);
+		//if (TraceInfo trace_info; ray_tracer->Trace(ray, trace_info))
+		//	DBG_LOG("%f %f %f", trace_info.m_normal.x, trace_info.m_normal.y, trace_info.m_normal.z);
+		//
+		//new_position += velocity * tick_interval;
 	}
 
 	position = new_position;

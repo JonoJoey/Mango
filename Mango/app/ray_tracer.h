@@ -3,7 +3,6 @@
 #include "block.h"
 
 
-
 struct Ray
 {
 	Ray() = default;
@@ -55,8 +54,9 @@ public:
 	void SetWorld(World* world) { m_world = world; }
 
 private:
-	static bool RayPlaneIntersection(const Ray& ray, const Plane& plane, double* intersection_distance = nullptr);
-	static bool RayAABBIntersection(const Ray& ray, const AABB& aabb, double* intersection_distance = nullptr, glm::dvec3* intersection_normal = nullptr);
+	static bool RaytoPlaneIntersection(const Ray& ray, const Plane& plane, double* intersection_distance = nullptr);
+	static bool RaytoAABBIntersection(const Ray& ray, const AABB& aabb, double* fraction = nullptr, glm::dvec3* intersection_normal = nullptr);
+	static bool AABBtoAABBIntersection(const Ray& ray, const AABB& aabb, double* fraction = nullptr, glm::dvec3* intersection_normal = nullptr);
 
 private:
 	World* m_world = nullptr;
