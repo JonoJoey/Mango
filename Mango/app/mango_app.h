@@ -24,7 +24,7 @@ public:
 	const std::unordered_map<std::string, BLOCK_ID>& GetBlockMap() const { return m_block_map; }
 
 private:
-	void OnInit();
+	bool OnInit();
 	void OnRelease();
 
 	void OnTick();

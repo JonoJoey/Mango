@@ -93,7 +93,11 @@ void MangoApp::Run()
 	float accumulated_time = 0.f;
 	m_tick_count = 0;
 
-	OnInit();
+	if (!OnInit())
+	{
+		m_mango_core.Release();
+		return;
+	}
 
 	// loooooooooooop
 	while (m_mango_core.NextFrame())
@@ -119,7 +123,7 @@ void MangoApp::Run()
 	m_mango_core.Release();
 }
 
-void MangoApp::OnInit()
+bool MangoApp::OnInit()
 {
 	m_mango_core.SetVerticalSync(false);
 
@@ -188,14 +192,22 @@ void MangoApp::OnInit()
 		World::CreateNewWorld("test_world", 69);
 
 	if (!m_world.Setup(&m_mango_core, "test_world", m_block_map))
+	{
 		DBG_LOG("FAILED TO SETUP WORLD");
+		return false;
+	}
+
+	//m_world.GetRayTracer()->Test();
+	//return false;
 
 	m_local_player = m_world.AddEntity<LocalPlayer>(this);
 
-	m_local_player->SetPosition({ 0.0, 200.0, 0.0 });
+	m_local_player->SetPosition({ 0.0, 130.0, 0.0 });
 
 	Mango::DiscordRPC::Setup("514257473654489098");
 	Mango::DiscordRPC::Update("you are", "a noob", "mango", "mAnGo", "m_fancy", "MaNgO", Mango::DiscordRPC::GetStartTime(), 0);
+
+	return true;
 }
 void MangoApp::OnRelease()
 {
@@ -315,6 +327,37 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 			}
 
 			ImGui::EndCombo();
+		}
+
+		if (ImGui::Button("Up"))
+		{
+			const auto pos = m_local_player->GetPosition();
+			m_local_player->SetPosition({ pos[0], std::floor(pos[1] + 1.0), pos[2] });
+		}
+		if (ImGui::Button("Down"))
+		{
+			const auto pos = m_local_player->GetPosition();
+			m_local_player->SetPosition({ pos[0], std::floor(pos[1] - 1.0), pos[2] });
+		}
+		if (ImGui::Button("Side1"))
+		{
+			const auto pos = m_local_player->GetPosition();
+			m_local_player->SetPosition({ std::floor(pos[0] + 1.0), pos[1], pos[2] });
+		}
+		if (ImGui::Button("Side2"))
+		{
+			const auto pos = m_local_player->GetPosition();
+			m_local_player->SetPosition({ std::floor(pos[0] - 1.0), pos[1], pos[2] });
+		}
+		if (ImGui::Button("Side3"))
+		{
+			const auto pos = m_local_player->GetPosition();
+			m_local_player->SetPosition({ pos[0], pos[1], std::floor(pos[2] + 1.0) });
+		}
+		if (ImGui::Button("Side4"))
+		{
+			const auto pos = m_local_player->GetPosition();
+			m_local_player->SetPosition({ pos[0], pos[1], std::floor(pos[2] - 1.0) });
 		}
 
 		ImGui::End();

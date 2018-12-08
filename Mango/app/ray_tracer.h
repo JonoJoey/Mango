@@ -26,14 +26,23 @@ struct Plane
 	glm::dvec3 m_point = { 0.0, 0.0, 0.0 },
 		m_normal = { 0.0, 0.0, 0.0 };
 };
-struct AABB
+//struct AABB
+//{
+//	AABB() = default;
+//	AABB(const glm::dvec3& min, const glm::dvec3& max)
+//		: m_min(min), m_max(max) {}
+//
+//	glm::dvec3 m_min = { 0.0, 0.0, 0.0 },
+//		m_max = { 0.0, 0.0, 0.0 };
+//};
+struct NEWAABB
 {
-	AABB() = default;
-	AABB(const glm::dvec3& min, const glm::dvec3& max)
-		: m_min(min), m_max(max) {}
+	NEWAABB() = default;
+	NEWAABB(const glm::dvec3& center, const glm::dvec3& extent)
+		: m_center(center), m_extent(extent) {}
 
-	glm::dvec3 m_min = { 0.0, 0.0, 0.0 },
-		m_max = { 0.0, 0.0, 0.0 };
+	glm::dvec3 m_center = { 0.0, 0.0, 0.0 },
+		m_extent = { 0.0, 0.0, 0.0 };
 };
 
 struct TraceInfo
@@ -51,12 +60,14 @@ class RayTracer
 public:
 	bool Trace(const Ray& ray, TraceInfo& trace_info);
 
+	void Test();
+
 	void SetWorld(World* world) { m_world = world; }
 
 private:
 	static bool RaytoPlaneIntersection(const Ray& ray, const Plane& plane, double* intersection_distance = nullptr);
-	static bool RaytoAABBIntersection(const Ray& ray, const AABB& aabb, double* fraction = nullptr, glm::dvec3* intersection_normal = nullptr);
-	static bool AABBtoAABBIntersection(const Ray& ray, const AABB& aabb, double* fraction = nullptr, glm::dvec3* intersection_normal = nullptr);
+	static bool RaytoAABBIntersection(const Ray& ray, const NEWAABB& aabb, double* fraction = nullptr, glm::dvec3* intersection_normal = nullptr);
+	static bool AABBtoAABBIntersection(const Ray& ray, const NEWAABB& aabb, double* fraction = nullptr, glm::dvec3* intersection_normal = nullptr);
 
 private:
 	World* m_world = nullptr;

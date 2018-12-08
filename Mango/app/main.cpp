@@ -9,6 +9,7 @@ int main()
 	MangoApp app;
 	app.Run();
 
+	system("pause");
 	return EXIT_SUCCESS;
 }
 //int DABBB()

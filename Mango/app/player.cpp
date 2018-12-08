@@ -89,43 +89,24 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 
 	// collision stuffs
 	{
-		//const double length = glm::length(velocity);
-		//glm::dvec3 new_velocity(0.0);
-		//
-		//for (int i = 0; i < 1; i++)
-		//{
-		//	Ray ray(position + glm::dvec3(0.5), velocity, glm::dvec3(0.5), glm::length(velocity) * tick_interval);
-		//	TraceInfo trace_info; ray_tracer->Trace(ray, trace_info);
-		//
-		//	double remaining_fraction = 1.0 - trace_info.m_fraction;
-		//	new_velocity += velocity * trace_info.m_fraction;
-		//
-		//	if (remaining_fraction > 0.0)
-		//	{
-		//		const glm::dvec3 inv_norm(1.0 - std::abs(trace_info.m_normal[0]), 1.0 - std::abs(trace_info.m_normal[1]), 1.0 - std::abs(trace_info.m_normal[2]));
-		//		new_velocity += velocity * inv_norm * remaining_fraction;
-		//	}
-		//}
-		//
-		//velocity = new_velocity;
-		//new_position = position + velocity * tick_interval;
-
 		auto velocity_copy = velocity;
-
-		for (int i = 0; i < 3; i++)
+		const auto original_vel = velocity;
+		
+		for (int i = 0; i < 4; i++)
 		{
 			if (glm::length(velocity_copy) <= 0.0)
 				break;
-
+		
 			Ray ray(new_position + glm::dvec3(0.5), velocity_copy, glm::dvec3(0.5), glm::length(velocity_copy) * tick_interval);
-			TraceInfo trace_info; ray_tracer->Trace(ray, trace_info);
-			if (trace_info.m_fraction < 1.0)
+			if (TraceInfo trace_info; ray_tracer->Trace(ray, trace_info))
 			{
 				new_position += velocity_copy * trace_info.m_fraction * tick_interval;
 				velocity_copy -= velocity_copy * trace_info.m_fraction;
-
+		
 				const glm::dvec3 inv_norm(std::abs(trace_info.m_normal[0]), std::abs(trace_info.m_normal[1]), std::abs(trace_info.m_normal[2]));
 				velocity_copy -= velocity_copy * inv_norm * (1.0 - trace_info.m_fraction);
+				DBG_LOG("(%f, %f, %f)", trace_info.m_normal[0], trace_info.m_normal[1], trace_info.m_normal[2]);
+				
 			}
 			else
 			{
@@ -133,8 +114,14 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 				break;
 			}
 		}
-	
 		
+		//position += velocity * tick_interval;
+		position = new_position;
+
+		//Ray ray(position + glm::dvec3(0.5), velocity, glm::dvec3(0.5), glm::length(velocity) * tick_interval);
+		//TraceInfo trace_info; ray_tracer->Trace(ray, trace_info);
+		//new_position = position + ray.m_direction * ray.m_length * trace_info.m_fraction;
+	
 		//double remaining_length = glm::length(velocity);
 		//for (int i = 0; i < 3; i++)
 		//{
@@ -159,14 +146,10 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 		//
 		//new_position += glm::safe_normalize(velocity) * remaining_length * tick_interval;
 
-		//Ray ray(position + 0.5, velocity, glm::dvec3(0.5), 1.f);
+		//Ray ray(position + 0.5, { 0.0, -1.0, 0.0 }, glm::dvec3(0.5), 1.0);
 		//if (TraceInfo trace_info; ray_tracer->Trace(ray, trace_info))
-		//	DBG_LOG("%f %f %f", trace_info.m_normal.x, trace_info.m_normal.y, trace_info.m_normal.z);
-		//
-		//new_position += velocity * tick_interval;
+		//	DBG_LOG("%f (%f %f %f)", trace_info.m_fraction, trace_info.m_normal.x, trace_info.m_normal.y, trace_info.m_normal.z);
 	}
-
-	position = new_position;
 }
 
 

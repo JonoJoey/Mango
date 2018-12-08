@@ -5,6 +5,134 @@
 #include <limits>
 
 
+//struct NEWAABB
+//{
+//	NEWAABB() = default;
+//	NEWAABB(const glm::dvec3& center, const glm::dvec3& extent)
+//		: m_center(center), m_extent(extent) {}
+//
+//	glm::dvec3 m_center = { 0.0, 0.0, 0.0 },
+//		m_extent = { 0.0, 0.0, 0.0 };
+//};
+
+
+static bool AABBtoAABBSweep(const NEWAABB& aabb1, const NEWAABB& aabb2, const glm::dvec3& velocity, double& near_frac, double& far_frac, glm::dvec3& normal)
+{
+	glm::dvec3 near_offset(0.0), far_offset(0.0);
+	for (int i = 0; i < 3; i++)
+	{
+		if (velocity[i] >= 0.0)
+		{
+			near_offset[i] = (aabb2.m_center[i] - aabb2.m_extent[i]) - (aabb1.m_center[i] + aabb1.m_extent[i]);
+			far_offset[i] = (aabb2.m_center[i] + aabb2.m_extent[i]) - (aabb1.m_center[i] - aabb1.m_extent[i]);
+		}
+		else
+		{
+			near_offset[i] = (aabb1.m_center[i] - aabb1.m_extent[i]) - (aabb2.m_center[i] + aabb2.m_extent[i]);
+			far_offset[i] = (aabb1.m_center[i] + aabb1.m_extent[i]) - (aabb2.m_center[i] - aabb2.m_extent[i]);
+		}
+	}
+
+	glm::dvec3 near_fraction(0.0), far_fraction(0.0);
+	for (int i = 0; i < 3; i++)
+	{
+		if (velocity[i] == 0.0)
+		{
+			const auto diff = aabb1.m_center[i] - aabb2.m_center[i];
+			if (std::abs(diff) >= aabb1.m_extent[i] + aabb2.m_extent[i])
+			{
+				if (std::abs(diff) == aabb1.m_extent[i] + aabb2.m_extent[i])
+				{
+					glm::dvec3 edge_normal(0.0);
+					edge_normal[i] = diff >= 0.0 ? 1.0 : -1.0;
+					//DBG_LOG("%f %f %f", edge_normal[0], edge_normal[1], edge_normal[2]);
+					if (glm::dot(edge_normal, glm::safe_normalize(velocity)) == 0.0)
+						return false;
+				}
+				else
+					return false;
+			}
+
+			near_fraction[i] = -std::numeric_limits<double>::infinity();
+			far_fraction[i] = std::numeric_limits<double>::infinity();
+		}
+		else
+		{
+			near_fraction[i] = near_offset[i] / std::abs(velocity[i]);
+			far_fraction[i] = far_offset[i] / std::abs(velocity[i]);
+		}
+	}
+
+	near_frac = std::max(std::max(near_fraction[0], near_fraction[1]), near_fraction[2]);
+	far_frac = std::min(std::min(far_fraction[0], far_fraction[1]), far_fraction[2]);
+	if (near_frac > far_frac || near_frac < 0.0 || near_frac >= 1.0)
+		return false;
+
+	// compute collision normal
+	{
+		normal = glm::dvec3(0.0);
+
+		if (near_fraction[0] >= std::max(near_fraction[1], near_fraction[2]))
+		{
+			if (velocity[0] >= 0.0)
+				normal[0] = -1.0;
+			else
+				normal[0] = 1.0;
+		}
+		if (near_fraction[1] >= std::max(near_fraction[0], near_fraction[2]))
+		{
+			if (velocity[1] >= 0.0)
+				normal[1] = -1.0;
+			else
+				normal[1] = 1.0;
+		}
+		if (near_fraction[2] >= std::max(near_fraction[0], near_fraction[1]))
+		{
+			if (velocity[2] >= 0.0)
+				normal[2] = -1.0;
+			else
+				normal[2] = 1.0;
+		}
+
+		normal = glm::safe_normalize(normal);
+		if (glm::dot(normal, glm::safe_normalize(velocity)) == 0.0)
+			return false;
+	}
+
+	return true;
+}
+
+
+void RayTracer::Test()
+{
+	const auto DoTest = [](const std::string& test_name, const NEWAABB& aabb1, const NEWAABB& aabb2, const glm::dvec3& velocity) -> void
+	{
+		double in_frac, out_frac;
+		glm::dvec3 normal;
+		if (!AABBtoAABBSweep(aabb1, aabb2, velocity, in_frac, out_frac, normal))
+			DBG_LOG("%s: Did not intersect", test_name.c_str());
+		else
+			DBG_LOG("%s: \n  in_frac:%f \n  out_frac:%f \n  normal:(%f, %f, %f)", test_name.c_str(), in_frac, out_frac, normal[0], normal[1], normal[2]);
+	};
+
+	DoTest("test 1", 
+		NEWAABB({ 0.0, 0.0, 0.0 }, glm::dvec3(0.5)), 
+		NEWAABB({ 5.0, 5.0, 0.0 }, glm::dvec3(0.5)), 
+		{ 10.0, 0.0, 0.0 });
+	DoTest("test 2",
+		NEWAABB({ 0.0, 1.1, 0.0 }, glm::dvec3(0.5)),
+		NEWAABB({ 5.0, 0.0, 0.0 }, glm::dvec3(0.5)),
+		{ 10.0, 0.0, 0.0 });
+
+	DoTest("test 3",
+		NEWAABB({ 5.0, 0.0, 0.0 }, glm::dvec3(0.5)),
+		NEWAABB({ 0.0, -1.1, 0.0 }, glm::dvec3(0.5)),
+		{ -10.0, 0.0, 0.0 });
+	DoTest("test 4",
+		NEWAABB({ 5.0, 1.1, 0.0 }, glm::dvec3(0.5)),
+		NEWAABB({ 0.0, 0.2, 0.0 }, glm::dvec3(0.5)),
+		{ -10.0, 0.0, 0.0 });
+}
 bool RayTracer::Trace(const Ray& ray, TraceInfo& trace_info)
 {
 	trace_info.m_hit = false;
@@ -29,7 +157,7 @@ bool RayTracer::Trace(const Ray& ray, TraceInfo& trace_info)
 
 			glm::dvec3 int_normal(FLT_MAX);
 			double int_fraction(FLT_MAX);
-			if (!RaytoAABBIntersection(ray, AABB(block_pos, block_pos + 1.0), &int_fraction, &int_normal))
+			if (!RaytoAABBIntersection(ray, NEWAABB(block_pos + 0.5, glm::dvec3(0.5)), &int_fraction, &int_normal))
 				continue;
 
 			trace_info.m_hit = true;
@@ -40,15 +168,16 @@ bool RayTracer::Trace(const Ray& ray, TraceInfo& trace_info)
 		}
 		else
 		{
-			std::deque<AABB> aabbs;
+			std::deque<NEWAABB> aabbs;
 
 			const auto BananaMango = [this, &aabbs, &ray, current_dist](glm::dvec3 start) -> void
 			{
 				const glm::dvec3 current_pos(start + ray.m_direction * current_dist);
 				const glm::dvec3 block_pos(std::floor(current_pos.x), std::floor(current_pos.y), std::floor(current_pos.z));
 				if (Block block; m_world->GetBlock(block_pos.x, block_pos.y, block_pos.z, block) && block.m_is_active)
-					aabbs.emplace_back(block_pos, block_pos + 1.0);
+					aabbs.emplace_back(block_pos + 0.5, glm::dvec3(0.5));
 			};
+			BananaMango(ray.m_start);
 			BananaMango(ray.m_start + glm::dvec3(ray.m_extents.x, ray.m_extents.y, ray.m_extents.z));
 			BananaMango(ray.m_start + glm::dvec3(-ray.m_extents.x, ray.m_extents.y, ray.m_extents.z));
 			BananaMango(ray.m_start + glm::dvec3(-ray.m_extents.x, -ray.m_extents.y, ray.m_extents.z));
@@ -72,11 +201,13 @@ bool RayTracer::Trace(const Ray& ray, TraceInfo& trace_info)
 				{
 					closest_fraction = fraction;
 					closest_normal = normal;
+
+					//DBG_LOG("%f %f", fraction, glm::length(ray.m_start - aabb.m_center));
 				}
 			}
 
 			if (closest_fraction >= 1.0)
-				break;
+				continue;
 
 			trace_info.m_hit = true;
 			trace_info.m_normal = closest_normal;
@@ -86,6 +217,7 @@ bool RayTracer::Trace(const Ray& ray, TraceInfo& trace_info)
 		}
 	}
 
+	trace_info.m_hit = false;
 	trace_info.m_fraction = 1.0;
 	return false;
 }
@@ -105,149 +237,27 @@ bool RayTracer::RaytoPlaneIntersection(const Ray& ray, const Plane& plane, doubl
 
 	return true;
 };
-bool RayTracer::RaytoAABBIntersection(const Ray& ray, const AABB& aabb, double* fraction, glm::dvec3* intersection_normal)
+bool RayTracer::RaytoAABBIntersection(const Ray& ray, const NEWAABB& aabb, double* fraction, glm::dvec3* intersection_normal)
 {
-	const auto aabb_center = (aabb.m_min + aabb.m_max) * 0.5;
-	const auto extents = (aabb.m_max - aabb.m_min) * 0.5;
-	const auto velocity = ray.m_direction * ray.m_length;
-
-	glm::dvec3 in_dist, out_dist;
-	for (int i = 0; i < 3; i++)
-	{
-		if (velocity[i] > 0.0)
-		{
-			in_dist[i] = ((aabb_center[i] - extents[i]) - ray.m_start[i]);
-			out_dist[i] = ((aabb_center[i] + extents[i]) - ray.m_start[i]);
-		}
-		else
-		{
-			in_dist[i] = ((aabb_center[i] + extents[i]) - ray.m_start[i]);
-			out_dist[i] = ((aabb_center[i] - extents[i]) - ray.m_start[i]);
-		}
-	}
-
-	glm::dvec3 in_frac, out_frac;
-	for (int i = 0; i < 3; i++)
-	{
-		if (velocity[i] == 0.0)
-			in_frac[i] = out_frac[i] = 0.0;
-		else
-		{
-			in_frac[i] = in_dist[i] / velocity[i];
-			out_frac[i] = out_dist[i] / velocity[i];
-		}
-	}
-
-	const auto enter_fraction = std::max(std::max(in_frac[0], in_frac[1]), in_frac[2]);
-	const auto exit_fraction = std::min(std::min(out_frac[0], out_frac[1]), out_frac[2]);
-	if (enter_fraction > exit_fraction || enter_fraction < 0.0 || enter_fraction >= 1.0)
-		return false;
+	double near_frac, far_frac; glm::dvec3 normal;
+	const bool ret = AABBtoAABBSweep(NEWAABB(ray.m_start, { 0.0, 0.0, 0.0 }), aabb, ray.m_direction * ray.m_length, near_frac, far_frac, normal);
 
 	if (fraction)
-		*fraction = enter_fraction;
-
+		*fraction = near_frac;
 	if (intersection_normal)
-	{
-		*intersection_normal = glm::dvec3(0.0);
+		*intersection_normal = normal;
 
-		if (in_frac[0] > std::max(in_frac[1], in_frac[2]))
-		{
-			if (in_dist[0] >= 0.0)
-				(*intersection_normal)[0] = -1.0;
-			else
-				(*intersection_normal)[0] = 1.0;
-		}
-		else if (in_frac[1] > std::max(in_frac[0], in_frac[2]))
-		{
-			if (in_dist[1] >= 0.0)
-				(*intersection_normal)[1] = -1.0;
-			else
-				(*intersection_normal)[1] = 1.0;
-		}
-		else
-		{
-			if (in_dist[2] >= 0.0)
-				(*intersection_normal)[2] = -1.0;
-			else
-				(*intersection_normal)[2] = 1.0;
-		}
-	}
-
-	return true;
+	return ret;
 }
-bool RayTracer::AABBtoAABBIntersection(const Ray& ray, const AABB& aabb, double* fraction, glm::dvec3* intersection_normal)
+bool RayTracer::AABBtoAABBIntersection(const Ray& ray, const NEWAABB& aabb, double* fraction, glm::dvec3* intersection_normal)
 {
-	const auto aabb_center = (aabb.m_min + aabb.m_max) * 0.5;
-	const auto extents = (aabb.m_max - aabb.m_min) * 0.5;
-	const auto velocity = ray.m_direction * ray.m_length;
-
-	glm::dvec3 in_dist, out_dist;
-	for (int i = 0; i < 3; i++)
-	{
-		if (velocity[i] >= 0.0)
-		{
-			in_dist[i] = ((aabb_center[i] - extents[i]) - (ray.m_start[i] + ray.m_extents[i]));
-			out_dist[i] = ((aabb_center[i] + extents[i]) - (ray.m_start[i] - ray.m_extents[i]));
-		}
-		else
-		{
-			in_dist[i] = ((aabb_center[i] + extents[i]) - (ray.m_start[i] - ray.m_extents[i]));
-			out_dist[i] = ((aabb_center[i] - extents[i]) - (ray.m_start[i] + ray.m_extents[i]));
-		}
-	}
-
-	glm::dvec3 in_frac, out_frac;
-	for (int i = 0; i < 3; i++)
-	{
-		if (velocity[i] == 0.0)
-		{
-			in_frac[i] = -std::numeric_limits<double>::infinity();
-			out_frac[i] = std::numeric_limits<double>::infinity();
-		}
-		else
-		{
-			in_frac[i] = in_dist[i] / velocity[i];
-			out_frac[i] = out_dist[i] / velocity[i];
-		}
-	}
-
-	const auto enter_fraction = std::max(std::max(in_frac[0], in_frac[1]), in_frac[2]);
-	const auto exit_fraction = std::min(std::min(out_frac[0], out_frac[1]), out_frac[2]);
-	if (enter_fraction > exit_fraction || enter_fraction < 0.0 || enter_fraction > 1.0)
-		return false;
+	double near_frac, far_frac; glm::dvec3 normal;
+	const bool ret = AABBtoAABBSweep(NEWAABB(ray.m_start, ray.m_extents), aabb, ray.m_direction * ray.m_length, near_frac, far_frac, normal);
 
 	if (fraction)
-		*fraction = enter_fraction;
-
+		*fraction = near_frac;
 	if (intersection_normal)
-	{
-		*intersection_normal = glm::dvec3(0.0);
+		*intersection_normal = normal;
 
-		if (in_frac[0] > std::max(in_frac[1], in_frac[2]))
-		{
-			if (in_dist[0] >= 0.0)
-				(*intersection_normal)[0] = -1.0;
-			else
-				(*intersection_normal)[0] = 1.0;
-		}
-		else if (in_frac[1] > std::max(in_frac[0], in_frac[2]))
-		{
-			if (in_dist[1] >= 0.0)
-				(*intersection_normal)[1] = -1.0;
-			else
-				(*intersection_normal)[1] = 1.0;
-		}
-		else
-		{
-			if (in_dist[2] >= 0.0)
-				(*intersection_normal)[2] = -1.0;
-			else
-				(*intersection_normal)[2] = 1.0;
-		}
-
-		if (glm::dot(*intersection_normal, ray.m_direction) == 0.0)
-			DBG_LOG("dab");
-	}
-
-	return true;
+	return ret;
 }
