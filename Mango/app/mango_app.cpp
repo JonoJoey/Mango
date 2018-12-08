@@ -128,8 +128,78 @@ bool MangoApp::OnInit()
 	m_mango_core.SetVerticalSync(false);
 
 	BlockMap block_map;
-	block_map.AddBlock("grass", 69, { "grass_side.png", "grass_side.png", "grass_side.png", "grass_side.png", "grass_top.png", "grass_bottom.png" });
-	block_map.AddBlock("cobblestone", 420, { "cobblestone.png", "cobblestone.png", "cobblestone.png", "cobblestone.png", "cobblestone.png", "cobblestone.png" });
+	block_map.AddBlock("grass", 1, { 
+		"grass_side.png", 
+		"grass_side.png", 
+		"grass_side.png", 
+		"grass_side.png", 
+		"grass_top.png", 
+		"dirt.png" 
+	});
+	block_map.AddBlock("dirt", 2, { 
+		"dirt.png", 
+		"dirt.png", 
+		"dirt.png", 
+		"dirt.png", 
+		"dirt.png", 
+		"dirt.png" 
+	});
+	block_map.AddBlock("stone", 3, { 
+		"stone.png", 
+		"stone.png", 
+		"stone.png", 
+		"stone.png", 
+		"stone.png", 
+		"stone.png" 
+	});
+	block_map.AddBlock("cobblestone", 4, { 
+		"cobblestone.png", 
+		"cobblestone.png", 
+		"cobblestone.png", 
+		"cobblestone.png", 
+		"cobblestone.png", 
+		"cobblestone.png" 
+	});
+	block_map.AddBlock("oak_plank", 5, {
+		"oak_plank.png",
+		"oak_plank.png",
+		"oak_plank.png",
+		"oak_plank.png",
+		"oak_plank.png",
+		"oak_plank.png"
+	});
+	block_map.AddBlock("oak_log", 6, {
+		"oak_log_side.png",
+		"oak_log_side.png",
+		"oak_log_side.png",
+		"oak_log_side.png",
+		"oak_log_bottom.png",
+		"oak_log_bottom.png"
+	});
+	block_map.AddBlock("diamond_ore", 7, {
+		"diamond_ore.png",
+		"diamond_ore.png",
+		"diamond_ore.png",
+		"diamond_ore.png",
+		"diamond_ore.png",
+		"diamond_ore.png"
+	});
+	block_map.AddBlock("iron_ore", 8, {
+		"iron_ore.png",
+		"iron_ore.png",
+		"iron_ore.png",
+		"iron_ore.png",
+		"iron_ore.png",
+		"iron_ore.png"
+	});
+	block_map.AddBlock("mossy_cobblestone", 9, {
+		"mossy_cobblestone.png",
+		"mossy_cobblestone.png",
+		"mossy_cobblestone.png",
+		"mossy_cobblestone.png",
+		"mossy_cobblestone.png",
+		"mossy_cobblestone.png"
+	});
 
 	{
 		const auto app_data = Mango::GetAppDataPath();
@@ -274,6 +344,14 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 		ImGui::Text("Position: ");
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.2f %.2f %.2f", m_local_player->GetPosition().x, m_local_player->GetPosition().y, m_local_player->GetPosition().z);
+
+		ImGui::Text("Velocity: ");
+		ImGui::SameLine(0.f, 0.f);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.2f %.2f %.2f", m_local_player->GetVelocity().x, m_local_player->GetVelocity().y, m_local_player->GetVelocity().z);
+		ImGui::SameLine();
+		ImGui::Text("Speed: ");
+		ImGui::SameLine(0.f, 0.f);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.2f", glm::length(m_local_player->GetVelocity()));
 
 		ImGui::Text("Chunk: ");
 		ImGui::SameLine(0.f, 0.f);

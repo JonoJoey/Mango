@@ -312,8 +312,9 @@ void World::GenerateChunk(Chunk* chunk)
 	static constexpr int MIN_HEIGHT = (Chunk::HEIGHT / 2) - (VARIANCE / 2);
 	static constexpr double MULTIPLIER = 30.0;
 
-	const auto cobblestone = m_block_map.GetBlock("cobblestone").m_block_id,
-		grass = m_block_map.GetBlock("grass").m_block_id;
+	const auto stone = m_block_map.GetBlock("stone").m_block_id,
+		grass = m_block_map.GetBlock("grass").m_block_id,
+		dirt = m_block_map.GetBlock("dirt").m_block_id;
 
 	for (int x = 0; x < Chunk::WIDTH; x++)
 	{
@@ -324,10 +325,12 @@ void World::GenerateChunk(Chunk* chunk)
 
 			for (int i = 0; i < height; i++)
 			{
-				if (height - i <= 4)
+				if (height - i == 1)
 					chunk->SetBlock(x, i, z, Block::Create(grass));
+				else if (height - i <= 4)
+					chunk->SetBlock(x, i, z, Block::Create(dirt));
 				else
-					chunk->SetBlock(x, i, z, Block::Create(cobblestone));
+					chunk->SetBlock(x, i, z, Block::Create(stone));
 			}
 		}
 	}

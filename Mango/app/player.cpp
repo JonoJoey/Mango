@@ -54,6 +54,13 @@ void Player::Update()
 	m_prev_viewangle = m_viewangle;
 
 	SimulateMovement(m_position, m_velocity, m_acceleration, m_on_ground);
+
+	auto ray_tracer = GetMangoApp()->GetWorld()->GetRayTracer();
+	Ray ray(GetPosition() + 0.5, { 0.0, -1.0, 0.0 }, glm::dvec3(0.5), 0.1);
+	if (TraceInfo trace_info; ray_tracer->Trace(ray, trace_info) && trace_info.m_fraction <= 0.0)
+		m_on_ground = true;
+	else
+		m_on_ground = false;
 }
 
 void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::dvec3 acceleration, bool& on_ground)
@@ -64,18 +71,16 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 	// gravity
 	acceleration.y = -m_gravity;
 
-	//velocity.y = Mango::Maths::ApproachZero(velocity.y, 0.5);
-
 	velocity += acceleration * tick_interval;
 
 	// friction
-	if (const auto speed = glm::length(velocity); speed > 0.0)
+	if (const auto speed = std::sqrt((m_velocity.x * m_velocity.x) + (m_velocity.z * m_velocity.z)); speed > 0.0)
 	{
 		if (acceleration.x == 0.0)
-			velocity.x = (velocity.x / speed) * glm::max(0.0, speed - (m_friction * tick_interval));
+			velocity.x = (velocity.x / speed) * std::max(0.0, speed - (m_friction * tick_interval));
 
 		if (acceleration.z == 0.0)
-			velocity.z = (velocity.z / speed) * glm::max(0.0, speed - (m_friction * tick_interval));
+			velocity.z = (velocity.z / speed) * std::max(0.0, speed - (m_friction * tick_interval));
 	}
 
 	// clamp velocity
@@ -110,13 +115,8 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 			}
 		}
 		
-		//position += velocity * tick_interval;
 		velocity = (new_position - position) / tick_interval;
 		position = position + velocity * tick_interval;
-
-		//Ray ray(position + 0.5, { 0.0, -1.0, 0.0 }, glm::dvec3(0.5), 1.0);
-		//if (TraceInfo trace_info; ray_tracer->Trace(ray, trace_info))
-		//	DBG_LOG("%f (%f %f %f)", trace_info.m_fraction, trace_info.m_normal.x, trace_info.m_normal.y, trace_info.m_normal.z);
 	}
 }
 
@@ -183,6 +183,7 @@ void LocalPlayer::OnUpdate()
 	auto mango_app = GetMangoApp();
 	auto world = mango_app->GetWorld();
 	auto input_handler = mango_app->GetInputHandler();
+	auto ray_tracer = mango_app->GetWorld()->GetRayTracer();
 	const float tick_interval = GetMangoApp()->GetTickInterval();
 	const auto position = GetPosition() + glm::dvec3(0.5, double(m_view_offset), 0.5);
 
@@ -201,8 +202,8 @@ void LocalPlayer::OnUpdate()
 			acceleration += right_dir;
 		if (input_handler->GetKeyState('A'))
 			acceleration += -right_dir;
-		if (input_handler->GetKeyState(GLFW_KEY_SPACE))
-			SetVelocity(glm::dvec3(GetVelocity().x, 5.0, GetVelocity().z));
+		if (input_handler->GetKeyState(GLFW_KEY_SPACE) && IsOnGround())
+			SetVelocity(glm::dvec3(GetVelocity().x, 8.0, GetVelocity().z));
 		if (input_handler->GetKeyState(GLFW_KEY_F5) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
 			SetThirdPerson(!IsThirdPerson());
 		if (input_handler->GetKeyState(GLFW_KEY_LEFT_CONTROL))
