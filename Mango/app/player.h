@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entity.h"
+#include "inventory.h"
 
 
 class Player : public Entity
@@ -87,12 +88,11 @@ public:
 	void SetThirdPersonDistance(float value) { m_third_person_distance = value; }
 	float GetThirdPersonDistance() const { return m_third_person_distance; }
 
-	void SetSelectedBlock(const std::string& str) { m_selected_block = str; }
-	std::string GetSelectedBlock() const { return m_selected_block; }
+	Inventory& GetInventory() { return m_inventory; }
 
 private:
-	std::string m_selected_block = "null";
 	bool m_third_person = false;
 	float m_third_person_distance = 10.f;
 	float m_view_offset = 2.f;
+	Inventory m_inventory;
 };

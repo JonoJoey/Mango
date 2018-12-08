@@ -72,7 +72,7 @@ void BlockMap::Release()
 	m_block_map["null"] = element;
 }
 
-void BlockMap::AddBlock(const std::string& block_name, BLOCK_ID block_id, const std::array<std::string, 6>& face_textures)
+void BlockMap::AddBlock(const std::string& block_name, BLOCK_ID block_id, ITEM_ID item_id, const std::array<std::string, 6>& face_textures)
 {
 	// cant override this block dumb nut
 	if (block_name == "null")
@@ -84,6 +84,7 @@ void BlockMap::AddBlock(const std::string& block_name, BLOCK_ID block_id, const 
 
 	BlockMapElement element;
 	element.m_block_id = block_id;
+	element.m_item_id = item_id;
 	element.m_texture_names = face_textures;
 	m_block_map[block_name] = element;
 }

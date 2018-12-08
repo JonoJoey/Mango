@@ -28,6 +28,8 @@ void EventHandler::OnMouseButtonRelease(int button)
 void EventHandler::OnWindowResize(int width, int height)
 {
 	DBG_LOG("Resize [%i, %i]", width, height);
+	if (width <= 0 || height <= 0)
+		return;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, width, height);

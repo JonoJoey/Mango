@@ -133,6 +133,8 @@
     <ClCompile Include="app\block_map.cpp" />
     <ClCompile Include="app\chunk.cpp" />
     <ClCompile Include="app\event_handler.cpp" />
+    <ClCompile Include="app\inventory.cpp" />
+    <ClCompile Include="app\item_map.cpp" />
     <ClCompile Include="app\mango_app.cpp" />
     <ClCompile Include="app\player.cpp" />
     <ClCompile Include="app\ray_tracer.cpp" />
@@ -162,11 +164,13 @@
     <ClCompile Include="mango\misc\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="app\block.h" />
+    <ClInclude Include="app\defines.h" />
     <ClInclude Include="app\block_map.h" />
     <ClInclude Include="app\chunk.h" />
     <ClInclude Include="app\entity.h" />
     <ClInclude Include="app\event_handler.h" />
+    <ClInclude Include="app\inventory.h" />
+    <ClInclude Include="app\item_map.h" />
     <ClInclude Include="app\mango_app.h" />
     <ClInclude Include="app\player.h" />
     <ClInclude Include="app\ray_tracer.h" />

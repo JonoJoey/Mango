@@ -128,7 +128,7 @@ bool MangoApp::OnInit()
 	m_mango_core.SetVerticalSync(false);
 
 	BlockMap block_map;
-	block_map.AddBlock("grass", 1, { 
+	block_map.AddBlock("grass", 1, 1, { 
 		"grass_side.png", 
 		"grass_side.png", 
 		"grass_side.png", 
@@ -136,7 +136,7 @@ bool MangoApp::OnInit()
 		"grass_top.png", 
 		"dirt.png" 
 	});
-	block_map.AddBlock("dirt", 2, { 
+	block_map.AddBlock("dirt", 2, 2, { 
 		"dirt.png", 
 		"dirt.png", 
 		"dirt.png", 
@@ -144,7 +144,7 @@ bool MangoApp::OnInit()
 		"dirt.png", 
 		"dirt.png" 
 	});
-	block_map.AddBlock("stone", 3, { 
+	block_map.AddBlock("stone", 3, 3, { 
 		"stone.png", 
 		"stone.png", 
 		"stone.png", 
@@ -152,7 +152,7 @@ bool MangoApp::OnInit()
 		"stone.png", 
 		"stone.png" 
 	});
-	block_map.AddBlock("cobblestone", 4, { 
+	block_map.AddBlock("cobblestone", 4, 4, { 
 		"cobblestone.png", 
 		"cobblestone.png", 
 		"cobblestone.png", 
@@ -160,7 +160,7 @@ bool MangoApp::OnInit()
 		"cobblestone.png", 
 		"cobblestone.png" 
 	});
-	block_map.AddBlock("oak_plank", 5, {
+	block_map.AddBlock("oak_plank", 5, 5, {
 		"oak_plank.png",
 		"oak_plank.png",
 		"oak_plank.png",
@@ -168,7 +168,7 @@ bool MangoApp::OnInit()
 		"oak_plank.png",
 		"oak_plank.png"
 	});
-	block_map.AddBlock("oak_log", 6, {
+	block_map.AddBlock("oak_log", 6, 6, {
 		"oak_log_side.png",
 		"oak_log_side.png",
 		"oak_log_side.png",
@@ -176,7 +176,7 @@ bool MangoApp::OnInit()
 		"oak_log_bottom.png",
 		"oak_log_bottom.png"
 	});
-	block_map.AddBlock("diamond_ore", 7, {
+	block_map.AddBlock("diamond_ore", 7, 7, {
 		"diamond_ore.png",
 		"diamond_ore.png",
 		"diamond_ore.png",
@@ -184,7 +184,7 @@ bool MangoApp::OnInit()
 		"diamond_ore.png",
 		"diamond_ore.png"
 	});
-	block_map.AddBlock("iron_ore", 8, {
+	block_map.AddBlock("iron_ore", 8, 8, {
 		"iron_ore.png",
 		"iron_ore.png",
 		"iron_ore.png",
@@ -192,7 +192,7 @@ bool MangoApp::OnInit()
 		"iron_ore.png",
 		"iron_ore.png"
 	});
-	block_map.AddBlock("mossy_cobblestone", 9, {
+	block_map.AddBlock("mossy_cobblestone", 9, 9, {
 		"mossy_cobblestone.png",
 		"mossy_cobblestone.png",
 		"mossy_cobblestone.png",
@@ -391,6 +391,17 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 		if (static int render_distance = m_world.GetRenderDistance(); ImGui::SliderInt("Render distance", &render_distance, 1, 64))
 			m_world.SetRenderDistance(render_distance);
 
+		for (size_t i = 0; i < 9; i++)
+		{
+			if (m_local_player->GetInventory().GetSelectedSlot() == i)
+				ImGui::TextColored( { 0.5f, 0.5f, 0.5f, 1.f }, "%i - ", m_local_player->GetInventory().GetSlots()[i].m_item_type);
+			else
+				ImGui::Text("%i - ", m_local_player->GetInventory().GetSlots()[i].m_item_type);
+
+			ImGui::SameLine(0.f, 0.f);
+			ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_local_player->GetInventory().GetSlots()[i].m_count);
+		}
+
 		//std::string selected_block = m_local_player->GetSelectedBlock();
 		//if (ImGui::BeginCombo("Block##combo", selected_block.c_str()))
 		//{
@@ -403,37 +414,6 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 		//
 		//	ImGui::EndCombo();
 		//}
-
-		if (ImGui::Button("Up"))
-		{
-			const auto pos = m_local_player->GetPosition();
-			m_local_player->SetPosition({ pos[0], std::floor(pos[1] + 1.0), pos[2] });
-		}
-		if (ImGui::Button("Down"))
-		{
-			const auto pos = m_local_player->GetPosition();
-			m_local_player->SetPosition({ pos[0], std::floor(pos[1] - 1.0), pos[2] });
-		}
-		if (ImGui::Button("Side1"))
-		{
-			const auto pos = m_local_player->GetPosition();
-			m_local_player->SetPosition({ std::floor(pos[0] + 1.0), pos[1], pos[2] });
-		}
-		if (ImGui::Button("Side2"))
-		{
-			const auto pos = m_local_player->GetPosition();
-			m_local_player->SetPosition({ std::floor(pos[0] - 1.0), pos[1], pos[2] });
-		}
-		if (ImGui::Button("Side3"))
-		{
-			const auto pos = m_local_player->GetPosition();
-			m_local_player->SetPosition({ pos[0], pos[1], std::floor(pos[2] + 1.0) });
-		}
-		if (ImGui::Button("Side4"))
-		{
-			const auto pos = m_local_player->GetPosition();
-			m_local_player->SetPosition({ pos[0], pos[1], std::floor(pos[2] - 1.0) });
-		}
 
 		ImGui::End();
 	}

@@ -1,12 +1,13 @@
 #pragma once
 
 #include "../mango/mango.h"
-#include "block.h"
+#include "defines.h"
 
 
 struct BlockMapElement
 {
 	BLOCK_ID m_block_id;
+	ITEM_ID m_item_id;
 	std::array<uint32_t, 6> m_face_indices;
 	std::array<std::string, 6> m_texture_names;
 };
@@ -22,7 +23,7 @@ public:
 	bool CreateTextures(const std::string& texture_path);
 	void Release();
 
-	void AddBlock(const std::string& block_name, BLOCK_ID block_id, const std::array<std::string, 6>& face_textures);
+	void AddBlock(const std::string& block_name, BLOCK_ID block_id, ITEM_ID item_id, const std::array<std::string, 6>& face_textures);
 	void RemoveBlock(const std::string& block_name);
 	BlockMapElement GetBlock(const std::string& block_name) const;
 	BlockMapElement GetBlock(BLOCK_ID block_id) const;

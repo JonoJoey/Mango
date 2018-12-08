@@ -211,6 +211,12 @@ void LocalPlayer::OnUpdate()
 		else
 			SetMaxSpeed(4.3);
 
+		for (size_t i = 0; i < 9; i++)
+		{
+			if (input_handler->GetKeyState(GLFW_KEY_1 + i) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
+				m_inventory.SetSelectedSlot(i);
+		}
+
 		if (const auto length = glm::length(acceleration); length > 0.0)
 			acceleration = (acceleration / length) * GetAccelSpeed();
 
@@ -236,12 +242,19 @@ void LocalPlayer::OnUpdate()
 				block_y += int(trace_info.m_normal.y);
 				block_z += int(trace_info.m_normal.z);
 		
-				world->EditBlock(block_x, block_y, block_z, Block::Create(mango_app->GetWorld()->GetBlockMap().GetBlock(m_selected_block).m_block_id));
+				const auto item = m_inventory.GetSelectedItem();
+				if (m_inventory.RemoveItems(m_inventory.GetSelectedSlot(), 1) > 0)
+					world->EditBlock(block_x, block_y, block_z, Block::Create(item.m_item_type));
 			}
 		
 			// break block
 			if (input_handler->GetButtonState(0) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
+			{
+				if (Block block; world->GetBlock(block_x, block_y, block_z, block))
+					m_inventory.AddItems(block.m_block_id, 1);
+
 				world->EditBlock(block_x, block_y, block_z, Block::Inactive());
+			}
 		}
 	}
 
