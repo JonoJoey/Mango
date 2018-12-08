@@ -2,6 +2,7 @@
 
 
 
+
 uint64_t PackChunk(int x, int z)
 {
 	uint64_t packed_chunk;
@@ -39,10 +40,11 @@ void Chunk::Release()
 	delete[] m_blocks;
 	m_blocks = nullptr;
 }
-bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
+bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>>& chunks, const BlockMap& block_map)
 {
 	if (!m_needs_update)
 		return false;
+
 	m_needs_update = false;
 
 	std::vector<float> vertices;
@@ -50,7 +52,7 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 	std::vector<BLOCK_ID> block_ids;
 	std::vector<unsigned int> indices;
 
-	const auto MakeBlock = [&vertices, &tex_coords, &block_ids, &indices, &chunks, this](int x, int y, int z, int block_id) -> void
+	const auto MakeBlock = [&vertices, &tex_coords, &block_ids, &indices, &chunks, &block_map, this](int x, int y, int z, int block_id) -> void
 	{
 		if (!GetBlock(x, y, z).m_is_active)
 			return;
@@ -126,6 +128,8 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			f_y = float(y),
 			f_z = float(z);
 
+		const auto block_element = block_map.GetBlock(block_id);
+
 		// front face
 		if (!IsBlockActive(x, y, z + 1, false, true))
 		{
@@ -136,28 +140,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 0);
+			block_ids.push_back(block_element.m_face_indices[0]);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 0);
+			block_ids.push_back(block_element.m_face_indices[0]);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 0);
+			block_ids.push_back(block_element.m_face_indices[0]);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 0);
+			block_ids.push_back(block_element.m_face_indices[0]);
 
 			indices.push_back(start + 0);
 			indices.push_back(start + 1);
@@ -178,28 +182,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 1);
+			block_ids.push_back(block_element.m_face_indices[1]);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 1);
+			block_ids.push_back(block_element.m_face_indices[1]);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 1);
+			block_ids.push_back(block_element.m_face_indices[1]);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 1);
+			block_ids.push_back(block_element.m_face_indices[1]);
 
 			indices.push_back(start + 1);
 			indices.push_back(start + 0);
@@ -220,28 +224,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 2);
+			block_ids.push_back(block_element.m_face_indices[2]);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 2);
+			block_ids.push_back(block_element.m_face_indices[2]);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 2);
+			block_ids.push_back(block_element.m_face_indices[2]);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 2);
+			block_ids.push_back(block_element.m_face_indices[2]);
 
 			indices.push_back(start + 0);
 			indices.push_back(start + 1);
@@ -262,28 +266,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 3);
+			block_ids.push_back(block_element.m_face_indices[3]);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 3);
+			block_ids.push_back(block_element.m_face_indices[3]);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 3);
+			block_ids.push_back(block_element.m_face_indices[3]);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 3);
+			block_ids.push_back(block_element.m_face_indices[3]);
 
 			indices.push_back(start + 0);
 			indices.push_back(start + 1);
@@ -304,28 +308,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 4);
+			block_ids.push_back(block_element.m_face_indices[4]);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 4);
+			block_ids.push_back(block_element.m_face_indices[4]);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 4);
+			block_ids.push_back(block_element.m_face_indices[4]);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y + 1.f);
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 4);
+			block_ids.push_back(block_element.m_face_indices[4]);
 
 			indices.push_back(start + 0);
 			indices.push_back(start + 1);
@@ -346,28 +350,28 @@ bool Chunk::Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks)
 			vertices.push_back(f_z);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 5);
+			block_ids.push_back(block_element.m_face_indices[5]);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(0.f);
-			block_ids.push_back((block_id * 6) + 5);
+			block_ids.push_back(block_element.m_face_indices[5]);
 
 			vertices.push_back(f_x + 1.f);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(1.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 5);
+			block_ids.push_back(block_element.m_face_indices[5]);
 
 			vertices.push_back(f_x);
 			vertices.push_back(f_y);
 			vertices.push_back(f_z + 1.f);
 			tex_coords.push_back(0.f);
 			tex_coords.push_back(1.f);
-			block_ids.push_back((block_id * 6) + 5);
+			block_ids.push_back(block_element.m_face_indices[5]);
 
 			indices.push_back(start + 0);
 			indices.push_back(start + 1);

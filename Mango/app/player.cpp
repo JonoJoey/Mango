@@ -85,28 +85,23 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 		velocity.z = (velocity.z / vel_length) * m_max_speed;
 	}
 
-	auto new_position = position;
-
 	// collision stuffs
 	{
 		auto velocity_copy = velocity;
-		const auto original_vel = velocity;
-		
-		for (int i = 0; i < 4; i++)
+		auto new_position = position;
+
+		for (int i = 0; i < 9; i++)
 		{
 			if (glm::length(velocity_copy) <= 0.0)
 				break;
 		
-			Ray ray(new_position + glm::dvec3(0.5), velocity_copy, glm::dvec3(0.5), glm::length(velocity_copy) * tick_interval);
+			Ray ray = Ray(new_position + glm::dvec3(0.5, 0.5, 0.5), velocity_copy, glm::dvec3(0.5, 0.5, 0.5), glm::length(velocity_copy) * tick_interval);
 			if (TraceInfo trace_info; ray_tracer->Trace(ray, trace_info))
 			{
 				new_position += velocity_copy * trace_info.m_fraction * tick_interval;
+
 				velocity_copy -= velocity_copy * trace_info.m_fraction;
-		
-				const glm::dvec3 inv_norm(std::abs(trace_info.m_normal[0]), std::abs(trace_info.m_normal[1]), std::abs(trace_info.m_normal[2]));
-				velocity_copy -= velocity_copy * inv_norm * (1.0 - trace_info.m_fraction);
-				DBG_LOG("(%f, %f, %f)", trace_info.m_normal[0], trace_info.m_normal[1], trace_info.m_normal[2]);
-				
+				velocity_copy -= velocity_copy * trace_info.m_normal * trace_info.m_normal;
 			}
 			else
 			{
@@ -116,35 +111,8 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 		}
 		
 		//position += velocity * tick_interval;
-		position = new_position;
-
-		//Ray ray(position + glm::dvec3(0.5), velocity, glm::dvec3(0.5), glm::length(velocity) * tick_interval);
-		//TraceInfo trace_info; ray_tracer->Trace(ray, trace_info);
-		//new_position = position + ray.m_direction * ray.m_length * trace_info.m_fraction;
-	
-		//double remaining_length = glm::length(velocity);
-		//for (int i = 0; i < 3; i++)
-		//{
-		//	//if (remaining_length <= 0.0)
-		//	//	break;
-		//
-		//	Ray ray(new_position + 0.5, velocity, glm::dvec3(0.5), remaining_length * tick_interval);
-		//	TraceInfo trace_info; ray_tracer->Trace(ray, trace_info);
-		//
-		//	new_position += velocity * trace_info.m_fraction * tick_interval;
-		//	remaining_length -= remaining_length * trace_info.m_fraction;
-		//
-		//	if (trace_info.m_hit)
-		//	{
-		//		velocity[0] -= velocity[0] * std::abs(trace_info.m_normal[0]);
-		//		velocity[1] -= velocity[1] * std::abs(trace_info.m_normal[1]);
-		//		velocity[2] -= velocity[2] * std::abs(trace_info.m_normal[2]);
-		//
-		//		velocity = glm::safe_normalize(velocity) * remaining_length;
-		//	}
-		//}
-		//
-		//new_position += glm::safe_normalize(velocity) * remaining_length * tick_interval;
+		velocity = (new_position - position) / tick_interval;
+		position = position + velocity * tick_interval;
 
 		//Ray ray(position + 0.5, { 0.0, -1.0, 0.0 }, glm::dvec3(0.5), 1.0);
 		//if (TraceInfo trace_info; ray_tracer->Trace(ray, trace_info))
@@ -234,9 +202,7 @@ void LocalPlayer::OnUpdate()
 		if (input_handler->GetKeyState('A'))
 			acceleration += -right_dir;
 		if (input_handler->GetKeyState(GLFW_KEY_SPACE))
-			SetVelocity(glm::dvec3(GetVelocity().x, 10.0, GetVelocity().z));
-		if (input_handler->GetKeyState(GLFW_KEY_LEFT_SHIFT))
-			SetVelocity(glm::dvec3(GetVelocity().x, -10.0, GetVelocity().z));
+			SetVelocity(glm::dvec3(GetVelocity().x, 5.0, GetVelocity().z));
 		if (input_handler->GetKeyState(GLFW_KEY_F5) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
 			SetThirdPerson(!IsThirdPerson());
 		if (input_handler->GetKeyState(GLFW_KEY_LEFT_CONTROL))
@@ -269,7 +235,7 @@ void LocalPlayer::OnUpdate()
 				block_y += int(trace_info.m_normal.y);
 				block_z += int(trace_info.m_normal.z);
 		
-				world->EditBlock(block_x, block_y, block_z, Block::Create(mango_app->GetBlockMap().at(m_selected_block)));
+				world->EditBlock(block_x, block_y, block_z, Block::Create(mango_app->GetWorld()->GetBlockMap().GetBlock(m_selected_block).m_block_id));
 			}
 		
 			// break block

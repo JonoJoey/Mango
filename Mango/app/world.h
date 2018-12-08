@@ -3,6 +3,7 @@
 #include "chunk.h"
 #include "entity.h"
 #include "ray_tracer.h"
+#include "block_map.h"
 
 
 class World
@@ -13,12 +14,13 @@ public:
 	static void DeleteWorld(std::string world_name);
 
 public:
-	bool Setup(Mango::MangoCore* mango_core, std::string world_name, std::unordered_map<std::string, BLOCK_ID> block_map);
+	bool Setup(Mango::MangoCore* mango_core, std::string world_name, const BlockMap& block_map);
 	void Release();
 
 	void Render(Mango::MangoCore* mango_core, float lerp);
 	void Update(glm::fvec3 position);
 
+	BlockMap& GetBlockMap() { return m_block_map; }
 	void EditBlock(int x, int y, int z, const Block& block);
 	bool GetBlock(int x, int y, int z, Block& block);
 	bool GetBlock(double x, double y, double z, Block& block) { return GetBlock(int(x), int(y), int(z), block); }
@@ -56,8 +58,8 @@ private:
 	RayTracer m_ray_tracer;
 	std::string m_world_path;
 	siv::PerlinNoise m_perlin_noise;
-	std::unordered_map<std::string, BLOCK_ID> m_block_map;
 	std::deque<Entity*> m_entities;
+	BlockMap m_block_map;
 
 	std::deque<Chunk*> m_update_chunks;
 	std::deque<uint64_t> m_load_chunks;

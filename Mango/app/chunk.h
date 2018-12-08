@@ -2,6 +2,8 @@
 
 #include "block.h"
 
+#include "block_map.h"
+
 // index = x + (y * WIDTH) + (z * WIDTH * HEIGHT);
 // x = i % WIDTH;
 // y = (i / WIDTH) % HEIGHT;
@@ -21,7 +23,7 @@ public:
 
 	void Setup(int x, int z);
 	void Release();
-	bool Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>> chunks);
+	bool Update(std::unordered_map<uint64_t, std::shared_ptr<Chunk>>& chunks, const BlockMap& block_map);
 
 	int GetX() const { return m_x; }
 	int GetZ() const { return m_z; }

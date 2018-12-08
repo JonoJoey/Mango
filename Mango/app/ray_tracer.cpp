@@ -43,7 +43,7 @@ static bool AABBtoAABBSweep(const NEWAABB& aabb1, const NEWAABB& aabb2, const gl
 			{
 				if (std::abs(diff) == aabb1.m_extent[i] + aabb2.m_extent[i])
 				{
-					glm::dvec3 edge_normal(0.0);
+					glm::dvec3 edge_normal = glm::dvec3(0.0);
 					edge_normal[i] = diff >= 0.0 ? 1.0 : -1.0;
 					//DBG_LOG("%f %f %f", edge_normal[0], edge_normal[1], edge_normal[2]);
 					if (glm::dot(edge_normal, glm::safe_normalize(velocity)) == 0.0)
@@ -72,21 +72,21 @@ static bool AABBtoAABBSweep(const NEWAABB& aabb1, const NEWAABB& aabb2, const gl
 	{
 		normal = glm::dvec3(0.0);
 
-		if (near_fraction[0] >= std::max(near_fraction[1], near_fraction[2]))
+		if (near_fraction[0] > std::max(near_fraction[1], near_fraction[2]))
 		{
 			if (velocity[0] >= 0.0)
 				normal[0] = -1.0;
 			else
 				normal[0] = 1.0;
 		}
-		if (near_fraction[1] >= std::max(near_fraction[0], near_fraction[2]))
+		if (near_fraction[1] > std::max(near_fraction[0], near_fraction[2]))
 		{
 			if (velocity[1] >= 0.0)
 				normal[1] = -1.0;
 			else
 				normal[1] = 1.0;
 		}
-		if (near_fraction[2] >= std::max(near_fraction[0], near_fraction[1]))
+		if (near_fraction[2] > std::max(near_fraction[0], near_fraction[1]))
 		{
 			if (velocity[2] >= 0.0)
 				normal[2] = -1.0;
@@ -95,7 +95,7 @@ static bool AABBtoAABBSweep(const NEWAABB& aabb1, const NEWAABB& aabb2, const gl
 		}
 
 		normal = glm::safe_normalize(normal);
-		if (glm::dot(normal, glm::safe_normalize(velocity)) == 0.0)
+		if (glm::dot(glm::safe_normalize(normal), glm::safe_normalize(velocity)) == 0.0)
 			return false;
 	}
 

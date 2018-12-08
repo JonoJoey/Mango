@@ -99,7 +99,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -130,6 +130,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="app\block_map.cpp" />
     <ClCompile Include="app\chunk.cpp" />
     <ClCompile Include="app\event_handler.cpp" />
     <ClCompile Include="app\mango_app.cpp" />
@@ -162,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="app\block.h" />
+    <ClInclude Include="app\block_map.h" />
     <ClInclude Include="app\chunk.h" />
     <ClInclude Include="app\entity.h" />
     <ClInclude Include="app\event_handler.h" />

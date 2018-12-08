@@ -3,8 +3,8 @@
 #include "../mango/mango.h"
 
 #include "event_handler.h"
-
 #include "world.h"
+#include "block_map.h"
 
 
 class LocalPlayer;
@@ -21,7 +21,6 @@ public:
 	World* GetWorld() { return &m_world; }
 	unsigned int GetTickCount() const { return m_tick_count; }
 	float GetTickInterval() const { return m_interval_per_tick; }
-	const std::unordered_map<std::string, BLOCK_ID>& GetBlockMap() const { return m_block_map; }
 
 private:
 	bool OnInit();
@@ -40,7 +39,6 @@ private:
 	unsigned int m_tick_count = 0;
 	float m_mouse_sensitivity = 0.5f;
 
-	std::unordered_map<std::string, BLOCK_ID> m_block_map;
 	World m_world;
 	LocalPlayer* m_local_player = nullptr;
 };

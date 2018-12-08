@@ -127,14 +127,9 @@ bool MangoApp::OnInit()
 {
 	m_mango_core.SetVerticalSync(false);
 
-	m_block_map["null"] = 0;
-	m_block_map["cobblestone"] = 1;
-	m_block_map["grass"] = 2;
-	m_block_map["diamond_ore"] = 3;
-	m_block_map["iron_ore"] = 4;
-	m_block_map["oak_log"] = 5;
-	m_block_map["oak_plank"] = 6;
-	m_block_map["mossy_cobblestone"] = 7;
+	BlockMap block_map;
+	block_map.AddBlock("grass", 69, { "grass_side.png", "grass_side.png", "grass_side.png", "grass_side.png", "grass_top.png", "grass_bottom.png" });
+	block_map.AddBlock("cobblestone", 420, { "cobblestone.png", "cobblestone.png", "cobblestone.png", "cobblestone.png", "cobblestone.png", "cobblestone.png" });
 
 	{
 		const auto app_data = Mango::GetAppDataPath();
@@ -191,11 +186,13 @@ bool MangoApp::OnInit()
 	if (!World::DoesWorldExist("test_world"))
 		World::CreateNewWorld("test_world", 69);
 
-	if (!m_world.Setup(&m_mango_core, "test_world", m_block_map))
+	if (!m_world.Setup(&m_mango_core, "test_world", block_map))
 	{
 		DBG_LOG("FAILED TO SETUP WORLD");
 		return false;
 	}
+
+	const auto app_data = Mango::GetAppDataPath();
 
 	//m_world.GetRayTracer()->Test();
 	//return false;
@@ -316,18 +313,18 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 		if (static int render_distance = m_world.GetRenderDistance(); ImGui::SliderInt("Render distance", &render_distance, 1, 64))
 			m_world.SetRenderDistance(render_distance);
 
-		std::string selected_block = m_local_player->GetSelectedBlock();
-		if (ImGui::BeginCombo("Block##combo", selected_block.c_str()))
-		{
-			for (const auto& block : m_block_map)
-			{
-				bool is_selected = selected_block == block.first;
-				if (ImGui::Selectable(block.first.c_str(), is_selected))
-					m_local_player->SetSelectedBlock(block.first);
-			}
-
-			ImGui::EndCombo();
-		}
+		//std::string selected_block = m_local_player->GetSelectedBlock();
+		//if (ImGui::BeginCombo("Block##combo", selected_block.c_str()))
+		//{
+		//	for (const auto& block : m_block_map)
+		//	{
+		//		bool is_selected = selected_block == block.first;
+		//		if (ImGui::Selectable(block.first.c_str(), is_selected))
+		//			m_local_player->SetSelectedBlock(block.first);
+		//	}
+		//
+		//	ImGui::EndCombo();
+		//}
 
 		if (ImGui::Button("Up"))
 		{

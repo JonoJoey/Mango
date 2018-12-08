@@ -37,7 +37,7 @@ void World::DeleteWorld(std::string world_name)
 
 }
 
-bool World::Setup(Mango::MangoCore* mango_core, std::string world_name, std::unordered_map<std::string, BLOCK_ID> block_map)
+bool World::Setup(Mango::MangoCore* mango_core, std::string world_name, const BlockMap& block_map)
 {
 	if (!DoesWorldExist(world_name))
 		return false;
@@ -45,55 +45,9 @@ bool World::Setup(Mango::MangoCore* mango_core, std::string world_name, std::uno
 	const auto app_data = Mango::GetAppDataPath();
 	const auto world_path = app_data + "/.mango/worlds/" + world_name;
 
-	// null is the only block actually required
-	if (block_map.find("null") == block_map.end())
-		return false;
+	m_block_map = block_map;
 
-	const auto LoadBlockMap = [app_data](const std::unordered_map<std::string, BLOCK_ID>& block_map) -> size_t
-	{
-		std::vector<std::pair<std::string, BLOCK_ID>> sorted_block_map;
-		for (const auto& block : block_map)
-			sorted_block_map.push_back(block);
-
-		// sort the blocks
-		std::sort(sorted_block_map.begin(), sorted_block_map.end(), [](const std::pair<std::string, BLOCK_ID>& p1, const std::pair<std::string, BLOCK_ID>& p2) -> bool
-		{
-			return p1.second < p2.second;
-		});
-
-		size_t num_textures = 0;
-		std::vector<std::string> file_paths;
-		for (const auto& block : sorted_block_map)
-		{
-			if (file_paths.size() >= 250)
-			{
-				Mango::RescourcePool<Mango::TextureArray>::Get()->AddRes("blocks_" + std::to_string(num_textures),
-					file_paths, glm::ivec2({ 16, 16 }), true, false, false, -2.f);
-
-				num_textures++;
-				file_paths.clear();
-			}
-
-			// front, back, right, left, top, bottom
-			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/front.png");
-			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/back.png");
-			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/right.png");
-			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/left.png");
-			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/top.png");
-			file_paths.push_back(app_data + "/.mango/resource_packs/default/textures/blocks/" + block.first + "/bottom.png");
-		}
-
-		if (!file_paths.empty())
-		{
-			Mango::RescourcePool<Mango::TextureArray>::Get()->AddRes("blocks_" + std::to_string(num_textures),
-				file_paths, glm::ivec2({ 16, 16 }), true, false, false);
-
-			num_textures++;
-		}
-
-		return num_textures;
-	};
-	if (LoadBlockMap(block_map) <= 0)
+	if (!m_block_map.CreateTextures(app_data + "/.mango/resource_packs/default/textures/blocks"))
 		return false;
 
 	Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader",
@@ -101,7 +55,6 @@ bool World::Setup(Mango::MangoCore* mango_core, std::string world_name, std::uno
 		Mango::Shader::ReadFile(app_data + "/.mango/resource_packs/default/shaders/cube_fs.glsl"));
 
 	m_ray_tracer.SetWorld(this);
-	m_block_map = block_map;
 	m_world_path = world_path;
 	mango_core->GetRenderer3D().GetCamera().SetPosition({ 0.f, 128.f, 0.f });
 
@@ -185,6 +138,7 @@ void World::Release()
 	m_load_chunks.clear();
 	m_chunks.clear();
 	m_render_chunks.clear();
+	m_block_map.Release();
 
 	for (size_t i = 0; i < m_entities.size(); i++)
 	{
@@ -210,7 +164,12 @@ void World::Render(Mango::MangoCore* mango_core, float lerp)
 
 	const auto pos = renderer_3d.GetCamera().GetPosition();
 
-	Mango::RescourcePool<Mango::TextureArray>::Get()->GetRes("blocks_0")->Bind();
+	const auto& texture_arrays = m_block_map.GetTextureArrays();
+	for (size_t i = 0; i < texture_arrays.size(); i++)
+	{
+		texture_arrays[i].Bind(i);
+	}
+
 	for (auto chunk : m_render_chunks)
 	{
 		cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix(glm::dvec3(
@@ -330,7 +289,7 @@ void World::Update(glm::fvec3 position)
 			!DoesChunkExist(chunk->GetX(), chunk->GetZ() + 1) || !DoesChunkExist(chunk->GetX(), chunk->GetZ() - 1))
 			continue;
 
-		chunk->Update(m_chunks);
+		chunk->Update(m_chunks, m_block_map);
 		m_update_chunks.erase(m_update_chunks.begin() + i);
 		break;
 	}
@@ -353,13 +312,8 @@ void World::GenerateChunk(Chunk* chunk)
 	static constexpr int MIN_HEIGHT = (Chunk::HEIGHT / 2) - (VARIANCE / 2);
 	static constexpr double MULTIPLIER = 30.0;
 
-	BLOCK_ID cobblestone = m_block_map["null"];
-	if (auto it = m_block_map.find("cobblestone"); it != m_block_map.end())
-		cobblestone = it->second;
-
-	BLOCK_ID grass = m_block_map["null"];
-	if (auto it = m_block_map.find("grass"); it != m_block_map.end())
-		grass = it->second;
+	const auto cobblestone = m_block_map.GetBlock("cobblestone").m_block_id,
+		grass = m_block_map.GetBlock("grass").m_block_id;
 
 	for (int x = 0; x < Chunk::WIDTH; x++)
 	{
