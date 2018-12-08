@@ -8,8 +8,8 @@
 class Inventory
 {
 public:
-	Inventory();
-
+	bool Setup();
+	void Release();
 	void Render(Mango::MangoCore* mango_core, bool inventory_open);
 
 	void AddItems(ITEM_ID item_id, size_t count);
@@ -27,4 +27,7 @@ private:
 private:
 	std::array<ItemStack, 9 * 4> m_slots;
 	size_t m_selected_slot = 0;
+
+	Mango::Texture m_hotbar_tex,
+		m_selected_box_tex;
 };

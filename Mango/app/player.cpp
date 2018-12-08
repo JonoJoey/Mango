@@ -121,7 +121,18 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 }
 
 
+void LocalPlayer::OnInit()
+{
+	Init();
 
+	ASSERT(m_inventory.Setup());
+}
+void LocalPlayer::OnRelease()
+{
+	Release();
+
+	m_inventory.Release();
+}
 void LocalPlayer::OnFrameUpdate(Mango::MangoCore* mango_core, float lerp)
 {
 	auto mango_app = GetMangoApp();

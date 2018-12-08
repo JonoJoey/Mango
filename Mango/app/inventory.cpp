@@ -1,22 +1,48 @@
 #include "inventory.h"
 
 
-Inventory::Inventory()
+bool Inventory::Setup()
 {
 	for (auto& slot : m_slots)
 	{
 		slot.m_count = 0;
 		slot.m_item_type = 0xFFFFFFFF;
 	}
-}
 
+	const auto app_data = Mango::GetAppDataPath();
+	if (!m_hotbar_tex.Setup(app_data + "/.mango/resource_packs/default/textures/misc/hotbar.png", true, true, false))
+		return false;
+
+	if (!m_selected_box_tex.Setup(app_data + "/.mango/resource_packs/default/textures/misc/selected_box.png", true, true, false))
+		return false;
+
+	return true;
+}
+void Inventory::Release()
+{
+	m_hotbar_tex.Release();
+}
 void Inventory::Render(Mango::MangoCore* mango_core, bool inventory_open)
 {
-	for (size_t i = 0; i < 9; i++)
-	{
-		if (m_slots[i].m_count > 0)
-			DBG_LOG("%i - %i", m_slots[i].m_item_type, m_slots[i].m_count);
-	}
+	auto renderer_2d = &mango_core->GetRenderer2D();
+
+	renderer_2d->Start();
+
+	// 182, 22
+	static constexpr int WIDTH = 182 * 3,
+		HEIGHT = 22 * 3,
+		BOX_WIDTH = 20 * 3,
+		BOX_HEIGHT = 22 * 3;
+	const glm::ivec2 pos((mango_core->GetWindowSize()[0] / 2) - (WIDTH / 2), mango_core->GetWindowSize()[1] - HEIGHT);
+	const glm::ivec2 pos_2(pos[0] + 3 + (m_selected_slot * BOX_WIDTH), pos[1]);
+
+	m_hotbar_tex.Bind();
+	renderer_2d->RenderTexturedQuad({ pos[0], pos[1] }, { pos[0] + WIDTH, pos[1] + HEIGHT });
+
+	m_selected_box_tex.Bind();
+	renderer_2d->RenderTexturedQuad({ pos_2[0], pos_2[1] }, { pos_2[0] + BOX_WIDTH, pos_2[1] + BOX_HEIGHT });
+
+	renderer_2d->End();
 }
 
 void Inventory::AddItems(ITEM_ID item_id, size_t count)

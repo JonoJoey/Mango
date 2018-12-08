@@ -77,6 +77,8 @@ private:
 class LocalPlayer : public Player
 {
 public:
+	void OnInit() override;
+	void OnRelease() override;
 	void OnFrameUpdate(Mango::MangoCore* mango_core, float lerp) override;
 	void OnRender(Mango::MangoCore* mango_core, float lerp) override;
 	void OnUpdate() override;

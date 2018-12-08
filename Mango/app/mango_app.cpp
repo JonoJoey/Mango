@@ -298,13 +298,7 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 	// render entire world and stuffs
 	m_world.Render(&m_mango_core, lerp);
 
-	// 2d rendering
-	{
-		renderer_2d.Start();
-
-
-		renderer_2d.End();
-	}
+	m_local_player->GetInventory().Render(&m_mango_core, false);
 
 	// render final mango (post-process)
 	{
