@@ -58,7 +58,7 @@ void Inventory::Render(MangoApp* mango_app, bool inventory_open)
 		auto item = mango_app->GetWorld()->GetItemMap()->GetItem(m_slots[i].m_item_id);
 
 		item->m_gui_texture.Bind();
-		renderer_2d->RenderTexturedQuad({ item_pos[0] + 16, item_pos[1] + 16 }, { item_pos[0] + BOX_WIDTH - 16, item_pos[1] + BOX_HEIGHT - 16 });
+		renderer_2d->RenderTexturedQuad({ item_pos[0] + 12, item_pos[1] + 12 }, { item_pos[0] + BOX_WIDTH - 12, item_pos[1] + BOX_HEIGHT - 12 });
 	}
 
 	// tfw u dont wanna make a text renderer

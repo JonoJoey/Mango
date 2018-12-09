@@ -225,10 +225,10 @@ bool MangoApp::OnInit()
 	// create item map
 	{
 		auto item_map = m_world.GetItemMap();
-		item_map->AddItem("grass", "grass.png", 60, 16, 1);
+		item_map->AddItem("grass", "grass.png", 60, 64, 1);
 		item_map->AddItem("dirt", "dirt.png", 61, 64, 2);
 		item_map->AddItem("stone", "stone.png", 62, 64, 3);
-		item_map->AddItem("diamond_sword", "diamond_sword.png", 63, 64);
+		item_map->AddItem("diamond_sword", "diamond_sword.png", 63, 1);
 
 		if (!item_map->CreateTextures(Mango::GetAppDataPath() + "/.mango/resource_packs/default/"))
 			return false;
@@ -306,6 +306,10 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 		ImGui::Text("Position: ");
 		ImGui::SameLine(0.f, 0.f);
 		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.2f %.2f %.2f", m_local_player->GetPosition().x, m_local_player->GetPosition().y, m_local_player->GetPosition().z);
+
+		ImGui::Text("Viewangles: ");
+		ImGui::SameLine(0.f, 0.f);
+		ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%.4f %.4f %.4f", m_local_player->GetViewangle().x, m_local_player->GetViewangle().y, m_local_player->GetViewangle().z);
 
 		ImGui::Text("Velocity: ");
 		ImGui::SameLine(0.f, 0.f);

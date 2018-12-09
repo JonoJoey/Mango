@@ -45,7 +45,6 @@ static bool AABBtoAABBSweep(const NEWAABB& aabb1, const NEWAABB& aabb2, const gl
 				{
 					glm::dvec3 edge_normal = glm::dvec3(0.0);
 					edge_normal[i] = diff >= 0.0 ? 1.0 : -1.0;
-					//DBG_LOG("%f %f %f", edge_normal[0], edge_normal[1], edge_normal[2]);
 					if (glm::dot(edge_normal, glm::safe_normalize(velocity)) == 0.0)
 						return false;
 				}
@@ -74,27 +73,27 @@ static bool AABBtoAABBSweep(const NEWAABB& aabb1, const NEWAABB& aabb2, const gl
 
 		if (near_fraction[0] > std::max(near_fraction[1], near_fraction[2]))
 		{
-			if (velocity[0] >= 0.0)
+			if (velocity[0] > 0.0)
 				normal[0] = -1.0;
-			else
+			else if (velocity[0] < 0.0)
 				normal[0] = 1.0;
 		}
 		if (near_fraction[1] > std::max(near_fraction[0], near_fraction[2]))
 		{
-			if (velocity[1] >= 0.0)
+			if (velocity[1] > 0.0)
 				normal[1] = -1.0;
-			else
+			else if (velocity[1] < 0.0)
 				normal[1] = 1.0;
 		}
 		if (near_fraction[2] > std::max(near_fraction[0], near_fraction[1]))
 		{
-			if (velocity[2] >= 0.0)
+			if (velocity[2] > 0.0)
 				normal[2] = -1.0;
-			else
+			else if (velocity[2] < 0.0)
 				normal[2] = 1.0;
 		}
 
-		normal = glm::safe_normalize(normal);
+		//normal = glm::safe_normalize(normal);
 		if (glm::dot(glm::safe_normalize(normal), glm::safe_normalize(velocity)) == 0.0)
 			return false;
 	}
@@ -146,8 +145,15 @@ bool RayTracer::Trace(const Ray& ray, TraceInfo& trace_info)
 	// how much to step in ray.m_direction each iteration (MAYBE DYNAMICALLY CHANGE THIS)
 	static constexpr double STEP_VALUE = 0.001;
 
-	for (double current_dist(0.0); current_dist <= ray.m_length; current_dist += STEP_VALUE)
+	bool exit = false;
+	for (double current_dist(0.0); current_dist <= ray.m_length; current_dist += std::min(STEP_VALUE, ray.m_length - current_dist))
 	{
+		if (exit)
+			break;
+
+		if (current_dist == ray.m_length)
+			exit = true;
+
 		if (ray.m_is_ray)
 		{
 			const glm::dvec3 current_pos(ray.m_start + ray.m_direction * current_dist);
@@ -201,8 +207,10 @@ bool RayTracer::Trace(const Ray& ray, TraceInfo& trace_info)
 				{
 					closest_fraction = fraction;
 					closest_normal = normal;
+				}
+				else if (fraction == closest_fraction)
+				{
 
-					//DBG_LOG("%f %f", fraction, glm::length(ray.m_start - aabb.m_center));
 				}
 			}
 
@@ -225,7 +233,7 @@ bool RayTracer::Trace(const Ray& ray, TraceInfo& trace_info)
 bool RayTracer::RaytoPlaneIntersection(const Ray& ray, const Plane& plane, double* fraction)
 {
 	const auto denom = glm::dot(plane.m_normal, ray.m_direction);
-	if (std::abs(denom) <= 0.00001)
+	if (denom == 0.0)
 		return false;
 
 	const auto distance = glm::dot(plane.m_point - ray.m_start, plane.m_normal) / denom;

@@ -10,10 +10,10 @@
 
 namespace Mango::Maths
 {
-	glm::vec3 AngleVector(glm::vec3 angle);
+	glm::dvec3 AngleVector(glm::dvec3 angle);
 
-	glm::mat4 CreateViewMatrix(const glm::vec3& position, const glm::vec3& angle);
-	glm::mat4 CreateModelMatrix(const glm::vec3& position, const glm::vec3& rotation = { 0.f, 0.f, 0.f }, float scale = 1.f);
+	glm::mat4 CreateViewMatrix(const glm::dvec3& position, const glm::dvec3& angle);
+	glm::mat4 CreateModelMatrix(const glm::dvec3& position, const glm::dvec3& rotation = { 0.0, 0.0, 0.0 }, double scale = 1.0);
 	glm::mat4 CreateProjectionMatrix(float fov /* degrees */, float aspect_ratio, float znear, float zfar);
 	glm::mat3 CreateNormalMatrix(const glm::mat4& model_matrix);
 

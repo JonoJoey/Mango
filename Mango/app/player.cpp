@@ -175,7 +175,7 @@ void LocalPlayer::OnFrameUpdate(Mango::MangoCore* mango_core, float lerp)
 		if (m_third_person)
 		{
 			const auto direction = Mango::Maths::AngleVector(GetViewangle());
-			camera.SetPosition(position - glm::dvec3(direction * m_third_person_distance));
+			camera.SetPosition(position - glm::dvec3(direction * double(m_third_person_distance)));
 		}
 		else
 			camera.SetPosition(position);

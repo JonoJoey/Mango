@@ -68,7 +68,7 @@ private:
 	double m_max_speed = 4.3;
 	double m_friction = 24.0;
 	double m_accel_speed = 24.0;
-	double m_gravity = 24.0;
+	double m_gravity = 28.0;
 
 	bool m_on_ground = false;
 };
