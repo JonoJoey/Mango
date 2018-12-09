@@ -13,7 +13,7 @@ public:
 	Entity() = default;
 	virtual ~Entity() {}
 
-	virtual void OnInit() {}
+	virtual void OnInit(std::string resource_pack) {}
 	virtual void OnRelease() {}
 	virtual void OnRender(Mango::MangoCore* mango_core, float lerp) {}
 	virtual void OnFrameUpdate(Mango::MangoCore* mango_core, float lerp) {} // this is before OnRender()

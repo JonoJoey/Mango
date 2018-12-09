@@ -35,9 +35,8 @@ private:
 	Mango::Framebuffer m_framebuffer;
 	EventHandler m_event_handler;
 
-	const float m_interval_per_tick = 1.f / 32.f;
+	const float m_interval_per_tick = 1.f / 64.f;
 	unsigned int m_tick_count = 0;
-	float m_mouse_sensitivity = 0.5f;
 
 	World m_world;
 	LocalPlayer* m_local_player = nullptr;

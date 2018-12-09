@@ -9,7 +9,7 @@ class Player : public Entity
 public:
 	Player() = default;
 
-	void OnInit() override { Init(); }
+	void OnInit(std::string resource_pack) override { Init(resource_pack); }
 	void OnRelease() override { Release(); }
 	void OnRender(Mango::MangoCore* mango_core, float lerp) override { Render(mango_core, lerp); }
 	void OnFrameUpdate(Mango::MangoCore* mango_core, float lerp) override { FrameUpdate(mango_core, lerp); }
@@ -43,7 +43,7 @@ public:
 	bool IsOnGround() const { return m_on_ground; }
 
 public:
-	void Init();
+	void Init(std::string resource_pack);
 	void Release();
 	void Render(Mango::MangoCore* mango_core, float lerp);
 	void FrameUpdate(Mango::MangoCore* mango_core, float lerp);
@@ -77,7 +77,7 @@ private:
 class LocalPlayer : public Player
 {
 public:
-	void OnInit() override;
+	void OnInit(std::string resource_pack) override;
 	void OnRelease() override;
 	void OnFrameUpdate(Mango::MangoCore* mango_core, float lerp) override;
 	void OnRender(Mango::MangoCore* mango_core, float lerp) override;
@@ -90,11 +90,15 @@ public:
 	void SetThirdPersonDistance(float value) { m_third_person_distance = value; }
 	float GetThirdPersonDistance() const { return m_third_person_distance; }
 
+	void SetMouseSensitivity(float value) { m_mouse_sensitivity = value; }
+	float GetMouseSensitivity() const { return m_mouse_sensitivity; }
+
 	Inventory& GetInventory() { return m_inventory; }
 
 private:
 	bool m_third_person = false;
 	float m_third_person_distance = 10.f;
+	float m_mouse_sensitivity = 1.f;
 	float m_view_offset = 2.f;
 	Inventory m_inventory;
 };

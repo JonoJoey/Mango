@@ -33,7 +33,7 @@ public:
 	{
 		auto entity = new T(args...);
 		entity->SetMangoApp(mango_app);
-		entity->OnInit();
+		entity->OnInit(Mango::GetAppDataPath() + "/.mango/resource_packs/" + m_resource_pack + "/");
 		m_entities.push_back(entity);
 		return entity;
 	}
@@ -56,10 +56,11 @@ private:
 
 private:
 	RayTracer m_ray_tracer;
-	std::string m_world_path;
+	BlockMap m_block_map;
+	std::string m_world_path,
+		m_resource_pack = "default";
 	siv::PerlinNoise m_perlin_noise;
 	std::deque<Entity*> m_entities;
-	BlockMap m_block_map;
 
 	std::deque<Chunk*> m_update_chunks;
 	std::deque<uint64_t> m_load_chunks;

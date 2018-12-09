@@ -5,15 +5,15 @@
 #include "world.h"
 
 
-void Player::Init()
+void Player::Init(std::string resource_pack)
 {
 	Mango::LoadCubeModel(m_model);
 
 	const auto app_data = Mango::GetAppDataPath();
 
 	m_shader = &*Mango::RescourcePool<Mango::Shader>::Get()->GetOrAddRes("player_shader",
-		Mango::Shader::ReadFile(app_data + "/.mango/resource_packs/default/shaders/player_vs.glsl"),
-		Mango::Shader::ReadFile(app_data + "/.mango/resource_packs/default/shaders/player_fs.glsl"));
+		Mango::Shader::ReadFile(resource_pack + "/shaders/player_vs.glsl"),
+		Mango::Shader::ReadFile(resource_pack + "/shaders/player_fs.glsl"));
 }
 void Player::Release()
 {
@@ -121,11 +121,11 @@ void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::d
 }
 
 
-void LocalPlayer::OnInit()
+void LocalPlayer::OnInit(std::string resource_pack)
 {
-	Init();
+	Init(resource_pack);
 
-	ASSERT(m_inventory.Setup(GetMangoApp()->GetMangoCore()));
+	ASSERT(m_inventory.Setup(GetMangoApp()->GetMangoCore(), resource_pack));
 }
 void LocalPlayer::OnRelease()
 {
@@ -147,7 +147,7 @@ void LocalPlayer::OnFrameUpdate(Mango::MangoCore* mango_core, float lerp)
 		static bool toggle = false;
 		if (toggle)
 		{
-			const auto offset = glm::vec2(mango_core->GetMousePosition().x - screen_center.x, mango_core->GetMousePosition().y - screen_center.y);
+			const auto offset = glm::vec2(mango_core->GetMousePosition().x - screen_center.x, mango_core->GetMousePosition().y - screen_center.y) * m_mouse_sensitivity;
 			const auto new_viewangle = Mango::Maths::NormalizeAngle(GetViewangle() + glm::dvec3(double(offset[0]), double(-offset[1]), 0.0) * 0.5);
 			SetViewangle(new_viewangle);
 			mango_core->SetMousePosition(screen_center);

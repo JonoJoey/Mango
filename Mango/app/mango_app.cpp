@@ -266,9 +266,6 @@ bool MangoApp::OnInit()
 
 	const auto app_data = Mango::GetAppDataPath();
 
-	//m_world.GetRayTracer()->Test();
-	//return false;
-
 	m_local_player = m_world.AddEntity<LocalPlayer>(this);
 
 	m_local_player->SetPosition({ 0.0, 130.0, 0.0 });
@@ -383,7 +380,9 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 		if (static float tmp = m_local_player->GetThirdPersonDistance(); ImGui::SliderFloat("Thirdperson distance", &tmp, 0.f, 100.f))
 			m_local_player->SetThirdPersonDistance(tmp);
 
-		ImGui::SliderFloat("Mouse sensitivity", &m_mouse_sensitivity, 0.01f, 2.f);
+		if (static float tmp = m_local_player->GetMouseSensitivity(); ImGui::SliderFloat("Mouse sensitivity", &tmp, 0.01f, 2.f))
+			m_local_player->SetMouseSensitivity(tmp);
+
 		if (static int render_distance = m_world.GetRenderDistance(); ImGui::SliderInt("Render distance", &render_distance, 1, 64))
 			m_world.SetRenderDistance(render_distance);
 

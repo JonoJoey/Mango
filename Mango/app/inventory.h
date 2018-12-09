@@ -8,7 +8,7 @@
 class Inventory
 {
 public:
-	bool Setup(Mango::MangoCore* mango_core);
+	bool Setup(Mango::MangoCore* mango_core, std::string resource_pack);
 	void Release();
 	void Render(Mango::MangoCore* mango_core, bool inventory_open);
 
@@ -30,5 +30,5 @@ private:
 
 	Mango::Texture m_hotbar_tex,
 		m_selected_box_tex;
-	ImFont* m_font;
+	ImFont* m_font = nullptr;
 };
