@@ -24,6 +24,11 @@
 // opengl
 #pragma comment(lib, "opengl32.lib")
 
+// freetype
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#pragma comment(lib, "freetype.lib")
+
 // glm
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>

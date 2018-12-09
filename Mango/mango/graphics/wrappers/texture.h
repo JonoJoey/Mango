@@ -51,12 +51,14 @@ namespace Mango
 	{
 	public:
 		TextureArray() = default;
+		TextureArray(unsigned int texture) : m_texture(texture) { }
 		TextureArray(std::vector<std::string> file_paths, glm::ivec2 size, bool srgb = false, bool alpha_channel = false, bool linear = true, float mip_map_lod = 0.f)
 		{
 			ASSERT(Setup(file_paths, size, srgb, alpha_channel, linear, mip_map_lod));
 		}
 		~TextureArray() { Release(); UnregisterUtil(); }
 
+		void Setup(unsigned int texture) { m_texture = texture; }
 		bool Setup(std::vector<std::string> file_paths, glm::ivec2 size, bool srgb = false, bool alpha_channel = false, bool linear = true, float mip_map_lod = 0.f);
 		void Release() override;
 

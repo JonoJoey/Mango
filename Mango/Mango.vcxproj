@@ -76,8 +76,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Output\</OutDir>
-    <IncludePath>$(ProjectDir)dep\glfw\include;$(ProjectDir)dep\glew\include;$(ProjectDir)dep\glm;$(ProjectDir)dep\imgui;$(ProjectDir)dep\stb;$(ProjectDir)dep\discord-rpc\include;$(ProjectDir)dep\perlin-noise;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)dep\glfw\lib-vc2015;$(ProjectDir)dep\glew\lib\Release\Win32;$(ProjectDir)dep\discord-rpc\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)dep\glfw\include;$(ProjectDir)dep\glew\include;$(ProjectDir)dep\glm;$(ProjectDir)dep\imgui;$(ProjectDir)dep\stb;$(ProjectDir)dep\discord-rpc\include;$(ProjectDir)dep\perlin-noise;$(ProjectDir)dep\freetype\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)dep\glfw\lib-vc2015;$(ProjectDir)dep\glew\lib\Release\Win32;$(ProjectDir)dep\discord-rpc\lib;$(ProjectDir)dep\freetype\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -147,6 +147,7 @@
     <ClCompile Include="dep\imgui\imgui_widgets.cpp" />
     <ClCompile Include="dep\stb\stb_image.cpp" />
     <ClCompile Include="app\main.cpp" />
+    <ClCompile Include="mango\graphics\2D\text_renderer.cpp" />
     <ClCompile Include="mango\graphics\3D\camera_3d.cpp" />
     <ClCompile Include="mango\graphics\3D\light_3d.cpp" />
     <ClCompile Include="mango\graphics\model.cpp" />
@@ -424,6 +425,7 @@
     <ClInclude Include="dep\perlin-noise\PerlinNoise.hpp" />
     <ClInclude Include="dep\stb\stb_image.h" />
     <ClInclude Include="mango\common.h" />
+    <ClInclude Include="mango\graphics\2D\text_renderer.h" />
     <ClInclude Include="mango\graphics\3D\camera_3d.h" />
     <ClInclude Include="mango\graphics\3D\entity_3d.h" />
     <ClInclude Include="mango\graphics\3D\light_3d.h" />

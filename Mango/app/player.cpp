@@ -125,7 +125,7 @@ void LocalPlayer::OnInit()
 {
 	Init();
 
-	ASSERT(m_inventory.Setup());
+	ASSERT(m_inventory.Setup(GetMangoApp()->GetMangoCore()));
 }
 void LocalPlayer::OnRelease()
 {
