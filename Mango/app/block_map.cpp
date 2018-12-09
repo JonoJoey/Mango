@@ -3,7 +3,7 @@
 #include <filesystem>
 
 
-bool BlockMap::CreateTextures(const std::string& texture_path)
+bool BlockMap::CreateTextures(const std::string& resource_pack)
 {
 	m_texture_arrays.clear();
 
@@ -26,10 +26,10 @@ bool BlockMap::CreateTextures(const std::string& texture_path)
 			const auto texture_name = block.second.m_texture_names[i];
 			if (const auto index = FindElement(texture_name, unique_textures); index == 0xFFFFFFFF)
 			{
-				if (!std::filesystem::exists(texture_path + "/" + texture_name))
+				if (!std::filesystem::exists(resource_pack + "/textures/blocks/" + texture_name))
 				{
 					block.second.m_face_indices[i] = 0;
-					DBG_ERROR("Failed to find texture: \"%s\"", (texture_path + "/" + texture_name).c_str());
+					DBG_ERROR("Failed to find texture: \"%s\"", (resource_pack + "/textures/blocks/" + texture_name).c_str());
 				}
 				else
 				{
@@ -47,7 +47,7 @@ bool BlockMap::CreateTextures(const std::string& texture_path)
 		size_t amount = std::min(256U, unique_textures.size() - i);
 		std::vector<std::string> textures_chunk;
 		for (size_t x = 0; x < amount; x++)
-			textures_chunk.push_back(texture_path + "/" + unique_textures[i + x]);
+			textures_chunk.push_back(resource_pack + "/textures/blocks/" + unique_textures[i + x]);
 
 		m_texture_arrays.emplace_back();
 		if (!m_texture_arrays.back().Setup(textures_chunk, glm::ivec2(16, 16), true, false, false, -1.f))

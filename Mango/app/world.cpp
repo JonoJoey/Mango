@@ -37,18 +37,13 @@ void World::DeleteWorld(std::string world_name)
 
 }
 
-bool World::Setup(Mango::MangoCore* mango_core, std::string world_name, const BlockMap& block_map)
+bool World::Setup(Mango::MangoCore* mango_core, std::string world_name)
 {
 	if (!DoesWorldExist(world_name))
 		return false;
 
 	const auto app_data = Mango::GetAppDataPath();
 	const auto world_path = app_data + "/.mango/worlds/" + world_name;
-
-	m_block_map = block_map;
-
-	if (!m_block_map.CreateTextures(app_data + "/.mango/resource_packs/default/textures/blocks"))
-		return false;
 
 	Mango::RescourcePool<Mango::Shader>::Get()->AddRes("cube_shader",
 		Mango::Shader::ReadFile(app_data + "/.mango/resource_packs/default/shaders/cube_vs.glsl"),

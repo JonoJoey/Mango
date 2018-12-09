@@ -1,12 +1,14 @@
 #include "inventory.h"
 
+#include "mango_app.h"
 
-bool Inventory::Setup(Mango::MangoCore* mango_core, std::string resource_pack)
+
+bool Inventory::Setup(std::string resource_pack)
 {
 	for (auto& slot : m_slots)
 	{
 		slot.m_count = 0;
-		slot.m_item_type = 0xFFFFFFFF;
+		slot.m_item_id = ITEM_ID(-1);
 	}
 
 	const auto app_data = Mango::GetAppDataPath();
@@ -26,8 +28,9 @@ void Inventory::Release()
 	m_hotbar_tex.Release();
 	m_selected_box_tex.Release();
 }
-void Inventory::Render(Mango::MangoCore* mango_core, bool inventory_open)
+void Inventory::Render(MangoApp* mango_app, bool inventory_open)
 {
+	auto mango_core = mango_app->GetMangoCore();
 	auto renderer_2d = &mango_core->GetRenderer2D();
 
 	renderer_2d->Start();
@@ -46,6 +49,18 @@ void Inventory::Render(Mango::MangoCore* mango_core, bool inventory_open)
 	m_selected_box_tex.Bind();
 	renderer_2d->RenderTexturedQuad({ pos_2[0] - 1, pos_2[1] - 1 }, { pos_2[0] + BOX_WIDTH + 2, pos_2[1] + BOX_HEIGHT + 2 });
 
+	for (size_t i = 0; i < 9; i++)
+	{
+		if (m_slots[i].m_count <= 0)
+			continue;
+
+		auto item_pos = glm::ivec2(pos[0] + (i * (WIDTH / 9)), pos[1]);
+		auto item = mango_app->GetWorld()->GetItemMap()->GetItem(m_slots[i].m_item_id);
+
+		item->m_gui_texture.Bind();
+		renderer_2d->RenderTexturedQuad({ item_pos[0] + 16, item_pos[1] + 16 }, { item_pos[0] + BOX_WIDTH - 16, item_pos[1] + BOX_HEIGHT - 16 });
+	}
+
 	// tfw u dont wanna make a text renderer
 	{
 		ImGui::PushFont(m_font);
@@ -61,7 +76,7 @@ void Inventory::Render(Mango::MangoCore* mango_core, bool inventory_open)
 		ImDrawList* draw_list = ImGui::GetWindowDrawList();
 		for (size_t i = 0; i < 9; i++)
 		{
-			if (m_slots[i].m_count <= 0)
+			if (m_slots[i].m_count <= 1)
 				continue;
 
 			const auto text = std::to_string(m_slots[i].m_count);
@@ -80,9 +95,9 @@ void Inventory::Render(Mango::MangoCore* mango_core, bool inventory_open)
 	renderer_2d->End();
 }
 
-void Inventory::AddItems(ITEM_ID item_id, size_t count)
+void Inventory::AddItems(ITEM_ID item_id, size_t count, size_t max_count)
 {
-	auto slot = FindSlotValid(item_id);
+	auto slot = FindSlotValid(item_id, max_count);
 	if (slot == 0xFFFFFFFF)
 	{
 		slot = GetNextEmptySlot();
@@ -90,9 +105,9 @@ void Inventory::AddItems(ITEM_ID item_id, size_t count)
 			return;
 	}
 
-	auto add = std::min(count, (64 - m_slots[slot].m_count));
+	auto add = std::min(count, (max_count - m_slots[slot].m_count));
 	m_slots[slot].m_count += add;
-	m_slots[slot].m_item_type = item_id;
+	m_slots[slot].m_item_id = item_id;
 	count -= add;
 
 	while (count > 0)
@@ -103,8 +118,8 @@ void Inventory::AddItems(ITEM_ID item_id, size_t count)
 		if (slot == 0xFFFFFFFF)
 			return;
 
-		add = count - (64 - m_slots[slot].m_count);
-		m_slots[slot].m_item_type = item_id;
+		add = count - (max_count - m_slots[slot].m_count);
+		m_slots[slot].m_item_id = item_id;
 		m_slots[slot].m_count += add;
 		count -= add;
 	}
@@ -137,11 +152,11 @@ size_t Inventory::GetNextEmptySlot()
 
 	return 0xFFFFFFFF;
 }
-size_t Inventory::FindSlotValid(ITEM_ID item_id)
+size_t Inventory::FindSlotValid(ITEM_ID item_id, size_t max_count)
 {
 	for (size_t i = 0; i < m_slots.size(); i++)
 	{
-		if (m_slots[i].m_item_type == item_id && m_slots[i].m_count > 0 && m_slots[i].m_count < 64)
+		if (m_slots[i].m_item_id == item_id && m_slots[i].m_count > 0 && m_slots[i].m_count < max_count)
 			return i;
 	}
 

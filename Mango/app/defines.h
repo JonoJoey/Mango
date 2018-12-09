@@ -13,9 +13,10 @@ void UnpackChunk(uint64_t chunk, int& x, int& z);
 
 struct ItemStack
 {
-	ITEM_ID m_item_type;
+	ITEM_ID m_item_id;
 	size_t m_count;
 };
+
 struct Block
 {
 	static Block Create(BLOCK_ID id)

@@ -4,6 +4,7 @@
 #include "entity.h"
 #include "ray_tracer.h"
 #include "block_map.h"
+#include "item_map.h"
 
 
 class World
@@ -14,13 +15,15 @@ public:
 	static void DeleteWorld(std::string world_name);
 
 public:
-	bool Setup(Mango::MangoCore* mango_core, std::string world_name, const BlockMap& block_map);
+	bool Setup(Mango::MangoCore* mango_core, std::string world_name);
 	void Release();
 
 	void Render(Mango::MangoCore* mango_core, float lerp);
 	void Update(glm::fvec3 position);
 
-	BlockMap& GetBlockMap() { return m_block_map; }
+	ItemMap* GetItemMap() { return &m_item_map; }
+	BlockMap* GetBlockMap() { return &m_block_map; }
+
 	void EditBlock(int x, int y, int z, const Block& block);
 	bool GetBlock(int x, int y, int z, Block& block);
 	bool GetBlock(double x, double y, double z, Block& block) { return GetBlock(int(x), int(y), int(z), block); }
@@ -57,6 +60,7 @@ private:
 private:
 	RayTracer m_ray_tracer;
 	BlockMap m_block_map;
+	ItemMap m_item_map;
 	std::string m_world_path,
 		m_resource_pack = "default";
 	siv::PerlinNoise m_perlin_noise;

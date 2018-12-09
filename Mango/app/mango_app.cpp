@@ -129,80 +129,6 @@ bool MangoApp::OnInit()
 {
 	m_mango_core.SetVerticalSync(false);
 
-	BlockMap block_map;
-	block_map.AddBlock("grass", 1, 1, { 
-		"grass_side.png", 
-		"grass_side.png", 
-		"grass_side.png", 
-		"grass_side.png", 
-		"grass_top.png", 
-		"dirt.png" 
-	});
-	block_map.AddBlock("dirt", 2, 2, { 
-		"dirt.png", 
-		"dirt.png", 
-		"dirt.png", 
-		"dirt.png", 
-		"dirt.png", 
-		"dirt.png" 
-	});
-	block_map.AddBlock("stone", 3, 3, { 
-		"stone.png", 
-		"stone.png", 
-		"stone.png", 
-		"stone.png", 
-		"stone.png", 
-		"stone.png" 
-	});
-	block_map.AddBlock("cobblestone", 4, 4, { 
-		"cobblestone.png", 
-		"cobblestone.png", 
-		"cobblestone.png", 
-		"cobblestone.png", 
-		"cobblestone.png", 
-		"cobblestone.png" 
-	});
-	block_map.AddBlock("oak_plank", 5, 5, {
-		"oak_plank.png",
-		"oak_plank.png",
-		"oak_plank.png",
-		"oak_plank.png",
-		"oak_plank.png",
-		"oak_plank.png"
-	});
-	block_map.AddBlock("oak_log", 6, 6, {
-		"oak_log_side.png",
-		"oak_log_side.png",
-		"oak_log_side.png",
-		"oak_log_side.png",
-		"oak_log_bottom.png",
-		"oak_log_bottom.png"
-	});
-	block_map.AddBlock("diamond_ore", 7, 7, {
-		"diamond_ore.png",
-		"diamond_ore.png",
-		"diamond_ore.png",
-		"diamond_ore.png",
-		"diamond_ore.png",
-		"diamond_ore.png"
-	});
-	block_map.AddBlock("iron_ore", 8, 8, {
-		"iron_ore.png",
-		"iron_ore.png",
-		"iron_ore.png",
-		"iron_ore.png",
-		"iron_ore.png",
-		"iron_ore.png"
-	});
-	block_map.AddBlock("mossy_cobblestone", 9, 9, {
-		"mossy_cobblestone.png",
-		"mossy_cobblestone.png",
-		"mossy_cobblestone.png",
-		"mossy_cobblestone.png",
-		"mossy_cobblestone.png",
-		"mossy_cobblestone.png"
-	});
-
 	{
 		const auto app_data = Mango::GetAppDataPath();
 
@@ -258,17 +184,60 @@ bool MangoApp::OnInit()
 	if (!World::DoesWorldExist("test_world"))
 		World::CreateNewWorld("test_world", 69);
 
-	if (!m_world.Setup(&m_mango_core, "test_world", block_map))
+	if (!m_world.Setup(&m_mango_core, "test_world"))
 	{
 		DBG_LOG("FAILED TO SETUP WORLD");
 		return false;
 	}
 
-	const auto app_data = Mango::GetAppDataPath();
+	// create block map
+	{
+		auto block_map = m_world.GetBlockMap();
+		block_map->AddBlock("grass", 1, 60, {
+			"grass_side.png",
+			"grass_side.png",
+			"grass_side.png",
+			"grass_side.png",
+			"grass_top.png",
+			"dirt.png"
+			});
+		block_map->AddBlock("dirt", 2, 61, {
+			"dirt.png",
+			"dirt.png",
+			"dirt.png",
+			"dirt.png",
+			"dirt.png",
+			"dirt.png"
+			});
+		block_map->AddBlock("stone", 3, 62, {
+			"stone.png",
+			"stone.png",
+			"stone.png",
+			"stone.png",
+			"stone.png",
+			"stone.png"
+			});
+
+		if (!block_map->CreateTextures(Mango::GetAppDataPath() + "/.mango/resource_packs/default/"))
+			return false;
+	}
+
+	// create item map
+	{
+		auto item_map = m_world.GetItemMap();
+		item_map->AddItem("grass", "grass.png", 60, 16, 1);
+		item_map->AddItem("dirt", "dirt.png", 61, 64, 2);
+		item_map->AddItem("stone", "stone.png", 62, 64, 3);
+		item_map->AddItem("diamond_sword", "diamond_sword.png", 63, 64);
+
+		if (!item_map->CreateTextures(Mango::GetAppDataPath() + "/.mango/resource_packs/default/"))
+			return false;
+	}
 
 	m_local_player = m_world.AddEntity<LocalPlayer>(this);
-
 	m_local_player->SetPosition({ 0.0, 130.0, 0.0 });
+
+	m_local_player->GetInventory().AddItems(63, 1, 64);
 
 	Mango::DiscordRPC::Setup("514257473654489098");
 	Mango::DiscordRPC::Update("you are", "a noob", "mango", "mAnGo", "m_fancy", "MaNgO", Mango::DiscordRPC::GetStartTime(), 0);
@@ -297,7 +266,7 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 	// render entire world and stuffs
 	m_world.Render(&m_mango_core, lerp);
 
-	m_local_player->GetInventory().Render(&m_mango_core, false);
+	m_local_player->GetInventory().Render(this, false);
 
 	// render final mango (post-process)
 	{

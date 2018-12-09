@@ -125,7 +125,7 @@ void LocalPlayer::OnInit(std::string resource_pack)
 {
 	Init(resource_pack);
 
-	ASSERT(m_inventory.Setup(GetMangoApp()->GetMangoCore(), resource_pack));
+	ASSERT(m_inventory.Setup(resource_pack));
 }
 void LocalPlayer::OnRelease()
 {
@@ -194,7 +194,8 @@ void LocalPlayer::OnUpdate()
 	auto mango_app = GetMangoApp();
 	auto world = mango_app->GetWorld();
 	auto input_handler = mango_app->GetInputHandler();
-	auto ray_tracer = mango_app->GetWorld()->GetRayTracer();
+	auto ray_tracer = world->GetRayTracer();
+	auto item_map = world->GetItemMap();
 	const float tick_interval = GetMangoApp()->GetTickInterval();
 	const auto position = GetPosition() + glm::dvec3(0.5, double(m_view_offset), 0.5);
 
@@ -253,16 +254,22 @@ void LocalPlayer::OnUpdate()
 				block_y += int(trace_info.m_normal.y);
 				block_z += int(trace_info.m_normal.z);
 		
-				const auto item = m_inventory.GetSelectedItem();
-				if (m_inventory.RemoveItems(m_inventory.GetSelectedSlot(), 1) > 0)
-					world->EditBlock(block_x, block_y, block_z, Block::Create(item.m_item_type));
+				if (const auto selected_item = m_inventory.GetSelectedItem(); selected_item.m_count > 0)
+				{
+					auto item = item_map->GetItem(selected_item.m_item_id);
+					if (item->m_block_id != BLOCK_ID(-1) && m_inventory.RemoveItems(m_inventory.GetSelectedSlot(), 1) > 0)
+						world->EditBlock(block_x, block_y, block_z, Block::Create(item->m_block_id));
+				}
 			}
 		
 			// break block
 			if (input_handler->GetButtonState(0) == Mango::INPUT_STATE::INPUT_STATE_PRESS)
 			{
 				if (Block block; world->GetBlock(block_x, block_y, block_z, block))
-					m_inventory.AddItems(block.m_block_id, 1);
+				{
+					const auto item = item_map->GetItemFromBlock(block.m_block_id);
+					m_inventory.AddItems(item->m_item_id, 1, item->m_max_stack);
+				}
 
 				world->EditBlock(block_x, block_y, block_z, Block::Inactive());
 			}

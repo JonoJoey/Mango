@@ -5,14 +5,15 @@
 #include "defines.h"
 
 
+class MangoApp;
 class Inventory
 {
 public:
-	bool Setup(Mango::MangoCore* mango_core, std::string resource_pack);
+	bool Setup(std::string resource_pack);
 	void Release();
-	void Render(Mango::MangoCore* mango_core, bool inventory_open);
+	void Render(MangoApp* mango_app, bool inventory_open);
 
-	void AddItems(ITEM_ID item_id, size_t count);
+	void AddItems(ITEM_ID item_id, size_t count, size_t max_count);
 	size_t RemoveItems(size_t slot, size_t count);
 	const std::array<ItemStack, 9 * 4>& GetSlots() const { return m_slots; }
 
@@ -22,7 +23,7 @@ public:
 
 private:
 	size_t GetNextEmptySlot();
-	size_t FindSlotValid(ITEM_ID item_id);
+	size_t FindSlotValid(ITEM_ID item_id, size_t max_count);
 
 private:
 	std::array<ItemStack, 9 * 4> m_slots;

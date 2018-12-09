@@ -20,7 +20,7 @@ public:
 	BlockMap(const BlockMap& block_map) { m_block_map = block_map.GetBlockMap(); }
 	void operator=(const BlockMap& block_map) { m_block_map = block_map.GetBlockMap(); }
 
-	bool CreateTextures(const std::string& texture_path);
+	bool CreateTextures(const std::string& resource_pack);
 	void Release();
 
 	void AddBlock(const std::string& block_name, BLOCK_ID block_id, ITEM_ID item_id, const std::array<std::string, 6>& face_textures);
