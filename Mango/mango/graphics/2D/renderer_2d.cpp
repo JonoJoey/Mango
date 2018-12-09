@@ -74,9 +74,6 @@ namespace Mango
 	{
 		m_mango = mango;
 
-		if (!m_text_renderer.Setup())
-			return false;
-
 		// matrices
 		const auto window_size = mango->GetWindowSize();
 		m_proj_matrix = glm::ortho(0.f, float(window_size[0]), float(window_size[1]), 0.f);
@@ -139,8 +136,6 @@ namespace Mango
 
 		m_flat_shader.Release();
 		m_texture_shader.Release();
-
-		m_text_renderer.Release();
 	}
 	void Renderer2D::Resize(int width, int height)
 	{
@@ -171,11 +166,6 @@ namespace Mango
 	void Renderer2D::End()
 	{
 
-	}
-
-	FONT_HANDLE Renderer2D::NewFont(std::string name, std::string file_path, int font_height)
-	{
-		return m_text_renderer.NewFont(name, file_path, font_height);
 	}
 
 	void Renderer2D::RenderQuad(glm::ivec2 pos1, glm::ivec2 pos2, glm::vec3 color)
@@ -222,15 +212,5 @@ namespace Mango
 
 		Shader::Unbind();
 		VertexArray::Unbind();
-	}
-	bool Renderer2D::RenderText(FONT_HANDLE font, const glm::ivec2& position, const glm::vec4& color, const char* format, ...)
-	{
-		char buffer[1024];
-		va_list arg_list;
-		va_start(arg_list, format);
-		vsnprintf(buffer, 1024, format, arg_list);
-		va_end(arg_list);
-
-		return m_text_renderer.RenderText(font, m_proj_matrix, position, color, buffer);
 	}
 } // namespace Mango

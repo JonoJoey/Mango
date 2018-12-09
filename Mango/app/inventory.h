@@ -30,5 +30,5 @@ private:
 
 	Mango::Texture m_hotbar_tex,
 		m_selected_box_tex;
-	Mango::FONT_HANDLE m_font;
+	ImFont* m_font;
 };

@@ -16,7 +16,7 @@ bool Inventory::Setup(Mango::MangoCore* mango_core)
 	if (!m_selected_box_tex.Setup(app_data + "/.mango/resource_packs/default/textures/misc/selected_box.png", true, true, false))
 		return false;
 
-	m_font = mango_core->GetRenderer2D().NewFont("Tahoma", "C:/Windows/Fonts/Tahoma.ttf", 24);
+	m_font = ImGui::GetIO().Fonts->AddFontFromFileTTF((app_data + "/.mango/resource_packs/default/fonts/minecraft_font.ttf").c_str(), 32);
 
 	return true;
 }
@@ -34,9 +34,9 @@ void Inventory::Render(Mango::MangoCore* mango_core, bool inventory_open)
 	static constexpr int WIDTH = 182 * 3,
 		HEIGHT = 22 * 3,
 		BOX_WIDTH = 20 * 3,
-		BOX_HEIGHT = 22 * 3;
+		BOX_HEIGHT = 20 * 3;
 	const glm::ivec2 pos((mango_core->GetWindowSize()[0] / 2) - (WIDTH / 2), mango_core->GetWindowSize()[1] - HEIGHT);
-	const glm::ivec2 pos_2(pos[0] + 3 + (m_selected_slot * BOX_WIDTH), pos[1]);
+	const glm::ivec2 pos_2(pos[0] + 3 + (m_selected_slot * BOX_WIDTH), pos[1] + 3);
 	
 	m_hotbar_tex.Bind();
 	renderer_2d->RenderTexturedQuad({ pos[0], pos[1] }, { pos[0] + WIDTH, pos[1] + HEIGHT });
@@ -44,7 +44,34 @@ void Inventory::Render(Mango::MangoCore* mango_core, bool inventory_open)
 	m_selected_box_tex.Bind();
 	renderer_2d->RenderTexturedQuad({ pos_2[0], pos_2[1] }, { pos_2[0] + BOX_WIDTH, pos_2[1] + BOX_HEIGHT });
 
-	renderer_2d->RenderText(m_font, { 50, 50 }, { 1.f, 0.f, 0.f, 1.f }, "test text %i mango", 69);
+	// tfw u dont wanna make a text renderer
+	{
+		ImGui::PushFont(m_font);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+
+		ImGui::SetNextWindowPos({ 0, 0 });
+		ImGui::SetNextWindowSize({ float(mango_core->GetWindowSize()[0]), float(mango_core->GetWindowSize()[1]) });
+		ImGui::SetNextWindowBgAlpha(0.f);
+		ImGui::Begin("testing", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs);
+
+		ImDrawList* draw_list = ImGui::GetWindowDrawList();
+		for (size_t i = 0; i < 9; i++)
+		{
+			if (m_slots[i].m_count <= 0)
+				continue;
+
+			const auto text = std::to_string(m_slots[i].m_count);
+			const auto text_size = ImGui::CalcTextSize(text.c_str());
+			const auto text_pos = ImVec2(float(pos[0] + 3 + (i * BOX_WIDTH) + (BOX_WIDTH - (text_size[0] + 4))), float(pos[1] + (BOX_HEIGHT / 2) - 6));
+
+			draw_list->AddText(ImVec2(text_pos[0] + 2, text_pos[1] + 2), 0x88000000, text.c_str());
+			draw_list->AddText(text_pos, 0xFFFFFFFF, text.c_str());
+		}
+
+		ImGui::End();
+		ImGui::PopStyleVar();
+		ImGui::PopFont();
+	}
 
 	renderer_2d->End();
 }

@@ -41,6 +41,8 @@ void MangoApp::Run()
 		style.ScrollbarRounding = 0;
 		style.GrabRounding = 0;
 
+		ImGui::GetIO().Fonts->AddFontFromFileTTF("C:/Windows/Fonts/Tahoma.ttf", 16);
+
 		ImVec4* colors = ImGui::GetStyle().Colors;
 		colors[ImGuiCol_Text] = ImVec4(0.78f, 0.47f, 0.00f, 1.00f);
 		colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
@@ -384,30 +386,6 @@ void MangoApp::OnFrame(float frame_time, float lerp)
 		ImGui::SliderFloat("Mouse sensitivity", &m_mouse_sensitivity, 0.01f, 2.f);
 		if (static int render_distance = m_world.GetRenderDistance(); ImGui::SliderInt("Render distance", &render_distance, 1, 64))
 			m_world.SetRenderDistance(render_distance);
-
-		for (size_t i = 0; i < 9; i++)
-		{
-			if (m_local_player->GetInventory().GetSelectedSlot() == i)
-				ImGui::TextColored( { 0.5f, 0.5f, 0.5f, 1.f }, "%i - ", m_local_player->GetInventory().GetSlots()[i].m_item_type);
-			else
-				ImGui::Text("%i - ", m_local_player->GetInventory().GetSlots()[i].m_item_type);
-
-			ImGui::SameLine(0.f, 0.f);
-			ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "%i", m_local_player->GetInventory().GetSlots()[i].m_count);
-		}
-
-		//std::string selected_block = m_local_player->GetSelectedBlock();
-		//if (ImGui::BeginCombo("Block##combo", selected_block.c_str()))
-		//{
-		//	for (const auto& block : m_block_map)
-		//	{
-		//		bool is_selected = selected_block == block.first;
-		//		if (ImGui::Selectable(block.first.c_str(), is_selected))
-		//			m_local_player->SetSelectedBlock(block.first);
-		//	}
-		//
-		//	ImGui::EndCombo();
-		//}
 
 		ImGui::End();
 	}
