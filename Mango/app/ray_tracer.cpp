@@ -93,7 +93,7 @@ static bool AABBtoAABBSweep(const NEWAABB& aabb1, const NEWAABB& aabb2, const gl
 				normal[2] = 1.0;
 		}
 
-		//normal = glm::safe_normalize(normal);
+		normal = glm::safe_normalize(normal);
 		if (glm::dot(glm::safe_normalize(normal), glm::safe_normalize(velocity)) == 0.0)
 			return false;
 	}

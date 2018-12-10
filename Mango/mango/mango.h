@@ -40,7 +40,7 @@ namespace Mango
 
 		glm::ivec2 GetWindowSize() const { int w, h; glfwGetWindowSize(m_window, &w, &h); return { w, h }; }
 		float GetAspectRatio() const { int w, h; glfwGetWindowSize(m_window, &w, &h); return float(w) / float(h); }
-		float GetFrameTime() const { return m_frame_time; }
+		double GetFrameTime() const { return m_frame_time; }
 		glm::vec2 GetMousePosition() const { double xpos, ypos; glfwGetCursorPos(m_window, &xpos, &ypos); return { float(xpos), float(ypos) }; }
 
 		bool RegisterEventHandler(IEventHandler* event_handler);
@@ -57,6 +57,6 @@ namespace Mango
 		GLFWwindow* m_window = nullptr;
 		Renderer2D m_renderer_2d;
 		Renderer3D m_renderer_3d;
-		float m_frame_time = 1.f;
+		double m_frame_time = 1.0;
 	};
 } // namespace Mango

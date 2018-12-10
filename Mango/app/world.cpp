@@ -141,7 +141,7 @@ void World::Release()
 	}
 }
 
-void World::Render(Mango::MangoCore* mango_core, float lerp)
+void World::Render(Mango::MangoCore* mango_core, double lerp)
 {
 	auto& renderer_3d = mango_core->GetRenderer3D();
 
@@ -155,7 +155,7 @@ void World::Render(Mango::MangoCore* mango_core, float lerp)
 	auto cube_shader = Mango::RescourcePool<Mango::Shader>::Get()->GetRes("cube_shader");
 	cube_shader->Bind();
 	cube_shader->SetUniformMat4("u_projection_matrix", renderer_3d.GetProjMatrix());
-	cube_shader->SetUniformMat4("u_view_matrix", Mango::Maths::CreateViewMatrix({ 0.f, 0.f, 0.f }, renderer_3d.GetCamera().GetViewangle()));
+	cube_shader->SetUniformMat4("u_view_matrix", Mango::Maths::CreateViewMatrix({ 0.0, 0.0, 0.0 }, renderer_3d.GetCamera().GetViewangle()));
 
 	const auto pos = renderer_3d.GetCamera().GetPosition();
 
@@ -168,8 +168,7 @@ void World::Render(Mango::MangoCore* mango_core, float lerp)
 	for (auto chunk : m_render_chunks)
 	{
 		cube_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix(glm::dvec3(
-			double(Chunk::WIDTH * chunk->GetX()), 0.0, double(Chunk::DEPTH * chunk->GetZ())) -
-			renderer_3d.GetCamera().GetPosition(), { 0.f, 0.f, 0.f }));
+			double(Chunk::WIDTH * chunk->GetX()), 0.0, double(Chunk::DEPTH * chunk->GetZ())) - pos, { 0.0, 0.0, 0.0 }));
 
 		auto model = chunk->GetModel();
 		model->GetVAO().Bind();
@@ -188,7 +187,7 @@ void World::Render(Mango::MangoCore* mango_core, float lerp)
 
 	renderer_3d.End();
 }
-void World::Update(glm::fvec3 position)
+void World::Update(glm::fvec3 position, double curtime)
 {
 	const int x_chunk = Chunk::PositionXToChunk(int(position.x)),
 		z_chunk = Chunk::PositionZToChunk(int(position.z));
@@ -259,34 +258,40 @@ void World::Update(glm::fvec3 position)
 		}
 	}
 
-	// load a single chunk
-	if (!m_load_chunks.empty())
+	static double last_time = 0.0;
+	if (std::abs(curtime - last_time) > 0.02)
 	{
-		int x, z;
-		UnpackChunk(m_load_chunks.front(), x, z);
+		last_time = curtime;
 
-		auto chunk = NewChunk(x_chunk + x, z_chunk + z);
-		LoadChunk(x + x_chunk, z + z_chunk, &*chunk);
-		if (x >= -m_render_distance && x <= m_render_distance && z >= -m_render_distance && z <= m_render_distance)
+		// load a single chunk
+		if (!m_load_chunks.empty())
 		{
-			m_render_chunks.push_back(chunk);
-			m_update_chunks.push_back(&*chunk);
+			int x, z;
+			UnpackChunk(m_load_chunks.front(), x, z);
+
+			auto chunk = NewChunk(x_chunk + x, z_chunk + z);
+			LoadChunk(x + x_chunk, z + z_chunk, &*chunk);
+			if (x >= -m_render_distance && x <= m_render_distance && z >= -m_render_distance && z <= m_render_distance)
+			{
+				m_render_chunks.push_back(chunk);
+				m_update_chunks.push_back(&*chunk);
+			}
+
+			m_load_chunks.pop_front();
 		}
 
-		m_load_chunks.pop_front();
-	}
+		// update a single chunk
+		for (size_t i = 0; i < m_update_chunks.size(); i++)
+		{
+			auto chunk = m_update_chunks[i];
+			if (!DoesChunkExist(chunk->GetX() + 1, chunk->GetZ()) || !DoesChunkExist(chunk->GetX() - 1, chunk->GetZ()) ||
+				!DoesChunkExist(chunk->GetX(), chunk->GetZ() + 1) || !DoesChunkExist(chunk->GetX(), chunk->GetZ() - 1))
+				continue;
 
-	// update a single chunk
-	for (size_t i = 0; i < m_update_chunks.size(); i++)
-	{
-		auto chunk = m_update_chunks[i];
-		if (!DoesChunkExist(chunk->GetX() + 1, chunk->GetZ()) || !DoesChunkExist(chunk->GetX() - 1, chunk->GetZ()) ||
-			!DoesChunkExist(chunk->GetX(), chunk->GetZ() + 1) || !DoesChunkExist(chunk->GetX(), chunk->GetZ() - 1))
-			continue;
-
-		chunk->Update(m_chunks, m_block_map);
-		m_update_chunks.erase(m_update_chunks.begin() + i);
-		break;
+			chunk->Update(m_chunks, m_block_map);
+			m_update_chunks.erase(m_update_chunks.begin() + i);
+			break;
+		}
 	}
 
 	// update entities

@@ -11,8 +11,8 @@ public:
 
 	void OnInit(std::string resource_pack) override { Init(resource_pack); }
 	void OnRelease() override { Release(); }
-	void OnRender(Mango::MangoCore* mango_core, float lerp) override { Render(mango_core, lerp); }
-	void OnFrameUpdate(Mango::MangoCore* mango_core, float lerp) override { FrameUpdate(mango_core, lerp); }
+	void OnRender(Mango::MangoCore* mango_core, double lerp) override { Render(mango_core, lerp); }
+	void OnFrameUpdate(Mango::MangoCore* mango_core, double lerp) override { FrameUpdate(mango_core, lerp); }
 	void OnUpdate() override { Update(); }
 
 	// getters/setters
@@ -45,8 +45,8 @@ public:
 public:
 	void Init(std::string resource_pack);
 	void Release();
-	void Render(Mango::MangoCore* mango_core, float lerp);
-	void FrameUpdate(Mango::MangoCore* mango_core, float lerp);
+	void Render(Mango::MangoCore* mango_core, double lerp);
+	void FrameUpdate(Mango::MangoCore* mango_core, double lerp);
 	void Update();
 
 	void SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::dvec3 acceleration, bool& on_ground);
@@ -79,8 +79,8 @@ class LocalPlayer : public Player
 public:
 	void OnInit(std::string resource_pack) override;
 	void OnRelease() override;
-	void OnFrameUpdate(Mango::MangoCore* mango_core, float lerp) override;
-	void OnRender(Mango::MangoCore* mango_core, float lerp) override;
+	void OnFrameUpdate(Mango::MangoCore* mango_core, double lerp) override;
+	void OnRender(Mango::MangoCore* mango_core, double lerp) override;
 	void OnUpdate() override;
 
 public:

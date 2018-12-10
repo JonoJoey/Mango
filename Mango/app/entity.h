@@ -15,8 +15,8 @@ public:
 
 	virtual void OnInit(std::string resource_pack) {}
 	virtual void OnRelease() {}
-	virtual void OnRender(Mango::MangoCore* mango_core, float lerp) {}
-	virtual void OnFrameUpdate(Mango::MangoCore* mango_core, float lerp) {} // this is before OnRender()
+	virtual void OnRender(Mango::MangoCore* mango_core, double lerp) {}
+	virtual void OnFrameUpdate(Mango::MangoCore* mango_core, double lerp) {} // this is before OnRender()
 	virtual void OnUpdate() {}
 
 	void SetMangoApp(MangoApp* app) { m_app = app; }

@@ -212,7 +212,7 @@ namespace Mango
 
 		static double last_time = 0.0;
 		const double time = glfwGetTime();
-		m_frame_time = float(time - last_time);
+		m_frame_time = time - last_time;
 		last_time = time;
 
 		return true;

@@ -19,20 +19,16 @@ void Player::Release()
 {
 	m_model.Release();
 }
-void Player::Render(Mango::MangoCore* mango_core, float lerp)
+void Player::Render(Mango::MangoCore* mango_core, double lerp)
 {
-	const float tick_interval = GetMangoApp()->GetTickInterval();
+	const double tick_interval = GetMangoApp()->GetTickInterval();
 	auto& camera = mango_core->GetRenderer3D().GetCamera();
-	auto position = GetPosition();
-	auto velocity = GetVelocity();
-	bool on_ground = IsOnGround();
-	SimulateMovement(position, velocity, GetAcceleration(), on_ground);
+	const auto render_pos = GetPrevPosition() + (GetPosition() - GetPrevPosition()) * double(lerp);
 
 	m_shader->Bind();
 	m_shader->SetUniformMat4("u_projection_matrix", mango_core->GetRenderer3D().GetProjMatrix());
 	m_shader->SetUniformMat4("u_view_matrix", Mango::Maths::CreateViewMatrix({ 0.f, 0.f, 0.f }, camera.GetViewangle()));
-	m_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix(GetPosition() + 
-		((position - GetPosition()) * double(lerp)) + glm::dvec3(0.5) - glm::dvec3(camera.GetPosition())));
+	m_shader->SetUniformMat4("u_model_matrix", Mango::Maths::CreateModelMatrix(render_pos + glm::dvec3(0.5) - glm::dvec3(camera.GetPosition())));
 
 	m_model.GetVAO().Bind();
 
@@ -42,7 +38,7 @@ void Player::Render(Mango::MangoCore* mango_core, float lerp)
 	Mango::CubeTexture::Unbind();
 	Mango::VertexArray::Unbind();
 }
-void Player::FrameUpdate(Mango::MangoCore* mango_core, float lerp)
+void Player::FrameUpdate(Mango::MangoCore* mango_core, double lerp)
 {
 
 }
@@ -65,13 +61,11 @@ void Player::Update()
 
 void Player::SimulateMovement(glm::dvec3& position, glm::dvec3& velocity, glm::dvec3 acceleration, bool& on_ground)
 {
-	const double tick_interval = double(GetMangoApp()->GetTickInterval());
+	const auto tick_interval = GetMangoApp()->GetTickInterval();
 	const auto ray_tracer = GetMangoApp()->GetWorld()->GetRayTracer();
 
-	// gravity
-	acceleration.y = -m_gravity;
-
 	velocity += acceleration * tick_interval;
+	velocity.y -= m_gravity * tick_interval;
 
 	// friction
 	if (const auto speed = std::sqrt((m_velocity.x * m_velocity.x) + (m_velocity.z * m_velocity.z)); speed > 0.0)
@@ -133,12 +127,12 @@ void LocalPlayer::OnRelease()
 
 	m_inventory.Release();
 }
-void LocalPlayer::OnFrameUpdate(Mango::MangoCore* mango_core, float lerp)
+void LocalPlayer::OnFrameUpdate(Mango::MangoCore* mango_core, double lerp)
 {
 	auto mango_app = GetMangoApp();
 	auto& camera = mango_core->GetRenderer3D().GetCamera();
 	auto input_handler = mango_app->GetInputHandler();
-	const float tick_interval = mango_app->GetTickInterval();
+	const double tick_interval = mango_app->GetTickInterval();
 
 	// mouse input
 	{
@@ -164,12 +158,7 @@ void LocalPlayer::OnFrameUpdate(Mango::MangoCore* mango_core, float lerp)
 
 	// camera position is extrapolated for that smoooooooooooothness
 	{
-		auto position = GetPosition();
-		auto velocity = GetVelocity();
-		bool on_ground = IsOnGround();
-		SimulateMovement(position, velocity, GetAcceleration(), on_ground);
-
-		position = GetPosition() + ((position - GetPosition()) * double(lerp));
+		auto position = GetPrevPosition() + (GetPosition() - GetPrevPosition()) * double(lerp);
 		position += glm::dvec3(0.5, m_view_offset, 0.5);
 
 		if (m_third_person)
@@ -184,7 +173,7 @@ void LocalPlayer::OnFrameUpdate(Mango::MangoCore* mango_core, float lerp)
 	camera.SetViewangle(GetViewangle());
 	FrameUpdate(mango_core, lerp);
 }
-void LocalPlayer::OnRender(Mango::MangoCore* mango_core, float lerp)
+void LocalPlayer::OnRender(Mango::MangoCore* mango_core, double lerp)
 {
 	if (m_third_person)
 		Render(mango_core, lerp);
@@ -196,7 +185,7 @@ void LocalPlayer::OnUpdate()
 	auto input_handler = mango_app->GetInputHandler();
 	auto ray_tracer = world->GetRayTracer();
 	auto item_map = world->GetItemMap();
-	const float tick_interval = GetMangoApp()->GetTickInterval();
+	const auto tick_interval = GetMangoApp()->GetTickInterval();
 	const auto position = GetPosition() + glm::dvec3(0.5, double(m_view_offset), 0.5);
 
 	// handle movement

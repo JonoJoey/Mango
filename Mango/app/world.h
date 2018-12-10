@@ -18,8 +18,8 @@ public:
 	bool Setup(Mango::MangoCore* mango_core, std::string world_name);
 	void Release();
 
-	void Render(Mango::MangoCore* mango_core, float lerp);
-	void Update(glm::fvec3 position);
+	void Render(Mango::MangoCore* mango_core, double lerp);
+	void Update(glm::fvec3 position, double curtime);
 
 	ItemMap* GetItemMap() { return &m_item_map; }
 	BlockMap* GetBlockMap() { return &m_block_map; }
@@ -63,9 +63,9 @@ private:
 	ItemMap m_item_map;
 	std::string m_world_path,
 		m_resource_pack = "default";
+
 	siv::PerlinNoise m_perlin_noise;
 	std::deque<Entity*> m_entities;
-
 	std::deque<Chunk*> m_update_chunks;
 	std::deque<uint64_t> m_load_chunks;
 	std::deque<std::shared_ptr<Chunk>> m_render_chunks;

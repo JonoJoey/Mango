@@ -92,8 +92,9 @@ void MangoApp::Run()
 	// framebuffer
 	m_framebuffer.Setup(m_mango_core.GetWindowSize());
 
-	float accumulated_time = 0.f;
+	double accumulated_time = 0.0;
 	m_tick_count = 0;
+	m_curtime = 0.0;
 
 	if (!OnInit())
 	{
@@ -104,7 +105,8 @@ void MangoApp::Run()
 	// loooooooooooop
 	while (m_mango_core.NextFrame())
 	{
-		const float frame_time = m_mango_core.GetFrameTime();
+		const double frame_time = m_mango_core.GetFrameTime();
+		m_curtime += frame_time;
 
 		accumulated_time += frame_time;
 		while (accumulated_time > m_interval_per_tick)
@@ -253,9 +255,9 @@ void MangoApp::OnRelease()
 
 void MangoApp::OnTick()
 {
-	m_world.Update(m_local_player->GetPosition());
+	m_world.Update(m_local_player->GetPosition(), m_curtime);
 }
-void MangoApp::OnFrame(float frame_time, float lerp)
+void MangoApp::OnFrame(double frame_time, double lerp)
 {
 	auto& renderer_2d = m_mango_core.GetRenderer2D();
 	auto& renderer_3d = m_mango_core.GetRenderer3D();
